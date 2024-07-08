@@ -15,7 +15,6 @@
  */
 package com.reandroid.archive.writer;
 
-import com.reandroid.apk.APKLogger;
 import com.reandroid.archive.Archive;
 import com.reandroid.archive.InputSource;
 import com.reandroid.archive.ZipSignature;
@@ -24,7 +23,6 @@ import com.reandroid.archive.block.DataDescriptor;
 import com.reandroid.archive.block.LocalFileHeader;
 import com.reandroid.archive.io.CountingOutputStream;
 import com.reandroid.archive.io.ZipOutput;
-import com.reandroid.utils.io.FileUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -34,7 +32,6 @@ import java.util.zip.DeflaterOutputStream;
 class OutputSource {
     private final InputSource inputSource;
     private LocalFileHeader lfh;
-    private APKLogger apkLogger;
     private HeaderInterceptor headerInterceptor;
 
     OutputSource(InputSource inputSource){
@@ -50,7 +47,9 @@ class OutputSource {
 
         if(inputSource.getMethod() != Archive.STORED){
             DeflaterOutputStream deflaterInputStream =
-                    new DeflaterOutputStream(rawCounter, new Deflater(Deflater.BEST_SPEED, true), true);
+                    (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) ?
+                            new DeflaterOutputStream(rawCounter, new Deflater(Deflater.BEST_SPEED, true), true)
+                    : new DeflaterOutputStream(rawCounter, new Deflater(Deflater.BEST_SPEED, true));
             deflateCounter = new CountingOutputStream<>(deflaterInputStream, false);
         }
         if(deflateCounter != null){
@@ -144,34 +143,5 @@ class OutputSource {
         lfh.setDataDescriptor(null);
         lfh.setZipAlign(0);
     }
-    void logLargeFileWrite(){
-        APKLogger logger =  this.apkLogger;
-        if(logger == null){
-            return;
-        }
-        long size = getLocalFileHeader().getDataSize();
-        if(size < LOG_LARGE_FILE_SIZE){
-            return;
-        }
-        logFileWrite();
-    }
-    void logFileWrite(){
-        APKLogger logger =  this.apkLogger;
-        if(logger == null){
-            return;
-        }
-        long size = getLocalFileHeader().getDataSize();
-        logVerbose("Write [" + FileUtil.toReadableFileSize(size) + "] " +
-                getInputSource().getAlias());
-    }
 
-    void setAPKLogger(APKLogger logger) {
-        this.apkLogger = logger;
-    }
-    void logVerbose(String msg) {
-        if(apkLogger!=null){
-            apkLogger.logVerbose(msg);
-        }
-    }
-    private static final long LOG_LARGE_FILE_SIZE = 2L * 1000 * 1000 * 1024;
 }

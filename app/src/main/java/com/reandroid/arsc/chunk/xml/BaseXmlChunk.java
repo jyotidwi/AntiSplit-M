@@ -102,14 +102,13 @@ class BaseXmlChunk extends Chunk<XmlNodeHeader> {
     int getStringReference(){
         return mStringReference.get();
     }
-    ResXmlString setString(String str){
+    void setString(String str){
         ResXmlStringPool pool = getStringPool();
         if(pool==null){
-            return null;
+            return;
         }
         ResXmlString xmlString = pool.getOrCreate(str);
         setStringReference(xmlString.getIndex());
-        return xmlString;
     }
     ResXmlStringPool getStringPool(){
         Block parent=getParent();
@@ -190,13 +189,11 @@ class BaseXmlChunk extends Chunk<XmlNodeHeader> {
         if(chunkType==null){
             return super.toString();
         }
-        StringBuilder builder=new StringBuilder();
-        builder.append(chunkType.toString());
-        builder.append(": line=");
-        builder.append(getLineNumber());
-        builder.append(" {");
-        builder.append(getName());
-        builder.append("}");
-        return builder.toString();
+        return chunkType +
+                ": line=" +
+                getLineNumber() +
+                " {" +
+                getName() +
+                "}";
     }
 }

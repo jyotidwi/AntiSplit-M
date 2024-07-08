@@ -18,11 +18,9 @@ package com.reandroid.archive.io;
 import com.reandroid.archive.Archive;
 import com.reandroid.archive.ArchiveEntry;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.file.StandardOpenOption;
 
 public class ArchiveFileEntrySource extends ArchiveEntrySource<ZipFileInput> {
 
@@ -48,27 +46,6 @@ public class ArchiveFileEntrySource extends ArchiveEntrySource<ZipFileInput> {
         FileChannel fileChannel = zipInput.getFileChannel();
         fileChannel.position(getArchiveEntry().getFileOffset());
         return fileChannel;
-    }
-
-    @Override
-    public void write(File file) throws IOException {
-        FileChannel fileChannel = getFileChannel();
-        if(getMethod() != Archive.STORED || fileChannel == null){
-            super.write(file);
-            return;
-        }
-        File dir = file.getParentFile();
-        if(dir != null && !dir.exists()){
-            dir.mkdirs();
-        }
-        if(file.isFile()){
-            file.delete();
-        }
-        file.createNewFile();
-        StandardOpenOption openOption = StandardOpenOption.WRITE;
-        FileChannel outputChannel = FileChannel.open(file.toPath(), openOption);
-        outputChannel.transferFrom(fileChannel, 0, getLength());
-        outputChannel.close();
     }
 
 }

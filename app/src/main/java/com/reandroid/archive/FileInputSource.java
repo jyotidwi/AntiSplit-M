@@ -33,10 +33,7 @@ public class FileInputSource extends InputSource {
     public long getLength() {
         return getFile().length();
     }
-    @Override
-    public void close(InputStream inputStream) throws IOException {
-        inputStream.close();
-    }
+
     @Override
     public FileChannelInputStream openStream() throws IOException {
         return new FileChannelInputStream(this.file);

@@ -44,12 +44,12 @@ public class ZipByteInput extends ZipInput{
         this.length = length;
     }
     @Override
-    public long position() throws IOException {
+    public long position() {
         return position;
     }
 
     @Override
-    public void position(long pos) throws IOException {
+    public void position(long pos) {
         if(pos > getLength()){
             pos = getLength() - 1;
         }
@@ -60,7 +60,7 @@ public class ZipByteInput extends ZipInput{
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         position = length;
     }
     @Override
@@ -68,11 +68,11 @@ public class ZipByteInput extends ZipInput{
         return true;
     }
     @Override
-    public long getLength() throws IOException {
+    public long getLength() {
         return length;
     }
     @Override
-    public InputStream getInputStream(long offset, long length) throws IOException {
+    public InputStream getInputStream(long offset, long length) {
         return new BytesInputStream(this.array, (int)(offset + this.offset), (int)length);
     }
     @Override

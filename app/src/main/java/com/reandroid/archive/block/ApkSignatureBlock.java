@@ -17,14 +17,10 @@ package com.reandroid.archive.block;
 
 import com.reandroid.archive.block.pad.SchemePadding;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.utils.collection.ArrayCollection;
-import com.reandroid.utils.collection.IterableIterator;
-import com.reandroid.utils.io.FileUtil;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
 
 public class ApkSignatureBlock extends LengthPrefixedList<SignatureInfo>
         implements Comparator<SignatureInfo> {
@@ -33,18 +29,7 @@ public class ApkSignatureBlock extends LengthPrefixedList<SignatureInfo>
         super(true);
         setBottomBlock(signatureFooter);
     }
-    public ApkSignatureBlock(){
-        this(new SignatureFooter());
-    }
 
-    public Iterator<CertificateBlock> getCertificates() {
-        return new IterableIterator<SignatureInfo, CertificateBlock>(this.iterator()) {
-            @Override
-            public Iterator<CertificateBlock> iterator(SignatureInfo element) {
-                return element.getCertificates();
-            }
-        };
-    }
     public void sortSignatures(){
         sort(this);
     }
@@ -97,57 +82,14 @@ public class ApkSignatureBlock extends LengthPrefixedList<SignatureInfo>
         footer.setSignatureSize(getDataSize());
     }
 
-    public void writeRaw(File file) throws IOException{
-        refresh();
-        OutputStream outputStream = FileUtil.outputStream(file);
-        writeBytes(outputStream);
-        outputStream.close();
-    }
-    public List<File> writeSplitRawToDirectory(File dir) throws IOException{
-        refresh();
-        List<File> writtenFiles = new ArrayCollection<>(size());
-        for(SignatureInfo signatureInfo : this){
-            File file = signatureInfo.writeRawToDirectory(dir);
-            writtenFiles.add(file);
-        }
-        return writtenFiles;
-    }
     public void read(File file) throws IOException {
         super.readBytes(new BlockReader(file));
     }
-    public void scanSplitFiles(File dir) throws IOException {
-        if(!dir.isDirectory()){
-            throw new IOException("No such directory");
-        }
-        FileFilter filter = new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                if(!file.isFile()){
-                    return false;
-                }
-                String name = file.getName().toLowerCase();
-                return name.endsWith(SignatureId.FILE_EXT_RAW);
-            }
-        };
-        File[] files = dir.listFiles(filter);
-        if(files == null){
-            return;
-        }
-        for(File file:files){
-            addSplitRaw(file);
-        }
-        sortSignatures();
-    }
-    public SignatureInfo addSplitRaw(File signatureInfoFile) throws IOException {
-        SignatureInfo signatureInfo = new SignatureInfo();
-        signatureInfo.read(signatureInfoFile);
-        add(signatureInfo);
-        return signatureInfo;
-    }
+
+
     @Override
     public int compare(SignatureInfo info1, SignatureInfo info2) {
         return info1.getId().compareTo(info2.getId());
     }
 
-    public static final String FILE_EXT = ".sig";
 }

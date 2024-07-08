@@ -74,8 +74,7 @@ public class ResXmlIDArray extends BlockArray<ResXmlID>  {
             return;
         }
         int max=allChildes.length;
-        for(int i=0;i<max;i++){
-            ResXmlID xmlID=allChildes[i];
+        for (ResXmlID xmlID : allChildes) {
             mResIdMap.put(xmlID.get(), xmlID);
         }
     }

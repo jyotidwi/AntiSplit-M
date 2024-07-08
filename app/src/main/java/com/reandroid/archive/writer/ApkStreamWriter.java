@@ -33,7 +33,7 @@ public class ApkStreamWriter extends ApkWriter<ZipStreamOutput, StreamOutputSour
         outputSource.writeApk(getZipOutput(), zipAligner);
     }
     @Override
-    void prepareOutputs(StreamOutputSource[] outList) throws IOException {
+    void prepareOutputs(StreamOutputSource[] outList) {
     }
     @Override
     StreamOutputSource toOutputSource(InputSource inputSource) {

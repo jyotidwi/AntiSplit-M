@@ -15,32 +15,36 @@
   */
 package com.reandroid.arsc.container;
 
-import com.reandroid.arsc.chunk.*;
 import com.reandroid.arsc.array.TypeBlockArray;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockContainer;
-import com.reandroid.arsc.model.ResourceEntry;
+import com.reandroid.arsc.chunk.ChunkType;
+import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.chunk.SpecBlock;
+import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.header.TypeHeader;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.TypeString;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TableStringPool;
-import com.reandroid.arsc.value.ValueItem;
-import com.reandroid.utils.collection.ComputeIterator;
-import com.reandroid.utils.collection.EmptyIterator;
-import com.reandroid.utils.HexUtil;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
+import com.reandroid.arsc.value.ValueItem;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.MergingIterator;
+
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
-import java.util.*;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 public class SpecTypePair extends BlockContainer<Block>
         implements JSONConvert<JSONObject>, Comparable<SpecTypePair>{
@@ -141,37 +145,23 @@ public class SpecTypePair extends BlockContainer<Block>
             }
         };
     }
-    private Iterator<Entry> listDefaultEntries(){
-        Iterator<TypeBlock> iterator = getTypeBlockArray().iterator(false);
-        if(!iterator.hasNext()){
-            return EmptyIterator.of();
-        }
-        return iterator.next().getEntries();
-    }
+
     public Iterator<Entry> getEntries(int entryId){
         return getEntries(entryId, false);
     }
     public Iterator<Entry> getEntries(int entryId, boolean skipNull){
-        return new ComputeIterator<TypeBlock, Entry>(getTypeBlocks(), new Function<TypeBlock, Entry>() {
-            @Override
-            public Entry apply(TypeBlock typeBlock) {
-                Entry entry = typeBlock.getEntry(entryId);
-                if(entry == null || (skipNull && entry.isNull())){
-                    return null;
-                }
-                return entry;
+        return new ComputeIterator<>(getTypeBlocks(), typeBlock -> {
+            Entry entry = typeBlock.getEntry(entryId);
+            if (entry == null || (skipNull && entry.isNull())) {
+                return null;
             }
+            return entry;
         });
     }
     public Iterator<TypeBlock> getTypeBlocks(){
         return getTypeBlockArray().iterator();
     }
-    public Iterator<TypeBlock> getTypeBlocks(Predicate<TypeBlock> filter){
-        return getTypeBlockArray().iterator(filter);
-    }
-    public Iterator<TypeBlock> getTypeBlocks(ResConfig resConfig){
-        return getTypeBlockArray().iterator(resConfig);
-    }
+
     public Boolean hasComplexEntry(){
         return getTypeBlockArray().hasComplexEntry();
     }
@@ -192,19 +182,18 @@ public class SpecTypePair extends BlockContainer<Block>
     public Entry getAnyEntry(short entryId){
         Entry result = null;
         TypeBlock[] types = getTypeBlockArray().getChildes();
-        for(int i = 0; i < types.length; i++){
-            TypeBlock typeBlock = types[i];
-            if(typeBlock == null){
+        for (TypeBlock typeBlock : types) {
+            if (typeBlock == null) {
                 continue;
             }
             Entry entry = typeBlock.getEntry(entryId);
-            if(entry == null){
+            if (entry == null) {
                 continue;
             }
-            if(!entry.isNull()){
+            if (!entry.isNull()) {
                 return entry;
             }
-            if(result == null){
+            if (result == null) {
                 result = entry;
             }
         }
@@ -212,13 +201,12 @@ public class SpecTypePair extends BlockContainer<Block>
     }
     public Entry getAnyEntry(String name){
         TypeBlock[] types = getTypeBlockArray().getChildes();
-        for(int i = 0; i < types.length; i++){
-            TypeBlock typeBlock = types[i];
-            if(typeBlock == null){
+        for (TypeBlock typeBlock : types) {
+            if (typeBlock == null) {
                 continue;
             }
             Entry entry = typeBlock.getEntry(name);
-            if(entry != null){
+            if (entry != null) {
                 return entry;
             }
         }
@@ -230,14 +218,13 @@ public class SpecTypePair extends BlockContainer<Block>
     public void sortTypes(){
         getTypeBlockArray().sort();
     }
-    public boolean removeNullEntries(int startId){
+    public void removeNullEntries(int startId){
         startId = 0x0000ffff & startId;
         boolean removed = getTypeBlockArray().removeNullEntries(startId);
         if(!removed){
-            return false;
+            return;
         }
         getSpecBlock().setEntryCount(startId);
-        return true;
     }
     public void removeEmptyTypeBlocks(){
         getTypeBlockArray().removeEmptyBlocks();
@@ -245,15 +232,7 @@ public class SpecTypePair extends BlockContainer<Block>
     public boolean isEmpty(){
         return getTypeBlockArray().isEmpty();
     }
-    public int countTypeBlocks(){
-        return getTypeBlockArray().size();
-    }
-    public Entry getOrCreateEntry(short entryId, String qualifiers){
-        return getTypeBlockArray().getOrCreateEntry(entryId, qualifiers);
-    }
-    public Entry getOrCreateEntry(short entryId, ResConfig resConfig){
-        return getTypeBlockArray().getOrCreateEntry(entryId, resConfig);
-    }
+
     public Entry getEntry(short entryId, String qualifiers){
         return getTypeBlockArray().getEntry(entryId, qualifiers);
     }
@@ -265,21 +244,6 @@ public class SpecTypePair extends BlockContainer<Block>
     }
     public TypeBlock getTypeBlock(String qualifiers){
         return getTypeBlockArray().getTypeBlock(qualifiers);
-    }
-    public TypeBlock getTypeBlock(ResConfig resConfig){
-        return getTypeBlockArray().getTypeBlock(resConfig);
-    }
-    public Set<ResConfig> listResConfig(){
-        return mTypeBlockArray.listResConfig();
-    }
-    public Iterator<ResConfig> getResConfigs(){
-        return mTypeBlockArray.getResConfigs();
-    }
-    public Iterator<TypeBlock> iteratorNonEmpty(){
-        return mTypeBlockArray.iteratorNonEmpty();
-    }
-    public boolean hasDuplicateResConfig(boolean ignoreEmpty){
-        return mTypeBlockArray.hasDuplicateResConfig(ignoreEmpty);
     }
 
     public byte getTypeId(){
@@ -321,31 +285,7 @@ public class SpecTypePair extends BlockContainer<Block>
     public PackageBlock getPackageBlock(){
         return getParent(PackageBlock.class);
     }
-    public List<Entry> listEntries(int entryId){
-        List<Entry> results=new ArrayList<>();
-        Iterator<TypeBlock> itr = mTypeBlockArray.iterator(true);
-        while (itr.hasNext()){
-            TypeBlock typeBlock=itr.next();
-            Entry entry = typeBlock.getEntry(entryId);
-            if(entry ==null|| entry.isNull()){
-                continue;
-            }
-            results.add(entry);
-        }
-        return results;
-    }
-    public List<Entry> listEntries(String entryName){
-        List<Entry> results = new ArrayList<>();
-        Iterator<TypeBlock> itr = mTypeBlockArray.iterator(true);
-        while (itr.hasNext()){
-            TypeBlock typeBlock = itr.next();
-            Entry entry = typeBlock.getEntry(entryName);
-            if(entry != null){
-                results.add(entry);
-            }
-        }
-        return results;
-    }
+
     public Collection<TypeBlock> listTypeBlocks(){
         return getTypeBlockArray().listItems();
     }
@@ -375,7 +315,7 @@ public class SpecTypePair extends BlockContainer<Block>
             return;
         }
         if(chunkType!=ChunkType.SPEC){
-            readUnexpectedNonSpecBlock(reader, headerBlock);
+            readUnexpectedNonSpecBlock(headerBlock);
         }
         mSpecBlock.readBytes(reader);
     }
@@ -385,7 +325,7 @@ public class SpecTypePair extends BlockContainer<Block>
                 typeHeader.isSparse(), typeHeader.isOffset16());
         typeBlock.readBytes(reader);
     }
-    private void readUnexpectedNonSpecBlock(BlockReader reader, HeaderBlock headerBlock) throws IOException{
+    private void readUnexpectedNonSpecBlock(HeaderBlock headerBlock) throws IOException{
         throw new IOException("Unexpected block: "+headerBlock.toString()+", Should be: "+ChunkType.SPEC);
     }
     public int getHighestEntryCount(){
@@ -466,5 +406,4 @@ public class SpecTypePair extends BlockContainer<Block>
     }
 
     public static final String NAME_types = "types";
-    public static final String NAME_sparse_types = "sparse_types";
 }

@@ -6,6 +6,6 @@
 package com.reandroid.json;
 
 public interface JSONConvert<T extends JSONItem> {
-    public T toJson();
-    public void fromJson(T json);
+    T toJson();
+    void fromJson(T json);
 }

@@ -56,7 +56,7 @@ public class BlockReader extends InputStream {
         byte[] bts = new byte[2];
         readFully(bts);
         seek(pos);
-        return toShort(bts, 0);
+        return toShort(bts);
     }
     public int readInteger() throws IOException {
         int pos = getPosition();
@@ -105,9 +105,9 @@ public class BlockReader extends InputStream {
                 (bts[offset+2] & 0xff) << 16 |
                 (bts[offset+3] & 0xff) << 24;
     }
-    private short toShort(byte[] bts, int offset){
-        return (short) (bts[offset] & 0xff |
-                (bts[offset+1] & 0xff) << 8);
+    private short toShort(byte[] bts){
+        return (short) (bts[0] & 0xff |
+                (bts[0 +1] & 0xff) << 8);
     }
     public byte[] getBuffer(){
         return BUFFER;
@@ -177,8 +177,8 @@ public class BlockReader extends InputStream {
         System.arraycopy(result, 0, bytes, 0, readLength);
         return bytes;
     }
-    public int readFully(byte[] bytes) throws IOException{
-        return readFully(bytes, 0, bytes.length);
+    public void readFully(byte[] bytes) throws IOException{
+        readFully(bytes, 0, bytes.length);
     }
     public int readFully(byte[] bytes, int length) throws IOException{
         if(length == 0){

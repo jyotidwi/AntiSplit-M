@@ -480,10 +480,7 @@ public class AndroidColor {
             if(value > mask) {
                 return mask;
             }
-            if(value < 0){
-                return 0;
-            }
-            return value;
+            return Math.max(value, 0);
         }
         public int mask(){
             if(eightBit){

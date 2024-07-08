@@ -67,10 +67,9 @@ public class ApkFileWriter extends ApkWriter<ZipFileOutput, FileOutputSource> {
         BufferFileInput input = new BufferFileInput(bufferFile);
         FileOutputSource tableSource = null;
         int length = outputList.length;
-        for(int i = 0; i < length; i++){
-            FileOutputSource fileOutputSource = outputList[i];
+        for (FileOutputSource fileOutputSource : outputList) {
             InputSource inputSource = fileOutputSource.getInputSource();
-            if(tableSource == null && TableBlock.FILE_NAME.equals(inputSource.getAlias())){
+            if (tableSource == null && TableBlock.FILE_NAME.equals(inputSource.getAlias())) {
                 tableSource = fileOutputSource;
                 continue;
             }

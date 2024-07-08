@@ -15,14 +15,17 @@
  */
 package com.reandroid.xml;
 
-import com.reandroid.utils.collection.*;
+import com.reandroid.utils.collection.ArrayCollection;
+import com.reandroid.utils.collection.IndexIterator;
+import com.reandroid.utils.collection.RecursiveIterator;
+import com.reandroid.utils.collection.SizedSupplier;
 import com.reandroid.xml.base.NodeTree;
+
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.function.Predicate;
 
 public abstract class XMLNodeTree extends XMLNode implements
         NodeTree<XMLNode>, Iterable<XMLNode>, SizedSupplier<XMLNode> {
@@ -51,7 +54,7 @@ public abstract class XMLNodeTree extends XMLNode implements
             lastTrimSize = 0;
         }
     }
-    public Iterator<XMLNode> iterator(Predicate<? super XMLNode> filter){
+    public Iterator<XMLNode> iterator(com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super XMLNode> filter){
         return new IndexIterator<>(this, filter);
     }
     @Override
@@ -70,9 +73,8 @@ public abstract class XMLNodeTree extends XMLNode implements
         return mChildes.get(index);
     }
     public void addAll(Iterable<? extends XMLNode> iterable){
-        Iterator<? extends XMLNode> itr = iterable.iterator();
-        while (itr.hasNext()){
-            add(itr.next());
+        for (XMLNode xmlNode : iterable) {
+            add(xmlNode);
         }
     }
     public boolean add(XMLNode xmlNode) {
@@ -129,7 +131,7 @@ public abstract class XMLNodeTree extends XMLNode implements
             return xmlNode;
         }
     }
-    public boolean remove(Predicate<? extends XMLNode> filter){
+    public boolean remove(com.abdurazaaqmohammed.AntiSplit.main.Predicate<? extends XMLNode> filter){
         synchronized (this){
             return mChildes.remove(filter);
         }
@@ -147,9 +149,8 @@ public abstract class XMLNodeTree extends XMLNode implements
     }
     abstract void startSerialize(XmlSerializer serializer) throws IOException;
     private void serializeChildes(XmlSerializer serializer) throws IOException {
-        Iterator<XMLNode> itr = iterator();
-        while (itr.hasNext()){
-            itr.next().serialize(serializer);
+        for (XMLNode xmlNode : this) {
+            xmlNode.serialize(serializer);
         }
     }
     abstract void endSerialize(XmlSerializer serializer) throws IOException;

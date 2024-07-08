@@ -20,7 +20,6 @@ import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.value.Value;
 import com.reandroid.arsc.value.attribute.AttributeBag;
-import com.reandroid.utils.HexUtil;
 import com.reandroid.arsc.value.AttributeDataFormat;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.utils.StringsUtil;
@@ -197,7 +196,7 @@ public class ValueCoder {
         return encodeAny(text);
     }
     private static boolean isEmpty(Object[] objects){
-        if(objects == null || objects.length == 0){
+        if(objects == null){
             return true;
         }
         for(Object obj : objects){

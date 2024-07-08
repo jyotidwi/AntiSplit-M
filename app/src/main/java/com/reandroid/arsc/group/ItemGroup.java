@@ -23,7 +23,6 @@ import com.reandroid.utils.collection.EmptyIterator;
 import java.util.AbstractList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Predicate;
 
 public class ItemGroup<T extends Block> implements Iterable<T>{
     private final BlockArrayCreator<T> mBlockArrayCreator;
@@ -56,14 +55,9 @@ public class ItemGroup<T extends Block> implements Iterable<T>{
         if(!skipNullBlock){
             return new ArrayIterator<>(this.items);
         }
-        return new ArrayIterator<>(this.items, new Predicate<T>() {
-            @Override
-            public boolean test(T item) {
-                return !item.isNull();
-            }
-        });
+        return new ArrayIterator<>(this.items, item -> !item.isNull());
     }
-    public Iterator<T> iterator(Predicate<T> tester){
+    public Iterator<T> iterator(com.abdurazaaqmohammed.AntiSplit.main.Predicate<T> tester){
         if(size() == 0){
             return EmptyIterator.of();
         }
@@ -109,8 +103,8 @@ public class ItemGroup<T extends Block> implements Iterable<T>{
             return false;
         }
         int length = items.length;
-        for(int i = 0; i < length; i++){
-            if(block == items[i]){
+        for (T item : items) {
+            if (block == item) {
                 return true;
             }
         }
@@ -163,9 +157,8 @@ public class ItemGroup<T extends Block> implements Iterable<T>{
         }
         T[] update = createNew(count);
         int index = 0;
-        for(int i = 0; i < length; i++){
-            T block = items[i];
-            if(block != null){
+        for (T block : items) {
+            if (block != null) {
                 update[index] = block;
                 index++;
             }

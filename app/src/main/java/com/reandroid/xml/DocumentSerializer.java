@@ -75,7 +75,7 @@ public class DocumentSerializer implements XmlSerializer {
     }
 
     @Override
-    public void startDocument(String encoding, Boolean standalone) throws IOException, IllegalArgumentException, IllegalStateException {
+    public void startDocument(String encoding, Boolean standalone) throws IllegalArgumentException, IllegalStateException {
         this.document.setEncoding(encoding);
         this.document.setStandalone(standalone);
         this.currentElement = null;
@@ -83,7 +83,7 @@ public class DocumentSerializer implements XmlSerializer {
     }
 
     @Override
-    public void endDocument() throws IOException, IllegalArgumentException, IllegalStateException {
+    public void endDocument() throws IllegalArgumentException, IllegalStateException {
         this.currentElement = null;
         this.currentText = null;
         this.namespaceMap.clear();
@@ -91,7 +91,7 @@ public class DocumentSerializer implements XmlSerializer {
     }
 
     @Override
-    public void setPrefix(String prefix, String namespace) throws IOException, IllegalArgumentException, IllegalStateException {
+    public void setPrefix(String prefix, String namespace) throws IllegalArgumentException, IllegalStateException {
         namespaceMap.put(namespace, prefix);
     }
 
@@ -147,7 +147,7 @@ public class DocumentSerializer implements XmlSerializer {
     }
 
     @Override
-    public XmlSerializer startTag(String namespace, String name) throws IOException {
+    public XmlSerializer startTag(String namespace, String name) {
         this.currentText = null;
         XMLNodeTree nodeTree = this.currentElement;
         if(nodeTree == null){
@@ -161,7 +161,7 @@ public class DocumentSerializer implements XmlSerializer {
     }
 
     @Override
-    public XmlSerializer attribute(String namespace, String name, String value) throws IOException{
+    public XmlSerializer attribute(String namespace, String name, String value) {
         XMLAttribute attribute = this.currentElement.newAttribute();
         attribute.set(name, value);
         this.currentElement.addAttribute(attribute);
@@ -184,13 +184,13 @@ public class DocumentSerializer implements XmlSerializer {
     }
 
     @Override
-    public XmlSerializer text(String text) throws IOException{
+    public XmlSerializer text(String text) {
         appendText(text);
         return this;
     }
 
     @Override
-    public XmlSerializer text(char[] buf, int start, int len) throws IOException, IllegalArgumentException, IllegalStateException {
+    public XmlSerializer text(char[] buf, int start, int len) throws IllegalArgumentException, IllegalStateException {
         StringBuilder builder = new StringBuilder();
         int end = start + len;
         for(int i = start; i < end; i++){
@@ -201,22 +201,22 @@ public class DocumentSerializer implements XmlSerializer {
     }
 
     @Override
-    public void cdsect(String text) throws IOException, IllegalArgumentException, IllegalStateException {
+    public void cdsect(String text) throws IllegalArgumentException, IllegalStateException {
 
     }
 
     @Override
-    public void entityRef(String text) throws IOException, IllegalArgumentException, IllegalStateException {
+    public void entityRef(String text) throws IllegalArgumentException, IllegalStateException {
         appendText(XMLUtil.decodeEntityRef(text));
     }
 
     @Override
-    public void processingInstruction(String text) throws IOException, IllegalArgumentException, IllegalStateException {
+    public void processingInstruction(String text) throws IllegalArgumentException, IllegalStateException {
 
     }
 
     @Override
-    public void comment(String text) throws IOException, IllegalArgumentException, IllegalStateException {
+    public void comment(String text) throws IllegalArgumentException, IllegalStateException {
         XMLNodeTree nodeTree = getCurrentNode();
         XMLComment xmlComment = nodeTree.newComment();
         nodeTree.add(xmlComment);
@@ -224,17 +224,17 @@ public class DocumentSerializer implements XmlSerializer {
     }
 
     @Override
-    public void docdecl(String text) throws IOException, IllegalArgumentException, IllegalStateException {
+    public void docdecl(String text) throws IllegalArgumentException, IllegalStateException {
 
     }
 
     @Override
-    public void ignorableWhitespace(String text) throws IOException, IllegalArgumentException, IllegalStateException {
+    public void ignorableWhitespace(String text) throws IllegalArgumentException, IllegalStateException {
 
     }
 
     @Override
-    public void flush() throws IOException {
+    public void flush() {
 
     }
 

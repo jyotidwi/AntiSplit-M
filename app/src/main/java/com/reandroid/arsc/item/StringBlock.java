@@ -18,7 +18,6 @@ package com.reandroid.arsc.item;
 import com.reandroid.utils.StringsUtil;
 
 import java.nio.charset.CharsetDecoder;
-import java.nio.charset.StandardCharsets;
 
 public abstract class StringBlock extends BlockItem{
 
@@ -42,12 +41,12 @@ public abstract class StringBlock extends BlockItem{
         this.mCache = text;
         byte[] bytes = encodeString(text);
         setBytesInternal(bytes, false);
-        onStringChanged(old, text);
+        onStringChanged();
     }
     protected void onBytesChanged(){
         mCache = decodeString(getBytesInternal());
     }
-    protected void onStringChanged(String old, String text){
+    protected void onStringChanged(){
     }
     protected abstract String decodeString(byte[] bytes);
     protected abstract byte[] encodeString(String text);
@@ -63,5 +62,5 @@ public abstract class StringBlock extends BlockItem{
         return get();
     }
 
-    public static final CharsetDecoder UTF8_DECODER = StandardCharsets.UTF_8.newDecoder();
+    public static final CharsetDecoder UTF8_DECODER = com.abdurazaaqmohammed.AntiSplit.main.LegacyUtils.UTF_8.newDecoder();
 }

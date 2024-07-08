@@ -46,8 +46,8 @@ public class FileUtils {
     https://github.com/starry-shivam/FileUtils/blob/main/file-utils/src/main/java/com/starry/file_utils/FileUtils.kt
      */
 
-    private static String FALLBACK_COPY_FOLDER = "upload_part";
-    private Context context;
+    private static final String FALLBACK_COPY_FOLDER = "upload_part";
+    private final Context context;
 
     public FileUtils(Context context) {
         this.context = context;
@@ -234,7 +234,7 @@ public class FileUtils {
                     outputStream.write(buffers, 0, read);
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException ignored) {
         }
         return file.getPath();
     }
@@ -267,7 +267,7 @@ public class FileUtils {
                     outputStream.write(buffers, 0, read);
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException ignored) {
         }
         return output.getPath();
     }

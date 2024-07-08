@@ -48,8 +48,4 @@ public class ShortOffsetArray extends ShortArrayBlock implements OffsetArray {
         }
         return result;
     }
-    @Override
-    public void clear(){
-        super.setSize(0);
-    }
 }

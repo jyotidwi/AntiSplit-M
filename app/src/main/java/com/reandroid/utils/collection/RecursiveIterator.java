@@ -17,21 +17,20 @@ package com.reandroid.utils.collection;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import com.abdurazaaqmohammed.AntiSplit.main.Function;
 
 public class RecursiveIterator<T> implements Iterator<T> {
 
     private T item;
     private final Function<T, Iterator<? extends T>> function;
-    private final Predicate<? super T> filter;
+    private final com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super T> filter;
 
     private boolean firstProcessed;
     private T current;
     private Iterator<? extends T> currentIterator;
     private RecursiveIterator<T> currentRecursiveIterator;
 
-    public RecursiveIterator(T item, Function<T, Iterator<? extends T>> function, Predicate<? super T> filter){
+    public RecursiveIterator(T item, Function<T, Iterator<? extends T>> function, com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super T> filter){
         this.item = item;
         this.function = function;
         this.filter = filter;
@@ -118,11 +117,11 @@ public class RecursiveIterator<T> implements Iterator<T> {
         if(element == null){
             return false;
         }
-        Predicate<? super T> filter = this.filter;
+        com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super T> filter = this.filter;
         return filter == null || filter.test(element);
     }
 
-    public static<T1> Iterator<T1> of(T1 item, Function<T1, Iterator<? extends T1>> function, Predicate<? super T1> filter){
+    public static<T1> Iterator<T1> of(T1 item, Function<T1, Iterator<? extends T1>> function, com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super T1> filter){
         return new RecursiveIterator<>(item, function, filter);
     }
     public static<T1> Iterator<T1> of(T1 item, Function<T1, Iterator<? extends T1>> function){
@@ -133,7 +132,7 @@ public class RecursiveIterator<T> implements Iterator<T> {
         return compute(item, function, null, computer);
     }
     @SuppressWarnings("unchecked")
-    public static<T1, E> Iterator<E> compute(T1 item, Function<T1, Iterator<? extends T1>> function, Predicate<? super T1> filter, Function<T1, Iterator<? extends E>> computer){
+    public static<T1, E> Iterator<E> compute(T1 item, Function<T1, Iterator<? extends T1>> function, com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super T1> filter, Function<T1, Iterator<? extends E>> computer){
         return new IterableIterator<T1, E>(new RecursiveIterator<>(item, function, filter)) {
             @Override
             public Iterator<E> iterator(T1 element) {

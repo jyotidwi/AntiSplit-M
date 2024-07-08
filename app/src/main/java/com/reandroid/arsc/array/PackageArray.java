@@ -25,7 +25,6 @@ import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
 
-import java.io.IOException;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Objects;
@@ -136,7 +135,7 @@ public class PackageArray extends BlockArray<PackageBlock>
     }
 
     @Override
-    public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
+    public void onBlockLoaded(Block sender) {
         if(sender != mPackageCount){
             return;
         }

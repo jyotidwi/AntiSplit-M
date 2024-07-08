@@ -17,8 +17,6 @@ package com.reandroid.arsc.io;
 
 import com.reandroid.arsc.base.Block;
 
-import java.io.IOException;
-
-public interface BlockLoad {
-    void onBlockLoaded(BlockReader reader, Block sender) throws IOException;
+ public interface BlockLoad {
+    void onBlockLoaded(Block sender);
 }

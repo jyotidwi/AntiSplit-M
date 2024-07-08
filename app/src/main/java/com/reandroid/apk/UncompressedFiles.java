@@ -222,7 +222,7 @@ public class UncompressedFiles implements JSONConvert<JSONObject> {
     public static final String JSON_FILE = "uncompressed-files.json";
     public static final String NAME_paths = "paths";
     public static final String NAME_extensions = "extensions";
-    public static String[] COMMON_EXTENSIONS=new String[]{
+    public static final String[] COMMON_EXTENSIONS=new String[]{
             ".png",
             ".jpg",
             ".mp3",

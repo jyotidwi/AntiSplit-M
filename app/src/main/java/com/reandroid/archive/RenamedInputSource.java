@@ -15,7 +15,6 @@
   */
 package com.reandroid.archive;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -56,10 +55,7 @@ public class RenamedInputSource<T extends InputSource> extends InputSource {
     public long getCrc() throws IOException {
         return getInputSource().getCrc();
     }
-    @Override
-    public void write(File file) throws IOException {
-        getInputSource().write(file);
-    }
+
     @Override
     public long write(OutputStream outputStream) throws IOException {
         return getInputSource().write(outputStream);

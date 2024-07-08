@@ -29,7 +29,6 @@ import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -157,7 +156,7 @@ public class PackageIdentifier extends IdentifierMap<TypeIdentifier>{
     }
     public void writePublicXml(OutputStream outputStream) throws IOException {
         XmlSerializer serializer = XMLFactory.newSerializer(outputStream);
-        serializer.setOutput(outputStream, StandardCharsets.UTF_8.name());
+        serializer.setOutput(outputStream, com.abdurazaaqmohammed.AntiSplit.main.LegacyUtils.UTF_8.name());
         write(serializer);
     }
     public void write(XmlSerializer serializer) throws IOException {

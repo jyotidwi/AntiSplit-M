@@ -21,7 +21,7 @@ import com.reandroid.utils.CompareUtil;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.List;
 
 public class DexFileInputSource extends RenamedInputSource<InputSource> implements Comparable<DexFileInputSource>{
@@ -37,16 +37,11 @@ public class DexFileInputSource extends RenamedInputSource<InputSource> implemen
     }
 
     public static void sort(List<DexFileInputSource> sourceList){
-        sourceList.sort(CompareUtil.getComparableComparator());
+        Collections.sort(sourceList, CompareUtil.getComparableComparator());
     }
 
     public static void sortDexFiles(List<File> fileList){
-        fileList.sort(new Comparator<File>() {
-            @Override
-            public int compare(File file1, File file2) {
-                return InputSource.compareDex(file1.getName(), file2.getName());
-            }
-        });
+        Collections.sort(fileList, (file1, file2) -> InputSource.compareDex(file1.getName(), file2.getName()));
     }
     public static List<File> listDexFiles(File dir){
         List<File> results = new ArrayList<>();

@@ -15,10 +15,12 @@
  */
 package com.reandroid.common;
 
+import android.os.Build;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
@@ -52,11 +54,11 @@ public class FileChannelInputStream extends InputStream {
         this(fileChannel, length, DEFAULT_BUFFER_SIZE);
     }
     public FileChannelInputStream(File file, long length, int bufferSize) throws IOException {
-        this(FileChannel.open(file.toPath(), StandardOpenOption.READ), length, bufferSize);
+        this((Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? FileChannel.open(file.toPath(), StandardOpenOption.READ) : new RandomAccessFile(file, "r").getChannel(), length, bufferSize);
         this.mAutoClosable = true;
     }
     public FileChannelInputStream(File file) throws IOException {
-        this(FileChannel.open(file.toPath(), StandardOpenOption.READ), file.length());
+        this((Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ? FileChannel.open(file.toPath(), StandardOpenOption.READ) : new RandomAccessFile(file, "r").getChannel(), file.length());
         this.mAutoClosable = true;
     }
 
@@ -136,25 +138,7 @@ public class FileChannelInputStream extends InputStream {
         }
         return bytes[0] & 0xff;
     }
-    public long transferTo(OutputStream out) throws IOException{
-        long transferred = 0;
-        if(isFinished()){
-            return transferred;
-        }
-        while (!isFinished()){
-            loadBuffer();
-            int offset = bufferPosition;
-            int length = bufferLength - bufferPosition;
-            if(length <= 0){
-                break;
-            }
-            out.write(buffer, offset, length);
-            bufferPosition += length;
-            position += length;
-            transferred += length;
-        }
-        return transferred;
-    }
+
     @Override
     public long skip(long amount) throws IOException {
         if(amount <= 0){
@@ -184,13 +168,7 @@ public class FileChannelInputStream extends InputStream {
         position += availableBuffer;
         return availableBuffer;
     }
-    public FileChannel getFileChannel() {
-        return fileChannel;
-    }
 
-    public void setAutoClosable(boolean autoClosable) {
-        this.mAutoClosable = autoClosable;
-    }
     private void closeAuto() throws IOException {
         if(mAutoClosable && !mIsClosed){
             mIsClosed = true;

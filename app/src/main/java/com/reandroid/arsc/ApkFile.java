@@ -32,7 +32,6 @@ public interface ApkFile {
     void add(InputSource inputSource);
     boolean containsFile(String path);
     InputSource getInputSource(String path);
-    ResXmlDocument getResXmlDocument(String path);
     ResXmlDocument loadResXmlDocument(String path) throws IOException;
     default void mergeWithName(ResourceMergeOption mergeOption, ApkFile apkFile, String path){
         mergeOption.mergeFileWithName(apkFile, this, path);

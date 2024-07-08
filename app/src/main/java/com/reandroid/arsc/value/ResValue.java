@@ -41,7 +41,7 @@ public class ResValue extends ValueItem  {
         setType(type);
         setData(data);
         if(compact){
-            setRes0((byte) 0);
+            setRes0();
         }
     }
 

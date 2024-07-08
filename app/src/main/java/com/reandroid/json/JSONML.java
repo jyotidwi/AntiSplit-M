@@ -152,12 +152,6 @@ public class JSONML {
                         if (x.nextToken() != XML.GT) {
                             throw x.syntaxError("Misshaped tag");
                         }
-                        if (ja == null) {
-                            if (arrayForm) {
-                                return newja;
-                            }
-                            return newjo;
-                        }
 
 // Content, between <...> and </...>
 
@@ -166,22 +160,20 @@ public class JSONML {
                             throw x.syntaxError("Misshaped tag");
                         }
                         closeTag = (String)parse(x, arrayForm, newja, keepStrings);
-                        if (closeTag != null) {
-                            if (!closeTag.equals(tagName)) {
-                                throw x.syntaxError("Mismatched '" + tagName +
-                                        "' and '" + closeTag + "'");
-                            }
-                            tagName = null;
-                            if (!arrayForm && newja.length() > 0) {
-                                newjo.put("childNodes", newja);
-                            }
-                            if (ja == null) {
-                                if (arrayForm) {
-                                    return newja;
-                                }
-                                return newjo;
-                            }
+                        if (!closeTag.equals(tagName)) {
+                            throw x.syntaxError("Mismatched '" + tagName +
+                                    "' and '" + closeTag + "'");
                         }
+                        tagName = null;
+                        if (!arrayForm && newja.length() > 0) {
+                            newjo.put("childNodes", newja);
+                        }
+                    }
+                    if (ja == null) {
+                        if (arrayForm) {
+                            return newja;
+                        }
+                        return newjo;
                     }
                 }
             } else {
@@ -338,7 +330,7 @@ public class JSONML {
                     } else if (object instanceof JSONArray) {
                         sb.append(toString((JSONArray)object));
                     } else {
-                        sb.append(object.toString());
+                        sb.append(object);
                     }
                 }
             } while (i < length);
@@ -407,7 +399,7 @@ public class JSONML {
                     } else if (object instanceof JSONArray) {
                         sb.append(toString((JSONArray)object));
                     } else {
-                        sb.append(object.toString());
+                        sb.append(object);
                     }
                 }
             }

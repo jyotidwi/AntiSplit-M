@@ -62,8 +62,7 @@ public class StringPoolMerger implements Comparator<String> {
         List<TableString> styledStrings = getStyledStrings();
         Map<String, TableString> mapTableStrings =
                 destination.insertStrings(toStringList(styledStrings));
-        Map<String, TableString> mapTags =
-                destination.insertStrings(listStyleTags(styledStrings));
+        destination.insertStrings(listStyleTags(styledStrings));
 
         StyleArray styleArray = destination.getStyleArray();
         styleArray.setSize(styledStrings.size());
@@ -110,7 +109,7 @@ public class StringPoolMerger implements Comparator<String> {
             }
         }
         List<String> results=new ArrayList<>(uniqueSet);
-        results.sort(this);
+        Collections.sort(results, this);
         return results;
     }
     private List<String> toStringList(Collection<TableString> tableStringList){
@@ -121,7 +120,7 @@ public class StringPoolMerger implements Comparator<String> {
                 results.add(str);
             }
         }
-        results.sort(this);
+        Collections.sort(results,this);
         return results;
     }
     private List<String> listStyleTags(List<TableString> styledStrings){
@@ -138,7 +137,7 @@ public class StringPoolMerger implements Comparator<String> {
             }
         }
         List<String> results=new ArrayList<>(resultSet);
-        results.sort(this);
+        Collections.sort(results,this);
         return results;
     }
     @Override

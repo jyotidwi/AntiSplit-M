@@ -178,11 +178,11 @@ public class Merger {
         AndroidManifestHelper.removeAttributeFromManifestByName(manifest,
                 AndroidManifest.NAME_splitTypes);
         AndroidManifestHelper.removeAttributeFromManifestAndApplication(manifest,
-                AndroidManifest.ID_extractNativeLibs,
-                 AndroidManifest.NAME_extractNativeLibs);
+                AndroidManifest.ID_extractNativeLibs
+        );
         AndroidManifestHelper.removeAttributeFromManifestAndApplication(manifest,
-                AndroidManifest.ID_isSplitRequired,
-                 AndroidManifest.NAME_isSplitRequired);
+                AndroidManifest.ID_isSplitRequired
+        );
         ResXmlElement application = manifest.getApplicationElement();
         List<ResXmlElement> splitMetaDataElements =
                 AndroidManifestHelper.listSplitRequired(application);
@@ -253,7 +253,7 @@ public class Merger {
     public static void run(InputStream ins, File cacheDir, OutputStream out, Uri xapkUri, Context context, boolean showDialog, WeakReference<MainActivity> act) throws IOException {
         LogUtil.logMessage("Searching apk files ...");
 
-        if(showDialog) act.get().showApkSelectionDialog(extractZipWithList(ins, cacheDir, xapkUri, context), context, cacheDir, out);
+        if(showDialog) act.get().showApkSelectionDialog(extractZipWithList(ins, cacheDir, xapkUri, context), context, out);
         else {
             extractZip(ins, cacheDir, xapkUri, context);
 
@@ -262,7 +262,7 @@ public class Merger {
             LogUtil.logMessage("Found modules: " + bundle.getApkModuleList().size());
 
             ApkModule mergedModule = bundle.mergeModules();
-            sanitizeManifest(mergedModule);
+            //sanitizeManifest(mergedModule);
             LogUtil.logMessage("Saving...");
 
             mergedModule.writeApk(out);

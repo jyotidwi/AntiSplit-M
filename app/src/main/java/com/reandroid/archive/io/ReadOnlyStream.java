@@ -19,6 +19,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public interface ReadOnlyStream extends RandomStream{
-    long getLength() throws IOException;
+    long getLength();
     InputStream getInputStream(long offset, long length) throws IOException;
 }

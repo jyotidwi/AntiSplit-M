@@ -28,7 +28,6 @@ import com.reandroid.common.Namespace;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.arsc.value.AttributeValue;
 import com.reandroid.arsc.value.ValueType;
-import com.reandroid.arsc.value.attribute.AttributeBag;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
@@ -749,18 +748,16 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
             }
             return fullName+"["+valueType+"]=\""+ getData()+"\"";
         }
-        StringBuilder builder= new StringBuilder();
-        builder.append(getClass().getSimpleName());
-        builder.append(": ");
-        builder.append(getIndex());
-        builder.append("{NamespaceReference=").append(getNamespaceReference());
-        builder.append(", NameReference=").append(getNameReference());
-        builder.append(", ValueStringReference=").append(getValueStringReference());
-        builder.append(", ValueSize=").append(getSize());
-        builder.append(", ValueTypeByte=").append(getType() & 0xff);
-        builder.append(", Data=").append(getData());
-        builder.append("}");
-        return builder.toString();
+        return getClass().getSimpleName() +
+                ": " +
+                getIndex() +
+                "{NamespaceReference=" + getNamespaceReference() +
+                ", NameReference=" + getNameReference() +
+                ", ValueStringReference=" + getValueStringReference() +
+                ", ValueSize=" + getSize() +
+                ", ValueTypeByte=" + (getType() & 0xff) +
+                ", Data=" + getData() +
+                "}";
     }
 
 

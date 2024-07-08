@@ -17,18 +17,17 @@ package com.reandroid.utils.collection;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.function.Predicate;
 
 public class ArrayIterator<T> implements Iterator<T>, SizedItem, SizedIterator{
 
     private final Object[] elements;
     private final int mStart;
     private final int mLength;
-    private final Predicate<? super T> mFilter;
+    private final com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super T> mFilter;
     private int index;
     private T mNext;
 
-    public ArrayIterator(Object[] elements, int start, int length, Predicate<? super T> filter){
+    public ArrayIterator(Object[] elements, int start, int length, com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super T> filter){
         this.elements = elements;
         this.mStart = start;
         this.mLength = length;
@@ -37,7 +36,7 @@ public class ArrayIterator<T> implements Iterator<T>, SizedItem, SizedIterator{
     public ArrayIterator(Object[] elements, int start, int length){
         this(elements, start, length, null);
     }
-    public ArrayIterator(Object[] elements, Predicate<? super T> filter){
+    public ArrayIterator(Object[] elements, com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super T> filter){
         this(elements, 0, elements.length, filter);
     }
     public ArrayIterator(Object[] elements){
@@ -93,7 +92,7 @@ public class ArrayIterator<T> implements Iterator<T>, SizedItem, SizedIterator{
         }
         return new ArrayIterator<>(elements);
     }
-    public static<T1> Iterator<T1> of(Object[] elements, Predicate<? super T1> filter){
+    public static<T1> Iterator<T1> of(Object[] elements, com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super T1> filter){
         if(isEmpty(elements)){
             return EmptyIterator.of();
         }
@@ -106,7 +105,7 @@ public class ArrayIterator<T> implements Iterator<T>, SizedItem, SizedIterator{
         return new ArrayIterator<>(elements, start, length);
     }
     private static boolean isEmpty(Object[] elements){
-        if(elements == null || elements.length == 0){
+        if(elements == null){
             return true;
         }
         for(Object element : elements){

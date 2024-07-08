@@ -23,32 +23,45 @@ import com.reandroid.arsc.coder.CommonType;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.PackageBody;
 import com.reandroid.arsc.container.SpecTypePair;
-import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.header.PackageHeader;
+import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.list.OverlayableList;
 import com.reandroid.arsc.list.StagedAliasList;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.model.ResourceLibrary;
 import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.pool.TypeStringPool;
 import com.reandroid.arsc.refactor.ResourceMergeOption;
-import com.reandroid.arsc.value.*;
+import com.reandroid.arsc.value.AttributeValue;
+import com.reandroid.arsc.value.Entry;
+import com.reandroid.arsc.value.LibraryInfo;
+import com.reandroid.arsc.value.ResConfig;
+import com.reandroid.arsc.value.StagedAliasEntry;
+import com.reandroid.arsc.value.ValueItem;
+import com.reandroid.arsc.value.ValueType;
 import com.reandroid.common.Namespace;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
-import com.reandroid.utils.*;
-import com.reandroid.utils.collection.*;
-import com.reandroid.utils.io.IOUtil;
+import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.IterableIterator;
+import com.reandroid.utils.collection.MergingIterator;
+
 import org.xmlpull.v1.XmlSerializer;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.*;
-import java.util.function.Predicate;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 
 public class PackageBlock extends Chunk<PackageHeader>
@@ -281,9 +294,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         setId(0);
         setName("");
     }
-    public int resolveResourceId(String type, String name){
-        return getSpecStringPool().resolveResourceId(type, name);
-    }
+
     public int resolveResourceId(int typeId, String name){
         return getSpecStringPool().resolveResourceId(typeId, name);
     }
@@ -490,8 +501,8 @@ public class PackageBlock extends Chunk<PackageHeader>
     public int typeIdOf(String typeName){
         return getTypeStringPool().idOf(typeName);
     }
-    public TypeString getOrCreateTypeString(int typeId, String typeName){
-        return getTypeStringPool().getOrCreate(typeId, typeName);
+    public void getOrCreateTypeString(int typeId, String typeName){
+        getTypeStringPool().getOrCreate(typeId, typeName);
     }
     public TypeStringPool getTypeStringPool(){
         return mTypeStringPool;
@@ -552,28 +563,12 @@ public class PackageBlock extends Chunk<PackageHeader>
     public Entry getEntry(byte typeId, short entryId, String qualifiers){
         return getSpecTypePairArray().getEntry(typeId, entryId, qualifiers);
     }
-    public TypeBlock getOrCreateTypeBlock(byte typeId, String qualifiers){
-        return getSpecTypePairArray().getOrCreateTypeBlock(typeId, qualifiers);
-    }
-    public TypeBlock getTypeBlock(byte typeId, String qualifiers){
-        return getSpecTypePairArray().getTypeBlock(typeId, qualifiers);
-    }
 
     private Iterator<SpecTypePair> getAttrSpecs(){
-        return getSpecTypePairArray().iterator(new Predicate<SpecTypePair>() {
-            @Override
-            public boolean test(SpecTypePair specTypePair) {
-                return specTypePair != null && specTypePair.isTypeAttr();
-            }
-        });
+        return getSpecTypePairArray().iterator(specTypePair -> specTypePair != null && specTypePair.isTypeAttr());
     }
     private Iterator<SpecTypePair> getIdSpecs(){
-        return getSpecTypePairArray().iterator(new Predicate<SpecTypePair>() {
-            @Override
-            public boolean test(SpecTypePair specTypePair) {
-                return specTypePair != null && specTypePair.isTypeId();
-            }
-        });
+        return getSpecTypePairArray().iterator(specTypePair -> specTypePair != null && specTypePair.isTypeId());
     }
     public SpecTypePair getSpecTypePair(String typeName){
         return getSpecTypePair(typeIdOf(typeName));
@@ -584,10 +579,6 @@ public class PackageBlock extends Chunk<PackageHeader>
 
     public Collection<SpecTypePair> listSpecTypePairs(){
         return getSpecTypePairArray().listItems();
-    }
-    public Iterator<ResConfig> getResConfigs(){
-        return new MergingIterator<>(new ComputeIterator<>(getSpecTypePairs(),
-                SpecTypePair::getResConfigs));
     }
     public Iterator<SpecTypePair> getSpecTypePairs(){
         return getSpecTypePairArray().iterator();
@@ -607,9 +598,6 @@ public class PackageBlock extends Chunk<PackageHeader>
     private void refreshSpecStringCount(){
         getHeaderBlock().getSpecStringPoolCount().set(mSpecStringPool.size());
     }
-    @Override
-    public void onChunkLoaded() {
-    }
 
     @Override
     protected void onChunkRefreshed() {
@@ -619,24 +607,6 @@ public class PackageBlock extends Chunk<PackageHeader>
         refreshSpecStringCount();
     }
 
-    public void serializePublicXml(XmlSerializer serializer) throws IOException {
-        serializePublicXml(serializer, true);
-    }
-    public void serializePublicXml(XmlSerializer serializer, boolean fullDocument) throws IOException {
-        if(fullDocument){
-            serializer.startDocument("utf-8", null);
-            serializer.text("\n");
-            serializer.startTag(null, TAG_resources);
-            writePackageInfo(serializer);
-        }
-        serializePublicXmlTypes(serializer);
-        if(fullDocument){
-            serializer.text("\n");
-            serializer.endTag(null, TAG_resources);
-            serializer.endDocument();
-            IOUtil.close(serializer);
-        }
-    }
     private void serializePublicXmlTypes(XmlSerializer serializer) throws IOException {
         Iterator<SpecTypePair> iterator = getSpecTypePairs();
         while (iterator.hasNext()){
@@ -792,10 +762,10 @@ public class PackageBlock extends Chunk<PackageHeader>
     }
     public static boolean isResourceId(int resourceId){
         if(resourceId == 0){
-            return false;
+            return true;
         }
-        return (resourceId & 0x00ff0000) != 0
-                && (resourceId & 0xff000000) != 0;
+        return (resourceId & 0x00ff0000) == 0
+                || (resourceId & 0xff000000) == 0;
     }
 
     public static void changePackageId(ValueItem valueItem, int packageIdOld, int packageIdNew){
@@ -806,7 +776,7 @@ public class PackageBlock extends Chunk<PackageHeader>
     }
     private static void changePackageIdName(int packageIdOld, int packageIdNew, AttributeValue value){
         int resourceId = value.getNameId();
-        if(!isResourceId(resourceId)){
+        if(isResourceId(resourceId)){
             return;
         }
         int id = (resourceId >> 24) & 0xff;
@@ -824,7 +794,7 @@ public class PackageBlock extends Chunk<PackageHeader>
             return;
         }
         int resourceId = valueItem.getData();
-        if(!isResourceId(resourceId)){
+        if(isResourceId(resourceId)){
             return;
         }
         int id = (resourceId >> 24) & 0xff;

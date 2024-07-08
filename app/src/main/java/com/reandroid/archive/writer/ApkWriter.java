@@ -15,7 +15,6 @@
  */
 package com.reandroid.archive.writer;
 
-import com.reandroid.apk.APKLogger;
 import com.reandroid.archive.ArchiveInfo;
 import com.reandroid.archive.InputSource;
 import com.reandroid.archive.WriteProgress;
@@ -59,14 +58,9 @@ public abstract class ApkWriter<T extends ZipOutput, OUT extends OutputSource> i
         }
     }
     private void writeApkList(OUT[] outputList) throws IOException{
-        int length = outputList.length;
         ZipAligner zipAligner = getZipAligner();
-        for(int i = 0; i < length; i++){
-            OUT out = outputList[i];
+        for (OUT out : outputList) {
             writeApk(out, zipAligner);
-            if(i % 100 == 0){
-                out.logFileWrite();
-            }
         }
     }
     void closeBuffer() throws IOException{
@@ -80,8 +74,7 @@ public abstract class ApkWriter<T extends ZipOutput, OUT extends OutputSource> i
         endRecord.setNumberOfDirectories(count);
         endRecord.setTotalNumberOfDirectories(count);
         ZipOutput zipOutput = getZipOutput();
-        for(int i = 0; i < count; i++){
-            OUT outputSource = outputList[i];
+        for (OUT outputSource : outputList) {
             outputSource.writeCEH(zipOutput);
         }
         long cedLength = position() - offset;

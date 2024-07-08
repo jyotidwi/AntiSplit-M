@@ -15,10 +15,11 @@
  */
 package com.reandroid.utils.collection;
 
+import static com.abdurazaaqmohammed.AntiSplit.main.LegacyUtils.copyOfArray;
+
 import com.reandroid.common.ArraySupplier;
 
 import java.util.*;
-import java.util.function.Predicate;
 
 public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T> {
 
@@ -84,7 +85,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T> {
     public ArrayCollection<T> copy(){
         return new ArrayCollection<>(toArray().clone());
     }
-    public ArrayCollection<T> filter(Predicate<? super T> filter){
+    public ArrayCollection<T> filter(com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super T> filter){
         int count = count(filter);
         if(count == size()){
             return this;
@@ -103,10 +104,10 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T> {
         collection.addAll(this.iterator(instance));
         return collection;
     }
-    public int count(Predicate<? super T> filter){
+    public int count(com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super T> filter){
         return count(filter, size());
     }
-    public int count(Predicate<? super T> filter, int limit){
+    public int count(com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super T> filter, int limit){
         int result = 0;
         int size = size();
         for(int i = 0; i < size; i++){
@@ -274,7 +275,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T> {
     public<T1> Iterator<T1> iterator(Class<T1> instance){
         return InstanceIterator.of(iterator(), instance);
     }
-    public Iterator<T> iterator(Predicate<? super T> filter){
+    public Iterator<T> iterator(com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super T> filter){
         return FilterIterator.of(iterator(), filter);
     }
     @Override
@@ -329,7 +330,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T> {
             }
             return out;
         }
-        return (T1[]) Arrays.copyOf(elements, size, out.getClass());
+        return (T1[]) copyOfArray(elements, size, out.getClass());
     }
 
     public T removeItem(Object item){
@@ -356,9 +357,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T> {
         }
         Object[] result = getNewArray(length);
         Object[] elements = this.mElements;
-        for(int i = start; i < end; i ++){
-            result[i] = elements[i];
-        }
+        if (end - start >= 0) System.arraycopy(elements, start, result, start, end - start);
         return new ArrayCollection<>(result);
     }
 
@@ -499,7 +498,6 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T> {
             add(iterator.next());
         }
     }
-    @SuppressWarnings("unchecked")
     public void addIterable(Iterable<? extends T> iterable){
         if(iterable == null){
             return;
@@ -623,18 +621,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T> {
     public boolean remove(Object obj) {
         return removeItem(obj) != null;
     }
-    @Override
-    public boolean removeIf(Predicate<? super T> filter){
-        boolean removed = false;
-        for(int i = 0; i < this.size(); i++){
-            if(filter.test(get(i))){
-                remove(i);
-                i--;
-                removed = true;
-            }
-        }
-        return removed;
-    }
+
     @Override
     public boolean add(T item){
         if (item == null ){
@@ -664,16 +651,15 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T> {
         this.mLocked = locked;
         onChanged();
     }
-    public boolean swap(int i1, int i2){
+    public void swap(int i1, int i2){
         if(i1 == i2){
-            return false;
+            return;
         }
         Object[] elements = this.mElements;
         Object item = elements[i1];
         elements[i1] = elements[i2];
         elements[i2] = item;
         onChanged();
-        return true;
     }
     public void move(int from, int to){
         if(from == to){
@@ -807,9 +793,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T> {
         return update;
     }
     private void arrayCopy(Object[] source, Object[] destination, int length){
-        for(int i = 0; i < length; i++){
-            destination[i] = source[i];
-        }
+        if (length >= 0) System.arraycopy(source, 0, destination, 0, length);
     }
     private Object[] getNewArray(Object[] source, int length){
         Object[] result = getNewArray(length);
@@ -998,7 +982,6 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T> {
         return collection;
     }
 
-    @SuppressWarnings("unchecked")
     public static<T> ArrayCollection<T> empty(){
         return (ArrayCollection<T>) EMPTY;
     }

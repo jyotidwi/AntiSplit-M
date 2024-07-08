@@ -93,7 +93,7 @@ public class FrameworkTable extends TableBlock {
             PackageBlock packageBlock = pickOne();
             if(packageBlock!=null){
                 String name = packageBlock.getName();
-                if(name!=null && !name.trim().isEmpty()){
+                if(name!=null && name.trim().length() != 0){
                     frameworkName = name;
                 }
             }
@@ -215,7 +215,7 @@ public class FrameworkTable extends TableBlock {
             entry.setNull(true);
         }
     }
-    private TableString writeProperty(String name, String value){
+    private void writeProperty(String name, String value){
         if(!name.endsWith(":")){
             name=name+":";
         }
@@ -232,7 +232,6 @@ public class FrameworkTable extends TableBlock {
             TableStringPool tableStringPool=getStringPool();
             tableString=tableStringPool.getOrCreate(value);
         }
-        return tableString;
     }
     private String loadProperty(String name){
         if(name==null){
@@ -256,8 +255,7 @@ public class FrameworkTable extends TableBlock {
             name=name+":";
         }
         TableStringPool tableStringPool=getStringPool();
-        int max=PROP_COUNT;
-        for(int i=0;i<max;i++){
+        for(int i = 0; i< PROP_COUNT; i++){
             TableString tableString=tableStringPool.get(i);
             if(tableString==null){
                 break;

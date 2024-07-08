@@ -39,7 +39,7 @@ public class ApkByteWriter extends ApkWriter<ZipByteOutput, ByteOutputSource>{
         outputSource.writeApk(getZipOutput(), zipAligner);
     }
     @Override
-    void prepareOutputs(ByteOutputSource[] outList) throws IOException {
+    void prepareOutputs(ByteOutputSource[] outList) {
     }
     @Override
     ByteOutputSource toOutputSource(InputSource inputSource) {

@@ -37,16 +37,16 @@ public class CrcOutputStream extends OutputStream {
         return mCheckSum;
     }
     @Override
-    public void write(int b) throws IOException {
+    public void write(int b) {
         this.crc.update(b);
         length=length+1;
     }
     @Override
-    public void write(byte[] b) throws IOException {
+    public void write(byte[] b) {
         this.write(b, 0, b.length);
     }
     @Override
-    public void write(byte[] b, int off, int len) throws IOException {
+    public void write(byte[] b, int off, int len) {
         this.crc.update(b, off, len);
         length=length+len;
     }

@@ -23,7 +23,7 @@ import com.reandroid.utils.collection.FilterIterator;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Predicate;
+import com.abdurazaaqmohammed.AntiSplit.main.Predicate;
 
 public interface ResXmlNodeTree extends Iterable<ResXmlNode>, JSONConvert<JSONObject> {
 
@@ -42,7 +42,7 @@ public interface ResXmlNodeTree extends Iterable<ResXmlNode>, JSONConvert<JSONOb
             return;
         }
         BlockList<ResXmlNode> blockList = getNodeListBlockInternal();
-        if(!blockList.containsExact(resXmlNode)) {
+        if(blockList.containsExact(resXmlNode)) {
             blockList.add(resXmlNode);
         }
     }
@@ -51,12 +51,12 @@ public interface ResXmlNodeTree extends Iterable<ResXmlNode>, JSONConvert<JSONOb
             return;
         }
         BlockList<ResXmlNode> blockList = getNodeListBlockInternal();
-        if(!blockList.containsExact(resXmlNode)) {
+        if(blockList.containsExact(resXmlNode)) {
             blockList.add(index, resXmlNode);
         }
     }
-    default int removeIf(Predicate<? super ResXmlNode> predicate) {
-        return getNodeListBlockInternal().remove(predicate);
+    default int removeIf(Predicate<? super ResXmlNode> Predicate) {
+        return getNodeListBlockInternal().remove(Predicate);
     }
     default boolean remove(ResXmlNode xmlNode) {
         if(xmlNode != null && xmlNode.getParent() != null){
@@ -74,8 +74,8 @@ public interface ResXmlNodeTree extends Iterable<ResXmlNode>, JSONConvert<JSONOb
     }
 
 
-    default Iterator<ResXmlNode> iterator(Predicate<? super ResXmlNode> predicate){
-        return getNodeListBlockInternal().iterator(predicate);
+    default Iterator<ResXmlNode> iterator(com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super ResXmlNode> Predicate){
+        return getNodeListBlockInternal().iterator(Predicate);
     }
     default <T1 extends ResXmlNode> Iterator<T1> iterator(Class<T1> instance){
         return getNodeListBlockInternal().iterator(instance);
@@ -83,7 +83,7 @@ public interface ResXmlNodeTree extends Iterable<ResXmlNode>, JSONConvert<JSONOb
     default Iterator<ResXmlElement> getElements(){
         return iterator(ResXmlElement.class);
     }
-    default Iterator<ResXmlElement> getElements(Predicate<? super ResXmlElement> filter){
+    default Iterator<ResXmlElement> getElements(com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super ResXmlElement> filter){
         return FilterIterator.of(getElements(), filter);
     }
     default Iterator<ResXmlElement> getElements(String name){

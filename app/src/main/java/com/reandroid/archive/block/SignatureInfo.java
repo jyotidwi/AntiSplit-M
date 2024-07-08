@@ -75,7 +75,7 @@ public class SignatureInfo extends LengthPrefixedBlock implements BlockLoad {
     }
 
     @Override
-    public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
+    public void onBlockLoaded(Block sender) {
         if(sender == this.idItem){
             onIdLoaded();
         }

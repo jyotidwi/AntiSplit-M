@@ -189,7 +189,7 @@ public class KXmlParser implements XmlPullParser, Closeable {
         this.keepNamespaceAttributes = true;
     }
 
-    private boolean adjustNsp() throws XmlPullParserException {
+    private void adjustNsp() throws XmlPullParserException {
         boolean any = false;
 
         for (int i = 0; i < attributeCount << 2; i += 4) {
@@ -216,7 +216,7 @@ public class KXmlParser implements XmlPullParser, Closeable {
                 nspStack[j] = attrName;
                 nspStack[j + 1] = attributes[i + 3];
 
-                if (attrName != null && attributes[i + 3].isEmpty()) {
+                if (attrName != null && attributes[i + 3].length() == 0) {
                     checkRelaxed("illegal empty namespace");
                 }
 
@@ -286,7 +286,6 @@ public class KXmlParser implements XmlPullParser, Closeable {
             this.namespace = NO_NAMESPACE;
         }
 
-        return any;
     }
 
     private String[] ensureCapacity(String[] arr, int required) {
@@ -382,7 +381,7 @@ public class KXmlParser implements XmlPullParser, Closeable {
                 case ENTITY_REF:
                     if (justOneToken) {
                         StringBuilder entityTextBuilder = new StringBuilder();
-                        readEntity(entityTextBuilder, true, throwOnResolveFailure, ValueContext.TEXT);
+                        readEntity(entityTextBuilder, true, false, ValueContext.TEXT);
                         text = entityTextBuilder.toString();
                         break;
                     }
@@ -444,7 +443,7 @@ public class KXmlParser implements XmlPullParser, Closeable {
              * reference.
              */
             int peek = peekType(false);
-            if (text != null && !text.isEmpty() && peek < TEXT) {
+            if (text != null && text.length() != 0 && peek < TEXT) {
                 type = TEXT;
                 return type;
             }
@@ -875,11 +874,11 @@ public class KXmlParser implements XmlPullParser, Closeable {
 
     private void defineAttributeDefault(String elementName, String attributeName, String value) {
         if (defaultAttributes == null) {
-            defaultAttributes = new HashMap<String, Map<String, String>>();
+            defaultAttributes = new HashMap<>();
         }
         Map<String, String> elementAttributes = defaultAttributes.get(elementName);
         if (elementAttributes == null) {
-            elementAttributes = new HashMap<String, String>();
+            elementAttributes = new HashMap<>();
             defaultAttributes.put(elementName, elementAttributes);
         }
         elementAttributes.put(attributeName, value);
@@ -938,7 +937,7 @@ public class KXmlParser implements XmlPullParser, Closeable {
 
         if (generalEntity && processDocDecl) {
             if (documentEntities == null) {
-                documentEntities = new HashMap<String, char[]>();
+                documentEntities = new HashMap<>();
             }
             documentEntities.put(name, entityValue.toCharArray());
         }
@@ -1414,12 +1413,10 @@ public class KXmlParser implements XmlPullParser, Closeable {
                 }
                 isWhitespace = false;
 
-            } else if (c == '%') {
+            } else {
                 throw new XmlPullParserException("This parser doesn't support parameter entities",
                         this, null);
 
-            } else {
-                throw new AssertionError();
             }
 
             position++;
@@ -1539,7 +1536,7 @@ public class KXmlParser implements XmlPullParser, Closeable {
                 || (c >= 'A' && c <= 'Z')
                 || c == '_'
                 || c == ':'
-                || c >= '\u00c0' // TODO: check the XML spec
+                || c >= 'À' // TODO: check the XML spec
                 || relaxed) {
             position++;
         } else {
@@ -1573,7 +1570,7 @@ public class KXmlParser implements XmlPullParser, Closeable {
                     || c == '-'
                     || c == ':'
                     || c == '.'
-                    || c >= '\u00b7') {  // TODO: check the XML spec
+                    || c >= '·') {  // TODO: check the XML spec
                 position++;
                 continue;
             }
@@ -1772,8 +1769,7 @@ public class KXmlParser implements XmlPullParser, Closeable {
         return encoding;
     }
 
-    public void defineEntityReplacementText(String entity, String value)
-            throws XmlPullParserException {
+    public void defineEntityReplacementText(String entity, String value) {
         if (processDocDecl) {
             throw new IllegalStateException(
                     "Entity replacement text may not be defined with DOCTYPE processing enabled.");
@@ -1783,20 +1779,21 @@ public class KXmlParser implements XmlPullParser, Closeable {
                     "Entity replacement text must be defined after setInput()");
         }
         if (documentEntities == null) {
-            documentEntities = new HashMap<String, char[]>();
+            documentEntities = new HashMap<>();
         }
         documentEntities.put(entity, value.toCharArray());
     }
 
     public Object getProperty(String property) {
-        if (property.equals(PROPERTY_XMLDECL_VERSION)) {
-            return version;
-        } else if (property.equals(PROPERTY_XMLDECL_STANDALONE)) {
-            return standalone;
-        } else if (property.equals(PROPERTY_LOCATION)) {
-            return location != null ? location : reader.toString();
-        } else {
-            return null;
+        switch (property) {
+            case PROPERTY_XMLDECL_VERSION:
+                return version;
+            case PROPERTY_XMLDECL_STANDALONE:
+                return standalone;
+            case PROPERTY_LOCATION:
+                return location != null ? location : reader.toString();
+            default:
+                return null;
         }
     }
 
@@ -1877,7 +1874,7 @@ public class KXmlParser implements XmlPullParser, Closeable {
             }
 
             if (prefix != null) {
-                buf.append("{" + namespace + "}" + prefix + ":");
+                buf.append("{").append(namespace).append("}").append(prefix).append(":");
             }
             buf.append(name);
 
@@ -1885,14 +1882,13 @@ public class KXmlParser implements XmlPullParser, Closeable {
             for (int i = 0; i < cnt; i += 4) {
                 buf.append(' ');
                 if (attributes[i + 1] != null) {
-                    buf.append("{" + attributes[i] + "}" + attributes[i + 1] + ":");
+                    buf.append("{").append(attributes[i]).append("}").append(attributes[i + 1]).append(":");
                 }
-                buf.append(attributes[i + 2] + "='" + attributes[i + 3] + "'");
+                buf.append(attributes[i + 2]).append("='").append(attributes[i + 3]).append("'");
             }
 
             buf.append('>');
         } else if (type == IGNORABLE_WHITESPACE) {
-            ;
         } else if (type != TEXT) {
             buf.append(getText());
         } else if (isWhitespace) {
@@ -1905,7 +1901,7 @@ public class KXmlParser implements XmlPullParser, Closeable {
             buf.append(text);
         }
 
-        buf.append("@" + getLineNumber() + ":" + getColumnNumber());
+        buf.append("@").append(getLineNumber()).append(":").append(getColumnNumber());
         if (location != null) {
             buf.append(" in ");
             buf.append(location);
@@ -2038,7 +2034,7 @@ public class KXmlParser implements XmlPullParser, Closeable {
         return null;
     }
 
-    public int getEventType() throws XmlPullParserException {
+    public int getEventType() {
         return type;
     }
 
@@ -2058,7 +2054,7 @@ public class KXmlParser implements XmlPullParser, Closeable {
     }
 
     public void require(int type, String namespace, String name)
-            throws XmlPullParserException, IOException {
+            throws XmlPullParserException {
         if (type != this.type
                 || (namespace != null && !namespace.equals(getNamespace()))
                 || (name != null && !name.equals(getName()))) {

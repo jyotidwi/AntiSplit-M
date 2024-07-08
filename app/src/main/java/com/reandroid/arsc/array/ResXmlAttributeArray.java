@@ -54,9 +54,8 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
     public List<ResXmlAttribute> listUndefined(){
         List<ResXmlAttribute> results = new ArrayList<>();
         ResXmlAttribute[] attributes = getChildes();
-        for(int i = 0; i < attributes.length; i++){
-            ResXmlAttribute attribute = attributes[i];
-            if(attribute != null && attribute.isUndefined()){
+        for (ResXmlAttribute attribute : attributes) {
+            if (attribute != null && attribute.isUndefined()) {
                 results.add(attribute);
             }
         }
@@ -64,8 +63,8 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
     }
     public void setAttributesUnitSize(int size){
         ResXmlAttribute[] attributes=getChildes();
-        for(int i=0;i<attributes.length;i++){
-            attributes[i].setAttributesUnitSize(size);
+        for (ResXmlAttribute attribute : attributes) {
+            attribute.setAttributesUnitSize(size);
         }
         mAttributesUnitSize.set(size);
     }
@@ -107,10 +106,9 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
         setSize(mAttributeCount.get());
         int attributeSize = mAttributesUnitSize.unsignedInt();
         ResXmlAttribute[] childes = getChildes();
-        for(int i=0;i<childes.length;i++){
+        for (ResXmlAttribute childe : childes) {
             int position = reader.getPosition();
-            ResXmlAttribute attribute = childes[i];
-            attribute.readBytes(reader);
+            childe.readBytes(reader);
             int remaining = attributeSize - (reader.getPosition() - position);
             reader.offset(remaining);
         }
@@ -123,9 +121,8 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
             return;
         }
         int length = childes.length;
-        for(int i=0;i<length;i++){
-            ResXmlAttribute child = childes[i];
-            if(child==null){
+        for (ResXmlAttribute child : childes) {
+            if (child == null) {
                 continue;
             }
             child.onRemoved();

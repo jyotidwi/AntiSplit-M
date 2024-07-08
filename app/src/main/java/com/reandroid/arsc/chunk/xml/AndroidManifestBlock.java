@@ -231,7 +231,7 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
         }
         return null;
     }
-    public ResXmlElement getOrCreateMainActivity(String name){
+    public void getOrCreateMainActivity(String name){
         ResXmlElement activity = getMainActivity();
         if(activity == null){
             ResXmlElement application = getOrCreateApplicationElement();
@@ -247,34 +247,7 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
             attribute = category.getOrCreateAndroidAttribute(NAME_name, ID_name);
             attribute.setValueAsString("android.intent.category.LAUNCHER");
         }
-        ResXmlAttribute attribute = activity.getOrCreateAndroidAttribute(NAME_name, ID_name);
-        attribute.setValueAsString(name);
-        return activity;
-    }
-    public ResXmlElement getOrCreateActivity(String name, boolean activityAlias){
-        ResXmlElement activity = getActivity(name, activityAlias);
-        if(activity == null){
-            ResXmlElement application = getOrCreateApplicationElement();
-            activity = application.createChildElement(
-                    activityAlias? TAG_activity_alias : TAG_activity);
-            ResXmlAttribute attribute = activity
-                    .createAndroidAttribute(NAME_name, ID_name);
-            attribute.setValueAsString(name);
-        }
-        return activity;
-    }
-    public ResXmlElement getActivity(String name, boolean activityAlias){
-        name = fullClassName(name);
-        for(ResXmlElement element : listActivities(activityAlias)){
-            ResXmlAttribute attribute = element.searchAttributeByResourceId(ID_name);
-            if(attribute == null){
-                continue;
-            }
-            if(name.equals(fullClassName(attribute.getValueAsString()))){
-                return element;
-            }
-        }
-        return null;
+        activity.getOrCreateAndroidAttribute(NAME_name, ID_name).setValueAsString(name);
     }
     public List<ResXmlElement> listActivities(){
         return listActivities(true);

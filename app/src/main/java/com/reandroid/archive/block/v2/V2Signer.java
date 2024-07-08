@@ -19,20 +19,19 @@ import com.reandroid.archive.block.*;
 import com.reandroid.utils.collection.InstanceIterator;
 
 import java.util.Iterator;
-import java.util.List;
 
 public class V2Signer extends LengthPrefixedBlock {
     private final V2Signature v2Signature;
     private final CertificateBlockList certificateBlockList;
-    private final BottomBlock unknown;
+
     public V2Signer() {
         super(3, false);
         this.v2Signature = new V2Signature();
         this.certificateBlockList = new CertificateBlockList();
-        this.unknown = new BottomBlock();
+        BottomBlock unknown = new BottomBlock();
         addChild(this.v2Signature);
         addChild(this.certificateBlockList);
-        addChild(this.unknown);
+        addChild(unknown);
     }
     public Iterator<CertificateBlock> getCertificates(){
         return InstanceIterator.of(certificateBlockList.iterator(), CertificateBlock.class);

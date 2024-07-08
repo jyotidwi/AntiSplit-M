@@ -68,7 +68,7 @@ public class ResIdBuilder implements Comparator<Integer> {
     }
     private List<Integer> getSortedIds(){
         List<Integer> results=new ArrayList<>(mIdNameMap.keySet());
-        results.sort(this);
+        Collections.sort(results, this);
         return results;
     }
     @Override

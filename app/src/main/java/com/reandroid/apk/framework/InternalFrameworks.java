@@ -35,7 +35,7 @@ public class InternalFrameworks extends FrameworkManager{
     }
 
     @Override
-    public FrameworkApk get(int version) {
+    public FrameworkApk get() {
         return null;
     }
     public FrameworkApk getBestMatch(int version){

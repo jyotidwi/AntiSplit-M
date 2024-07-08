@@ -15,12 +15,12 @@
  */
 package com.reandroid.archive.block;
 
+import com.abdurazaaqmohammed.AntiSplit.main.LegacyUtils;
 import com.reandroid.archive.ZipSignature;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 public class CentralEntryHeader extends CommonHeader {
@@ -79,7 +79,7 @@ public class CentralEntryHeader extends CommonHeader {
         if(comment==null){
             comment="";
         }
-        byte[] strBytes = comment.getBytes(StandardCharsets.UTF_8);
+        byte[] strBytes = com.abdurazaaqmohammed.AntiSplit.main.LegacyUtils.stringToByteArray(LegacyUtils.UTF_8, comment);
         int length = strBytes.length;
         setCommentLength(length);
         if(length==0){
@@ -125,24 +125,6 @@ public class CentralEntryHeader extends CommonHeader {
     }
     public int getExternalFileAttributes(){
         return getShortUnsigned(OFFSET_externalFileAttributes);
-    }
-    public void setExternalFileAttributes(int value){
-        putShort(OFFSET_externalFileAttributes, value);
-    }
-    @Override
-    void onUtf8Changed(boolean oldValue){
-        String str = mComment;
-        if(str != null){
-            setComment(str);
-        }
-    }
-
-    public boolean matches(LocalFileHeader localFileHeader){
-        if(localFileHeader==null){
-            return false;
-        }
-        return getCrc() == localFileHeader.getCrc()
-                && Objects.equals(getFileName(), localFileHeader.getFileName());
     }
 
     @Override

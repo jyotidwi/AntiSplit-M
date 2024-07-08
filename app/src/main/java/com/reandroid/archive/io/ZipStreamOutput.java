@@ -25,7 +25,7 @@ public class ZipStreamOutput extends ZipOutput {
         this.countingStream = new CountingOutputStream<>(outputStream, true);
     }
     @Override
-    public long position() throws IOException {
+    public long position() {
         return countingStream.getSize();
     }
     @Override

@@ -92,8 +92,7 @@ public class HexUtil {
     public static String toHexString(byte[] bytes){
         int length = bytes.length;
         StringBuilder builder = new StringBuilder(length * 2);
-        for(int i = 0; i < length; i++){
-            int b = bytes[i];
+        for (int b : bytes) {
             builder.append(toHexChar((b >> 4) & 0xf));
             builder.append(toHexChar(b & 0xf));
         }

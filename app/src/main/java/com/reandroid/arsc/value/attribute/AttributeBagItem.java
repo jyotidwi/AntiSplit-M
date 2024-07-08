@@ -55,37 +55,37 @@ public class AttributeBagItem {
         return getBagItem().getAttributeType();
     }
     public boolean isFormats(){
-        return getType() == AttributeType.FORMATS;
+        return getType() != AttributeType.FORMATS;
     }
     public boolean isType(){
         return getType() != null;
     }
     public boolean contains(AttributeDataFormat dataFormat){
-        if(dataFormat == null || !isFormats()){
+        if(dataFormat == null || isFormats()){
             return false;
         }
         return dataFormat.matches(getBagItem().getData());
     }
     public boolean isEqualType(AttributeDataFormat typeFormat){
-        if(typeFormat == null || !isFormats()){
+        if(typeFormat == null || isFormats()){
             return false;
         }
         return typeFormat.getMask() == getBagItem().getData();
     }
     public AttributeDataFormat[] getDataFormats(){
-        if(!isFormats()){
+        if(isFormats()){
             return null;
         }
         return AttributeDataFormat.decodeValueTypes(getBagItem().getData());
     }
     public boolean isEnum(){
-        if(!isFormats()){
+        if(isFormats()){
             return false;
         }
         return AttributeDataFormat.ENUM.matches(getBagItem().getData());
     }
     public boolean isFlag(){
-        if(!isFormats()){
+        if(isFormats()){
             return false;
         }
         return AttributeDataFormat.FLAG.matches(getBagItem().getData());
@@ -112,25 +112,24 @@ public class AttributeBagItem {
         }
         StringBuilder builder = new StringBuilder();
         boolean appendOnce=false;
-        for (int i = 0; i < len; i++) {
-            AttributeBagItem item = bagItems[i];
-            if(item==null){
+        for (AttributeBagItem item : bagItems) {
+            if (item == null) {
                 continue;
             }
-            if(appendOnce){
+            if (appendOnce) {
                 builder.append("|");
             }
             String name;
-            if(use_hex){
+            if (use_hex) {
                 name = item.getNameOrHex();
-            }else {
+            } else {
                 name = item.getName();
             }
-            if(name == null){
+            if (name == null) {
                 return null;
             }
             builder.append(name);
-            appendOnce=true;
+            appendOnce = true;
         }
         if(appendOnce){
             return builder.toString();

@@ -24,14 +24,13 @@ import java.util.Iterator;
 public class V2SignedData extends LengthPrefixedBlock {
 
     private final V2Signer signer;
-    private final BottomBlock unknown;
 
     public V2SignedData() {
         super(2, false);
         this.signer = new V2Signer();
-        this.unknown = new BottomBlock();
+        BottomBlock unknown = new BottomBlock();
         addChild(this.signer);
-        addChild(this.unknown);
+        addChild(unknown);
     }
 
     public Iterator<CertificateBlock> getCertificates(){

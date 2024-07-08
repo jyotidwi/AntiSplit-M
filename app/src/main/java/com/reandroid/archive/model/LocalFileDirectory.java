@@ -18,7 +18,6 @@ package com.reandroid.archive.model;
 import com.reandroid.archive.ArchiveEntry;
 import com.reandroid.archive.ArchiveException;
 import com.reandroid.archive.block.*;
-import com.reandroid.archive.block.ApkSignatureBlock;
 import com.reandroid.archive.io.ZipInput;
 import com.reandroid.arsc.io.BlockReader;
 

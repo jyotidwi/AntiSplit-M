@@ -89,8 +89,8 @@ public abstract class ValueItem extends BlockItem implements Value,
     byte getRes0(){
         return getBytesInternal()[this.sizeOffset + OFFSET_RES0];
     }
-    void setRes0(byte b){
-        getBytesInternal()[this.sizeOffset + OFFSET_RES0] = b;
+    void setRes0(){
+        getBytesInternal()[this.sizeOffset + OFFSET_RES0] = (byte) 0;
     }
     public byte getType(){
         return getBytesInternal()[this.sizeOffset + OFFSET_TYPE];
@@ -276,7 +276,7 @@ public abstract class ValueItem extends BlockItem implements Value,
             return;
         }
         StringPool<?> stringPool = getStringPool();
-        if(!styledString.hasElements() || !(stringPool instanceof TableStringPool)){
+        if(styledString.hasElements() || !(stringPool instanceof TableStringPool)){
             setValueAsString(XmlSanitizer.unEscapeUnQuote(styledString.getXml(false)));
             return;
         }

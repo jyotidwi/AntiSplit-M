@@ -70,15 +70,15 @@ public class BytesInputStream extends InputStream {
         mark = readLimit;
     }
     @Override
-    public void close() throws IOException {
+    public void close() {
         position = length;
     }
     @Override
-    public void reset() throws IOException {
+    public void reset() {
         position = mark;
     }
     @Override
-    public long skip(long amount) throws IOException{
+    public long skip(long amount) {
         if(amount <= 0){
             return amount;
         }
@@ -91,11 +91,11 @@ public class BytesInputStream extends InputStream {
         return skip;
     }
     @Override
-    public int read(byte[] bytes) throws IOException {
+    public int read(byte[] bytes) {
         return read(bytes, 0, bytes.length);
     }
     @Override
-    public int read(byte[] bytes, int offset, int length) throws IOException{
+    public int read(byte[] bytes, int offset, int length) {
         if(length == 0){
             return 0;
         }
@@ -111,7 +111,7 @@ public class BytesInputStream extends InputStream {
         return length;
     }
     @Override
-    public int read() throws IOException {
+    public int read() {
         if(available() <= 0){
             return -1;
         }

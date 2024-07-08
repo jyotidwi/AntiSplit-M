@@ -42,7 +42,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textColor="#673AB7"
+                    android:textColor="@color/purple"
                     android:text="@string/oldAndroidInfo"
                     android:visibility="gone"/>
 
@@ -54,7 +54,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="20sp"
                 android:text="@string/enable_logs"
-                android:textColor="#673AB7" />
+                android:textColor="@color/purple" />
 
             <Switch
                 android:id="@+id/ask"
@@ -62,7 +62,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="20sp"
                 android:text="@string/ask"
-                android:textColor="#673AB7" />
+                android:textColor="@color/purple" />
 
             <Switch
                 android:id="@+id/showDialog"
@@ -70,7 +70,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="20sp"
                 android:text="@string/show_dialog"
-                android:textColor="#673AB7" />
+                android:textColor="@color/purple" />
 
             <EditText
                 android:id="@+id/workingFileField"
@@ -78,8 +78,8 @@
                 android:layout_height="48dp"
                 android:ems="10"
                 android:inputType="textNoSuggestions"
-                android:textColor="#673AB7"
-                android:textColorHint="#673AB7"
+                android:textColor="@color/purple"
+                android:textColorHint="@color/purple"
                 android:hint="@string/working_file"
                 android:importantForAutofill="no"/>
 
@@ -88,7 +88,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="20sp"
-                android:textColor="#673AB7"
+                android:textColor="@color/purple"
                 android:textIsSelectable="true"
                 android:visibility="gone"/>
 
@@ -97,7 +97,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="20sp"
-                android:textColor="#673AB7"
+                android:textColor="@color/purple"
                 android:textIsSelectable="true"/>
 
         </LinearLayout>

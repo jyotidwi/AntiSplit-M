@@ -108,9 +108,8 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
     public List<T> listUnusedStrings(){
         List<T> results=new ArrayList<>();
         T[] childes = getChildes();
-        for(int i = 0; i < childes.length; i++){
-            T item = childes[i];
-            if(item != null && !item.hasReference()){
+        for (T item : childes) {
+            if (item != null && !item.hasReference()) {
                 results.add(item);
             }
         }
@@ -123,9 +122,8 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
         mUtf8 = is_utf8;
         T[] childes = getChildes();
         int length = childes.length;
-        for(int i = 0; i < length; i++){
-            T item = childes[i];
-            if(item != null){
+        for (T item : childes) {
+            if (item != null) {
                 item.setUtf8(is_utf8);
             }
         }

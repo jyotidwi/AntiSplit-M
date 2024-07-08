@@ -82,18 +82,16 @@ public class Zip64Record  extends ZipHeader{
         if(countBytes() < getMinByteLength()){
             return "Invalid";
         }
-        StringBuilder builder = new StringBuilder();
-        builder.append(getSignature());
-        builder.append(", EOCDR=").append(getSizeOfEOCDR());
-        builder.append(", creator=").append(getVersionCreator());
-        builder.append(", viewer=").append(getVersionViewer());
-        builder.append(", disk number=").append(getDiskNumber());
-        builder.append(", disk CD=").append(getDiskCD());
-        builder.append(", noOf CDR=").append(getNumberOfCDRecords());
-        builder.append(", total rec=").append(getTotalCDRecords());
-        builder.append(", size of CD=").append(getSizeOfCD());
-        builder.append(", offset of CD=").append(getOffsetOfCentralDirectory());
-        return builder.toString();
+        return getSignature() +
+                ", EOCDR=" + getSizeOfEOCDR() +
+                ", creator=" + getVersionCreator() +
+                ", viewer=" + getVersionViewer() +
+                ", disk number=" + getDiskNumber() +
+                ", disk CD=" + getDiskCD() +
+                ", noOf CDR=" + getNumberOfCDRecords() +
+                ", total rec=" + getTotalCDRecords() +
+                ", size of CD=" + getSizeOfCD() +
+                ", offset of CD=" + getOffsetOfCentralDirectory();
     }
     public static Zip64Record newZip64Record(){
         Zip64Record zip64Record = new Zip64Record();

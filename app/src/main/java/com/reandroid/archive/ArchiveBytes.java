@@ -17,18 +17,13 @@ package com.reandroid.archive;
 
 import com.reandroid.archive.io.ArchiveByteEntrySource;
 import com.reandroid.archive.io.ZipByteInput;
-import com.reandroid.utils.io.FileUtil;
 import com.reandroid.utils.io.IOUtil;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 public class ArchiveBytes extends Archive<ZipByteInput>{
-    public ArchiveBytes(ZipByteInput zipInput) throws IOException {
-        super(zipInput);
-    }
     public ArchiveBytes(byte[] array) throws IOException {
         super(new ZipByteInput(array));
     }
@@ -38,11 +33,5 @@ public class ArchiveBytes extends Archive<ZipByteInput>{
     @Override
     InputSource createInputSource(ArchiveEntry entry){
         return new ArchiveByteEntrySource(getZipInput(), entry);
-    }
-    @Override
-    void extractStored(File file, ArchiveEntry archiveEntry) throws IOException {
-        InputStream inputStream = getZipInput().getInputStream(archiveEntry.getFileOffset(),
-                archiveEntry.getDataSize());
-        IOUtil.writeAll(inputStream, file);
     }
 }

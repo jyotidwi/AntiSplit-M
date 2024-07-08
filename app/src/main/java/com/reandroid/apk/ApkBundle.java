@@ -15,8 +15,6 @@
   */
 package com.reandroid.apk;
 
-import android.util.Log;
-
 import com.reandroid.apkeditor.merge.LogUtil;
 import com.reandroid.archive.BlockInputSource;
 import com.reandroid.archive.ZipEntryMap;

@@ -21,7 +21,6 @@ import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 
 public class XMLFactory {
 
@@ -34,7 +33,7 @@ public class XMLFactory {
     public static XmlPullParser newPullParser(File file) throws XmlPullParserException {
         XmlPullParser parser = newPullParser();
         try {
-            parser.setInput(new FileChannelInputStream(file), StandardCharsets.UTF_8.name());
+            parser.setInput(new FileChannelInputStream(file), com.abdurazaaqmohammed.AntiSplit.main.LegacyUtils.UTF_8.name());
         } catch (IOException ex) {
             throw new XmlPullParserException(ex.getMessage());
         }
@@ -47,7 +46,7 @@ public class XMLFactory {
     }
     public static XmlPullParser newPullParser(InputStream inputStream) throws XmlPullParserException {
         XmlPullParser parser = newPullParser();
-        parser.setInput(inputStream, StandardCharsets.UTF_8.name());
+        parser.setInput(inputStream, com.abdurazaaqmohammed.AntiSplit.main.LegacyUtils.UTF_8.name());
         return parser;
     }
     public static XmlPullParser newPullParser(){
@@ -68,7 +67,7 @@ public class XMLFactory {
     }
     public static XmlSerializer newSerializer(OutputStream outputStream) throws IOException{
         XmlSerializer serializer = newSerializer();
-        serializer.setOutput(outputStream, StandardCharsets.UTF_8.name());
+        serializer.setOutput(outputStream, com.abdurazaaqmohammed.AntiSplit.main.LegacyUtils.UTF_8.name());
         return serializer;
     }
     public static XmlSerializer newSerializer(){

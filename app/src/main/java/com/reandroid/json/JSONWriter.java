@@ -71,7 +71,7 @@ public class JSONWriter {
         throw new JSONException("Misplaced array.");
     }
 
-    private JSONWriter end(char m, char c) throws JSONException {
+    private void end(char m, char c) throws JSONException {
         if (this.mode != m) {
             throw new JSONException(m == 'a'
                 ? "Misplaced endArray."
@@ -85,15 +85,14 @@ public class JSONWriter {
             throw new JSONException(e);
         }
         this.comma = true;
-        return this;
     }
 
-    public JSONWriter endArray() throws JSONException {
-        return this.end('a', ']');
+    public void endArray() throws JSONException {
+        this.end('a', ']');
     }
 
-    public JSONWriter endObject() throws JSONException {
-        return this.end('k', '}');
+    public void endObject() throws JSONException {
+        this.end('k', '}');
     }
 
     public JSONWriter key(String string) throws JSONException {
@@ -217,7 +216,7 @@ public class JSONWriter {
     }
 
     public static String valueToString(Object value) throws JSONException {
-        if (value == null || value.equals(null)) {
+        if (value == null) {
             return "null";
         }
         if (value instanceof JSONString) {
@@ -230,7 +229,7 @@ public class JSONWriter {
             if (object != null) {
                 return object;
             }
-            throw new JSONException("Bad value from toJSONString: " + object);
+            throw new JSONException("Bad value from toJSONString");
         }
         if (value instanceof Number) {
             return JSONItem.numberToString((Number) value);

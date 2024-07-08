@@ -51,7 +51,7 @@ public class TableStringPool extends StringPool<TableString> {
     }
     public TableString getOrCreate(StyleDocument document){
         String text = document.getXml();
-        if(!document.hasElements()){
+        if(document.hasElements()){
             return super.getOrCreate(text);
         }
         StringGroup<TableString> group = super.get(text);

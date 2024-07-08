@@ -79,9 +79,7 @@ public class BlockLocator extends BlockCounter{
             count++;
         }
         Block[] results = new Block[count];
-        for(int i = 0; i < count; i++){
-            results[i] = tmp[i];
-        }
+        System.arraycopy(tmp, 0, results, 0, count);
         return results;
     }
     public static class Result{
@@ -136,9 +134,6 @@ public class BlockLocator extends BlockCounter{
         }
         String name = block.getClass().getSimpleName();
         String text = block.toString();
-        if(text == null){
-            text = "null";
-        }
         if(!text.startsWith(name)){
             text = name + " " + text;
         }

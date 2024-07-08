@@ -7,5 +7,5 @@ package com.reandroid.json;
 
 public interface JSONString {
 
-    public String toJSONString();
+    String toJSONString();
 }

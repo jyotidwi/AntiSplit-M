@@ -18,11 +18,7 @@ package com.reandroid.arsc.value;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.io.BlockLoad;
-import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.ByteArray;
 import com.reandroid.arsc.item.IntegerItem;
-
-import java.io.IOException;
 
 class ResConfigBase extends FixedBlockContainer
         implements BlockLoad{
@@ -44,34 +40,29 @@ class ResConfigBase extends FixedBlockContainer
     public int getConfigSize(){
         return this.configSize.get();
     }
-    public boolean trimToSize(int size){
+    public void trimToSize(int size){
         int current = getConfigSize();
         if(current == size){
-            return true;
+            return;
         }
-        if(!isValidSize(size)){
-            return false;
+        if(isValidSize(size)){
+            return;
         }
         if(current<size){
             setConfigSize(size);
-            return true;
+            return;
         }
         int offset = size - 4;
         int len = current - 4 - offset;
         byte[] bts = mValuesContainer.getByteArray(offset, len);
         if(!isNullBytes(bts)){
-            return false;
+            return;
         }
         setConfigSize(size);
-        return true;
     }
-    public void trimToMinimumSize(){
-        int size = ByteArray.trimTrailZeros(mValuesContainer.getBytes()).length + 4;
-        size = nearestSize(size);
-        trimToSize(size);
-    }
+
     public void setConfigSize(int size){
-        if(!isValidSize(size)){
+        if(isValidSize(size)){
             throw new IllegalArgumentException("Invalid config size = " + size);
         }
         if(size % 4 != 0){
@@ -242,13 +233,7 @@ class ResConfigBase extends FixedBlockContainer
     public int getColorMode(){
         return mValuesContainer.getByteValue(OFFSET_colorMode);
     }
-    public void setReservedColorModePadding(int value){
-        mValuesContainer.setByteValue(OFFSET_reservedColorModePadding,
-                value);
-    }
-    public int getReservedColorModePadding(){
-        return mValuesContainer.getByteValue(OFFSET_reservedColorModePadding);
-    }
+
     public void setUnknownBytes(byte[] bytes){
         int length = getConfigSize() - 4 - OFFSET_unknown;
         if(bytes.length > length){
@@ -270,11 +255,9 @@ class ResConfigBase extends FixedBlockContainer
         int count = countBytes();
         configSize.set(count);
     }
+
     @Override
-    protected void onRefreshed() {
-    }
-    @Override
-    public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
+    public void onBlockLoaded(Block sender) {
         if(sender == configSize){
             mValuesContainer.setSize(configSize.get() - 4);
         }
@@ -317,9 +300,9 @@ class ResConfigBase extends FixedBlockContainer
             case SIZE_52:
             case SIZE_56:
             case SIZE_64:
-                return true;
+                return false;
             default:
-                return size > SIZE_64;
+                return size <= SIZE_64;
         }
     }
 
@@ -393,8 +376,8 @@ class ResConfigBase extends FixedBlockContainer
         if(chars == null){
             return true;
         }
-        for(int i = 0; i < chars.length; i++){
-            if(chars[i] != 0){
+        for (char aChar : chars) {
+            if (aChar != 0) {
                 return false;
             }
         }
@@ -404,8 +387,8 @@ class ResConfigBase extends FixedBlockContainer
         if(bytes == null){
             return true;
         }
-        for(int i = 0; i < bytes.length; i++){
-            if(bytes[i] != 0){
+        for (byte aByte : bytes) {
+            if (aByte != 0) {
                 return false;
             }
         }
@@ -476,7 +459,6 @@ class ResConfigBase extends FixedBlockContainer
     //SIZE=48
     private static final int OFFSET_screenLayout2 = 44;
     private static final int OFFSET_colorMode = 45;
-    private static final int OFFSET_reservedColorModePadding = 46;
     //SIZE=52
     private static final int OFFSET_unknown = 48;
     //SIZE=60

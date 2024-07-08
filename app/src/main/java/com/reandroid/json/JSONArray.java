@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -182,7 +183,7 @@ public class JSONArray extends JSONItem implements Iterable<Object> {
     public float getFloat(int index) throws JSONException {
         final Object object = this.get(index);
         if(object instanceof Number) {
-            return ((Float)object).floatValue();
+            return (Float) object;
         }
         try {
             return Float.parseFloat(object.toString());
@@ -219,7 +220,7 @@ public class JSONArray extends JSONItem implements Iterable<Object> {
         Object object = this.get(index);
         BigDecimal val = JSONObject.objectToBigDecimal(object, null);
         if(val == null) {
-            throw wrongValueFormatException(index, "BigDecimal", object, null);
+            throw wrongValueFormatException(index, "BigDecimal", object);
         }
         return val;
     }
@@ -228,7 +229,7 @@ public class JSONArray extends JSONItem implements Iterable<Object> {
         Object object = this.get(index);
         BigInteger val = JSONObject.objectToBigInteger(object, null);
         if(val == null) {
-            throw wrongValueFormatException(index, "BigInteger", object, null);
+            throw wrongValueFormatException(index, "BigInteger", object);
         }
         return val;
     }
@@ -331,11 +332,10 @@ public class JSONArray extends JSONItem implements Iterable<Object> {
         if (val == null) {
             return defaultValue;
         }
-        final double doubleValue = val.doubleValue();
         // if (Double.isNaN(doubleValue) || Double.isInfinite(doubleValue)) {
         // return defaultValue;
         // }
-        return doubleValue;
+        return val.doubleValue();
     }
 
     public float optFloat(int index) {
@@ -347,11 +347,10 @@ public class JSONArray extends JSONItem implements Iterable<Object> {
         if (val == null) {
             return defaultValue;
         }
-        final float floatValue = val.floatValue();
         // if (Float.isNaN(floatValue) || Float.isInfinite(floatValue)) {
         // return floatValue;
         // }
-        return floatValue;
+        return val.floatValue();
     }
 
     public int optInt(int index) {
@@ -597,11 +596,11 @@ public class JSONArray extends JSONItem implements Iterable<Object> {
 
     public boolean similar(Object other) {
         if (!(other instanceof JSONArray)) {
-            return false;
+            return true;
         }
         int len = this.length();
         if (len != ((JSONArray)other).length()) {
-            return false;
+            return true;
         }
         for (int i = 0; i < len; i += 1) {
             Object valueThis = this.myArrayList.get(i);
@@ -610,21 +609,21 @@ public class JSONArray extends JSONItem implements Iterable<Object> {
             	continue;
             }
             if(valueThis == null) {
-            	return false;
+            	return true;
             }
             if (valueThis instanceof JSONObject) {
-                if (!((JSONObject)valueThis).similar(valueOther)) {
-                    return false;
+                if (((JSONObject) valueThis).similar(valueOther)) {
+                    return true;
                 }
             } else if (valueThis instanceof JSONArray) {
-                if (!((JSONArray)valueThis).similar(valueOther)) {
-                    return false;
+                if (((JSONArray) valueThis).similar(valueOther)) {
+                    return true;
                 }
             } else if (!valueThis.equals(valueOther)) {
-                return false;
+                return true;
             }
         }
-        return true;
+        return false;
     }
 
     public JSONObject toJSONObject(JSONArray names) throws JSONException {
@@ -697,7 +696,7 @@ public class JSONArray extends JSONItem implements Iterable<Object> {
     }
 
     public void sort(Comparator comparator) {
-        this.myArrayList.sort(comparator);
+        Collections.sort(myArrayList, comparator);
     }
 
     private void addAll(Collection<?> collection, boolean wrap) {
@@ -768,11 +767,10 @@ public class JSONArray extends JSONItem implements Iterable<Object> {
     private static JSONException wrongValueFormatException(
             int idx,
             String valueType,
-            Object value,
-            Throwable cause) {
+            Object value) {
         return new JSONException(
                 "JSONArray[" + idx + "] is not a " + valueType + " (" + value + ")."
-                , cause);
+                , null);
     }
 
 }

@@ -42,15 +42,13 @@ public class StyleElement extends XMLElement implements StyleNode, Span{
         while (attributes.hasNext()){
             addAttribute(new StyleAttribute(attributes.next()));
         }
-        Iterator<XMLNode> iterator = xmlElement.iterator();
-        while (iterator.hasNext()){
-            XMLNode xmlNode = iterator.next();
-            if(xmlNode instanceof XMLElement){
+        for (XMLNode xmlNode : xmlElement) {
+            if (xmlNode instanceof XMLElement) {
                 StyleElement styleElement = newElement();
                 add(styleElement);
                 styleElement.copyFrom((XMLElement) xmlNode);
-            }else if(xmlNode instanceof XMLText){
-                XMLText xmlText = (XMLText)xmlNode;
+            } else if (xmlNode instanceof XMLText) {
+                XMLText xmlText = (XMLText) xmlNode;
                 StyleText styleText = new StyleText(xmlText.getText());
                 add(styleText);
             }
@@ -159,21 +157,17 @@ public class StyleElement extends XMLElement implements StyleNode, Span{
     @Override
     int getLength(){
         int result = 0;
-        Iterator<XMLNode> itr = iterator();
-        while (itr.hasNext()){
-            XMLNode child = itr.next();
+        for (XMLNode child : this) {
             result += child.getLength();
         }
         return result;
     }
     void writeStyledText(Appendable appendable) throws IOException {
-        Iterator<XMLNode> iterator = iterator();
-        while (iterator.hasNext()){
-            XMLNode xmlNode = iterator.next();
-            if(xmlNode instanceof StyleText){
+        for (XMLNode xmlNode : this) {
+            if (xmlNode instanceof StyleText) {
                 StyleText styleText = (StyleText) xmlNode;
                 styleText.writeStyledText(appendable);
-            }else if(xmlNode instanceof StyleElement){
+            } else if (xmlNode instanceof StyleElement) {
                 StyleElement element = (StyleElement) xmlNode;
                 element.writeStyledText(appendable);
             }

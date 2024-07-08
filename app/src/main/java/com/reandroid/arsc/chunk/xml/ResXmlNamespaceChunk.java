@@ -18,8 +18,6 @@ package com.reandroid.arsc.chunk.xml;
 import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.item.ResXmlString;
 
-import java.util.Objects;
-
 abstract class ResXmlNamespaceChunk extends BaseXmlChunk implements ResXmlNamespace{
     private ResXmlNamespaceChunk mPair;
     ResXmlNamespaceChunk(ChunkType chunkType) {
@@ -69,10 +67,10 @@ abstract class ResXmlNamespaceChunk extends BaseXmlChunk implements ResXmlNamesp
             pair.setUriReference(ref);
         }
         if(old != ref){
-            onUriReferenceChanged(old, ref);
+            onUriReferenceChanged(ref);
         }
     }
-    void onUriReferenceChanged(int old, int uriReference){
+    void onUriReferenceChanged(int uriReference){
 
     }
     public int getPrefixReference(){

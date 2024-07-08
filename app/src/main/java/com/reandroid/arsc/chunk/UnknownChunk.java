@@ -36,12 +36,17 @@ public class UnknownChunk extends Chunk<HeaderBlock> implements HeaderBlock.Head
     public ByteArray getBody(){
         return body;
     }
+
     @Override
-    public void onChunkTypeLoaded(short type) {
+    public void onChunkTypeLoaded() {
+
     }
+
     @Override
-    public void onHeaderSizeLoaded(int headerSize) {
+    public void onHeaderSizeLoaded() {
+
     }
+
     @Override
     public void onChunkSizeLoaded(int headerSize, int chunkSize) {
         getBody().setSize(chunkSize - headerSize);

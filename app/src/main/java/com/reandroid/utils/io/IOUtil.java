@@ -16,25 +16,10 @@
 package com.reandroid.utils.io;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 
 @SuppressWarnings({"ResultOfMethodCallIgnored"})
 public class IOUtil {
 
-    public static String readUtf8(File file) throws IOException {
-        return new String(readFully(file), StandardCharsets.UTF_8);
-    }
-    public static String readUtf8(InputStream inputStream) throws IOException {
-        return new String(readFully(inputStream), StandardCharsets.UTF_8);
-    }
-    public static void writeUtf8(String content, File file) throws IOException {
-        writeUtf8(content, FileUtil.outputStream(file));
-    }
-    public static void writeUtf8(String content, OutputStream outputStream) throws IOException {
-        byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
-        outputStream.write(bytes, 0, bytes.length);
-        outputStream.close();
-    }
     public static void writeAll(InputStream inputStream, File file) throws IOException {
         FileUtil.ensureParentDirectory(file);
         File tmp = file;
@@ -46,9 +31,6 @@ public class IOUtil {
             file.delete();
             tmp.renameTo(tmp);
         }
-    }
-    public static void writeAll(InputStream inputStream, OutputStream outputStream) throws IOException {
-        writeAll(inputStream, outputStream, true);
     }
     public static void writeAll(InputStream inputStream, OutputStream outputStream, boolean close) throws IOException {
         int bufferStep = 1024 * 1000;
@@ -70,9 +52,7 @@ public class IOUtil {
             outputStream.close();
         }
     }
-    public static byte[] readFully(File file) throws IOException{
-        return readFully(FileUtil.inputStream(file));
-    }
+
     public static byte[] readFully(InputStream inputStream) throws IOException{
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         writeAll(inputStream, outputStream, true);

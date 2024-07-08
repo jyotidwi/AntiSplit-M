@@ -51,7 +51,6 @@ class FileOutputSource extends OutputSource {
         return null;
     }
     void writeApk(ZipFileOutput zipFileOutput, ZipAligner zipAligner) throws IOException{
-        logLargeFileWrite();
         EntryBuffer entryBuffer = this.entryBuffer;
         FileChannel input = entryBuffer.getZipFileInput().getFileChannel();
         input.position(entryBuffer.getOffset());

@@ -15,9 +15,12 @@
  */
 package com.reandroid.archive.io;
 
+import android.os.Build;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
@@ -69,8 +72,13 @@ public class ZipFileOutput extends ZipOutput{
             return fileChannel;
         }
         synchronized (this){
-            fileChannel = FileChannel.open(this.file.toPath(), StandardOpenOption.WRITE);
-            this.fileChannel = fileChannel;
+           if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) fileChannel =  FileChannel.open(this.file.toPath(), StandardOpenOption.WRITE);
+           else {
+               try (RandomAccessFile bruh = new RandomAccessFile(file, "r")) {
+                   fileChannel = bruh.getChannel();
+               }
+           }
+                        this.fileChannel = fileChannel;
             return fileChannel;
         }
     }

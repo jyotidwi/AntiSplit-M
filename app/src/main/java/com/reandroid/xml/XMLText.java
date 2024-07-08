@@ -84,16 +84,21 @@ public class XMLText extends XMLNode implements Text {
             return;
         }
         String decode;
-        if(entityRef.equals("lt")){
-            decode = "<";
-        }else if(entityRef.equals("gt")){
-            decode = ">";
-        }else if(entityRef.equals("amp")){
-            decode = "&";
-        }else if(entityRef.equals("quote")){
-            decode = "\"";
-        }else {
-            return;
+        switch (entityRef) {
+            case "lt":
+                decode = "<";
+                break;
+            case "gt":
+                decode = ">";
+                break;
+            case "amp":
+                decode = "&";
+                break;
+            case "quote":
+                decode = "\"";
+                break;
+            default:
+                return;
         }
         appendText(decode);
     }

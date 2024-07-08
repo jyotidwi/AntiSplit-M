@@ -57,9 +57,7 @@ public class HeaderBlock extends ExpandableBlockContainer implements BlockLoad {
     public int getMinimumSize(){
         return countBytes();
     }
-    public ByteArray getExtraBytes() {
-        return extraBytes;
-    }
+
     public void setHeaderLoaded(HeaderLoaded headerLoaded){
         this.mHeaderLoaded=headerLoaded;
     }
@@ -158,7 +156,7 @@ public class HeaderBlock extends ExpandableBlockContainer implements BlockLoad {
         }
     }
     @Override
-    public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
+    public void onBlockLoaded(Block sender) {
         if(sender==this.mType){
             onChunkTypeLoaded(mType.getShort());
         }else if(sender==this.mHeaderSize){
@@ -189,13 +187,13 @@ public class HeaderBlock extends ExpandableBlockContainer implements BlockLoad {
     void onChunkTypeLoaded(short chunkType){
         HeaderLoaded headerLoaded = mHeaderLoaded;
         if(headerLoaded!=null){
-            headerLoaded.onChunkTypeLoaded(chunkType);
+            headerLoaded.onChunkTypeLoaded();
         }
     }
     void onHeaderSizeLoaded(int size){
         HeaderLoaded headerLoaded = mHeaderLoaded;
         if(headerLoaded!=null){
-            headerLoaded.onHeaderSizeLoaded(size);
+            headerLoaded.onHeaderSizeLoaded();
         }
     }
     void onChunkSizeLoaded(int headerSize, int chunkSize){
@@ -216,7 +214,7 @@ public class HeaderBlock extends ExpandableBlockContainer implements BlockLoad {
         ChunkType type = ChunkType.get(t);
         StringBuilder builder = new StringBuilder();
         if(type!=null){
-            builder.append(type.toString());
+            builder.append(type);
         }else {
             builder.append("Unknown type=");
             builder.append(HexUtil.toHex4(t));
@@ -230,8 +228,8 @@ public class HeaderBlock extends ExpandableBlockContainer implements BlockLoad {
     }
 
     public interface HeaderLoaded{
-        void onChunkTypeLoaded(short type);
-        void onHeaderSizeLoaded(int headerSize);
+        void onChunkTypeLoaded();
+        void onHeaderSizeLoaded();
         void onChunkSizeLoaded(int headerSize, int chunkSize);
     }
 }

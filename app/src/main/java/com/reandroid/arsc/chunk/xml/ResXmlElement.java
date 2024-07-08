@@ -16,32 +16,45 @@
 package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.array.ResXmlAttributeArray;
-import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.model.ResourceLibrary;
+import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.SingleBlockContainer;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ResXmlString;
+import com.reandroid.arsc.model.ResourceLibrary;
 import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.arsc.refactor.ResourceMergeOption;
 import com.reandroid.common.Namespace;
-import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
+import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.collection.CollectionUtil;
+import com.reandroid.utils.collection.CombiningIterator;
+import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.RecursiveIterator;
 import com.reandroid.utils.collection.SingleIterator;
-import com.reandroid.utils.collection.*;
-import com.reandroid.xml.*;
+import com.reandroid.xml.XMLAttribute;
+import com.reandroid.xml.XMLComment;
+import com.reandroid.xml.XMLElement;
+import com.reandroid.xml.XMLUtil;
+
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
-import java.util.*;
-import java.util.function.Predicate;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.ConcurrentModificationException;
+import java.util.Iterator;
+import java.util.List;
+import com.abdurazaaqmohammed.AntiSplit.main.Predicate;
 
 public class ResXmlElement extends ResXmlNode implements
         ResXmlNodeTree, JSONConvert<JSONObject>, Comparator<ResXmlNode> {
@@ -187,8 +200,8 @@ public class ResXmlElement extends ResXmlNode implements
     public ResXmlNamespace getOrCreateNamespace(String uri, String prefix){
         return getOrCreateXmlStartNamespace(uri, prefix);
     }
-    public ResXmlNamespace newNamespace(String uri, String prefix){
-        return createXmlStartNamespace(uri, prefix);
+    public void newNamespace(String uri, String prefix){
+        createXmlStartNamespace(uri, prefix);
     }
     public ResXmlNamespace getNamespaceByUri(String uri){
         return getStartNamespaceByUri(uri);
@@ -321,8 +334,8 @@ public class ResXmlElement extends ResXmlNode implements
     }
 
     @Deprecated
-    public int remove(Predicate<? super ResXmlNode> predicate) {
-        return removeIf(predicate);
+    public int remove(Predicate<? super ResXmlNode> Predicate) {
+        return removeIf(Predicate);
     }
     public void changeIndex(ResXmlElement element, int index){
         getNodeListBlockInternal().moveTo(element, index);
@@ -362,7 +375,7 @@ public class ResXmlElement extends ResXmlNode implements
         startElement.setAttributesUnitSize(size);
         if(setToAll){
             for(ResXmlElement child:listElements()){
-                child.setAttributesUnitSize(size, setToAll);
+                child.setAttributesUnitSize(size, true);
             }
         }
     }
@@ -492,8 +505,8 @@ public class ResXmlElement extends ResXmlNode implements
     public ResXmlTextNode createResXmlTextNode(int position){
         return createResXmlTextNode(position, null);
     }
-    public ResXmlTextNode createResXmlTextNode(String text){
-        return createResXmlTextNode(-1, text);
+    public void createResXmlTextNode(String text){
+        createResXmlTextNode(-1, text);
     }
     public ResXmlTextNode createResXmlTextNode(int position, String text){
         ResXmlTextNode xmlTextNode = new ResXmlTextNode();
@@ -706,11 +719,8 @@ public class ResXmlElement extends ResXmlNode implements
     public int removeAttributesWithId(int resourceId){
         return removeAttributes(getAttributesWithId(resourceId));
     }
-    public int removeAttributesWithName(String name){
-        return removeAttributes(getAttributesWithName(name));
-    }
-    public int removeAttributes(Predicate<? super ResXmlAttribute> predicate){
-        return removeAttributes(getAttributes(predicate));
+    public void removeAttributesWithName(String name){
+        removeAttributes(getAttributesWithName(name));
     }
     public int removeAttributes(Iterator<? extends ResXmlAttribute> attributes){
         Iterator<ResXmlAttribute> iterator = CollectionUtil.copyOf(attributes);
@@ -733,7 +743,7 @@ public class ResXmlElement extends ResXmlNode implements
         }
         return EmptyIterator.of();
     }
-    public Iterator<ResXmlAttribute> getAttributes(Predicate<? super ResXmlAttribute> filter){
+    public Iterator<ResXmlAttribute> getAttributes(com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super ResXmlAttribute> filter){
         ResXmlAttributeArray attributeArray = getAttributeArray();
         if(attributeArray != null){
             if(attributeArray.size() == 0){
@@ -871,18 +881,7 @@ public class ResXmlElement extends ResXmlNode implements
     public List<ResXmlTextNode> listXmlTextNodes(){
         return CollectionUtil.toList(getTextNodes());
     }
-    public int removeElements(Predicate<? super ResXmlElement> predicate){
-        List<ResXmlElement> removeList = CollectionUtil.toList(getElements(predicate));
-        Iterator<ResXmlElement> iterator = removeList.iterator();
-        int count = 0;
-        while (iterator.hasNext()){
-            boolean removed = remove(iterator.next());
-            if(removed){
-                count ++;
-            }
-        }
-        return count;
-    }
+
     ResXmlStartNamespace getStartNamespaceByUriRef(int uriRef){
         if(uriRef<0){
             return null;
@@ -991,7 +990,7 @@ public class ResXmlElement extends ResXmlNode implements
         mEndNamespaceList.remove(startNamespace.getEnd());
     }
 
-    ResXmlStartElement newStartElement(int lineNo){
+    void newStartElement(int lineNo){
         ResXmlStartElement startElement=new ResXmlStartElement();
         setStartElement(startElement);
 
@@ -1004,7 +1003,6 @@ public class ResXmlElement extends ResXmlNode implements
         startElement.setLineNumber(lineNo);
         endElement.setLineNumber(lineNo);
 
-        return startElement;
     }
     private ResXmlAttributeArray getAttributeArray(){
         ResXmlStartElement startElement = getStartElement();
@@ -1232,7 +1230,7 @@ public class ResXmlElement extends ResXmlNode implements
             if (node instanceof ResXmlElement) {
                 createChildElement().mergeWithName(mergeOption, (ResXmlElement) node);
             } else if (node instanceof ResXmlTextNode) {
-                createResXmlTextNode().mergeWithName(mergeOption, (ResXmlTextNode) node);
+                createResXmlTextNode().mergeWithName((ResXmlTextNode) node);
             }
         }
         this.getStartElement().setComment(element.getStartComment());
@@ -1251,7 +1249,7 @@ public class ResXmlElement extends ResXmlNode implements
         if(comment != null){
             serializer.comment(comment);
         }
-        boolean indent = getFeatureSafe(serializer, FEATURE_INDENT_OUTPUT);
+        boolean indent = getFeatureSafe(serializer);
         setIndent(serializer, indent);
         boolean indentChanged = indent;
         serializer.startTag(getUri(), getName());
@@ -1534,7 +1532,7 @@ public class ResXmlElement extends ResXmlNode implements
             builder.append(getEndLineNumber());
             builder.append(") ");
             builder.append("<");
-            builder.append(start.toString());
+            builder.append(start);
             if(hasText() && !hasElement()){
                 builder.append(">");
                 for(ResXmlTextNode textNode : listXmlTextNodes()){
@@ -1586,18 +1584,18 @@ public class ResXmlElement extends ResXmlNode implements
         return getTextNodes();
     }
     /**
-     * Use remove(Predicate)
+     * Use remove(com.abdurazaaqmohammed.AntiSplit.main.Predicate)
      * */
     @Deprecated
-    public int removeNodes(Predicate<? super ResXmlNode> predicate){
-        return removeIf(predicate);
+    public int removeNodes(Predicate<? super ResXmlNode> Predicate){
+        return removeIf(Predicate);
     }
     /**
-     * Use iterator(Predicate)
+     * Use iterator(com.abdurazaaqmohammed.AntiSplit.main.Predicate)
      * */
     @Deprecated
-    public Iterator<ResXmlNode> getResXmlNodes(Predicate<? super ResXmlNode> predicate){
-        return iterator(predicate);
+    public Iterator<ResXmlNode> getResXmlNodes(Predicate<? super ResXmlNode> Predicate){
+        return iterator(Predicate);
     }
     /**
      * Use iterator()
@@ -1625,9 +1623,9 @@ public class ResXmlElement extends ResXmlNode implements
     private static boolean looksNamespace(String uri, String prefix){
         return uri.length() != 0 && "xmlns".equals(prefix);
     }
-    private static boolean getFeatureSafe(XmlSerializer serializer, String name){
+    private static boolean getFeatureSafe(XmlSerializer serializer){
         try{
-            return serializer.getFeature(name);
+            return serializer.getFeature(ResXmlElement.FEATURE_INDENT_OUTPUT);
         }catch (Throwable ignored){
             return false;
         }
@@ -1647,11 +1645,11 @@ public class ResXmlElement extends ResXmlNode implements
         return name;
     }
     static void setIndent(XmlSerializer serializer, boolean state){
-        setFeatureSafe(serializer, FEATURE_INDENT_OUTPUT, state);
+        setFeatureSafe(serializer, state);
     }
-    private static void setFeatureSafe(XmlSerializer serializer, String name, boolean state){
+    private static void setFeatureSafe(XmlSerializer serializer, boolean state){
         try{
-            serializer.setFeature(name, state);
+            serializer.setFeature(ResXmlElement.FEATURE_INDENT_OUTPUT, state);
         }catch (Throwable ignored){
         }
     }

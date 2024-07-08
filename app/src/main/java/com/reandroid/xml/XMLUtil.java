@@ -26,16 +26,17 @@ public class XMLUtil {
         if(text == null || text.length() == 0){
             return "";
         }
-        if("lt".equals(text)){
-            return "<";
-        }else if("gt".equals(text)){
-            return ">";
-        }else if("amp".equals(text)){
-            return  "&";
-        }else if("quot".equals(text)){
-            return  "\"";
-        }else if("apos".equals(text)){
-            return  "'";
+        switch (text) {
+            case "lt":
+                return "<";
+            case "gt":
+                return ">";
+            case "amp":
+                return "&";
+            case "quot":
+                return "\"";
+            case "apos":
+                return "'";
         }
         if(text.charAt(0) == '#'){
             try{
@@ -110,7 +111,7 @@ public class XMLUtil {
         return types[eventType];
     }
 
-    public static String [] EVENT_TYPES = {
+    public static final String [] EVENT_TYPES = {
             "START_DOCUMENT",
             "END_DOCUMENT",
             "START_TAG",

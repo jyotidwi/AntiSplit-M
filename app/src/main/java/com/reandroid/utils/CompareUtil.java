@@ -59,13 +59,7 @@ public class CompareUtil {
         return objects == null || objects.length == 0;
     }
     public static int compare(int i1, int i2){
-        if(i1 == i2){
-            return 0;
-        }
-        if(i1 > i2){
-            return 1;
-        }
-        return -1;
+        return Integer.compare(i1, i2);
     }
     public static<T extends Comparable<? super T>> int compare(T item1, T item2) {
         if(item1 == item2){
@@ -78,13 +72,7 @@ public class CompareUtil {
             return 1;
         }
         int i = item1.compareTo(item2);
-        if(i == 0){
-            return 0;
-        }
-        if(i > 0){
-            return 1;
-        }
-        return -1;
+        return Integer.compare(i, 0);
     }
     @SuppressWarnings("unchecked")
     public static <T> Comparator<T> getComparatorUnchecked(){

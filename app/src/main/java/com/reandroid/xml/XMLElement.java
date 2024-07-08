@@ -29,7 +29,6 @@ import org.xmlpull.v1.XmlSerializer;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.*;
-import java.util.function.Predicate;
 
 public class XMLElement extends XMLNodeTree implements Element<XMLNode> {
 
@@ -62,9 +61,8 @@ public class XMLElement extends XMLNodeTree implements Element<XMLNode> {
         for(int i = 0; i < count; i++){
             element.addAttribute(getAttributeAt(i).newCopy(element));
         }
-        Iterator<XMLNode> iterator = iterator();
-        while(iterator.hasNext()){
-            iterator.next().newCopy(element);
+        for (XMLNode xmlNode : this) {
+            xmlNode.newCopy(element);
         }
         return element;
     }
@@ -131,18 +129,6 @@ public class XMLElement extends XMLNodeTree implements Element<XMLNode> {
         return mNamespaceList.iterator();
     }
 
-    @Override
-    public XMLNamespace newNamespace(String uri, String prefix) {
-        return new XMLNamespace(uri, prefix);
-    }
-    @Override
-    public XMLAttribute newAttribute() {
-        return new XMLAttribute();
-    }
-    @Override
-    public XMLElement newElement() {
-        return new XMLElement();
-    }
     @Override
     public XMLText newText() {
         return super.newText();
@@ -242,7 +228,7 @@ public class XMLElement extends XMLNodeTree implements Element<XMLNode> {
     public Iterator<? extends XMLElement> getElements(){
         return iterator(XMLElement.class);
     }
-    public Iterator<XMLElement> getElements(Predicate<XMLElement> filter){
+    public Iterator<XMLElement> getElements(com.abdurazaaqmohammed.AntiSplit.main.Predicate<XMLElement> filter){
         return iterator(XMLElement.class, filter);
     }
     public Iterator<XMLElement> getElements(String name){
@@ -458,9 +444,7 @@ public class XMLElement extends XMLNodeTree implements Element<XMLNode> {
     public String getTextContent(boolean escapeXmlText){
         StringWriter writer = new StringWriter();
         try {
-            Iterator<XMLNode> iterator = iterator();
-            while (iterator.hasNext()){
-                XMLNode child = iterator.next();
+            for (XMLNode child : this) {
                 child.write(writer, true, escapeXmlText);
             }
             writer.flush();
@@ -581,13 +565,11 @@ public class XMLElement extends XMLNodeTree implements Element<XMLNode> {
         appendable.append(getName());
         appendAttributes(appendable, xml, escapeXmlText);
         boolean haveChildes = false;
-        Iterator<XMLNode> iterator = iterator();
-        while (iterator.hasNext()){
-            if(!haveChildes){
+        for (XMLNode xmlNode : this) {
+            if (!haveChildes) {
                 appendable.append(">");
             }
-            XMLNode child = iterator.next();
-            child.write(appendable, xml, escapeXmlText);
+            xmlNode.write(appendable, xml, escapeXmlText);
             haveChildes = true;
         }
         if(haveChildes){
@@ -659,7 +641,7 @@ public class XMLElement extends XMLNodeTree implements Element<XMLNode> {
         element.parse(parser);
         return element;
     }
-    public static Iterator<XMLElement> iterateElements(XmlPullParser parser) throws IOException, XmlPullParserException {
+    public static Iterator<XMLElement> iterateElements() {
         return new Iterator<XMLElement>() {
             @Override
             public boolean hasNext() {

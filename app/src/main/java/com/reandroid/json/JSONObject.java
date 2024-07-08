@@ -5,6 +5,8 @@
  */
 package com.reandroid.json;
 
+import android.os.Build;
+
 import com.reandroid.common.FileChannelInputStream;
 
 import java.io.*;
@@ -29,9 +31,9 @@ public class JSONObject extends JSONItem {
 
     public JSONObject(JSONObject jo, String ... names) {
         this(names.length);
-        for (int i = 0; i < names.length; i += 1) {
+        for (String name : names) {
             try {
-                this.putOnce(names[i], jo.opt(names[i]));
+                this.putOnce(name, jo.opt(name));
             } catch (Exception ignore) {
             }
         }
@@ -66,17 +68,15 @@ public class JSONObject extends JSONItem {
 
             // Use syntaxError(..) to include error location
 
-            if (key != null) {
-                // Check if key exists
-                if (this.opt(key) != null) {
-                    // key already exists
-                    throw x.syntaxError("Duplicate key \"" + key + "\"");
-                }
-                // Only add value if non-null
-                Object value = x.nextValue();
-                if (value!=null) {
-                    this.put(key, value);
-                }
+            // Check if key exists
+            if (this.opt(key) != null) {
+                // key already exists
+                throw x.syntaxError("Duplicate key \"" + key + "\"");
+            }
+            // Only add value if non-null
+            Object value = x.nextValue();
+            if (value!=null) {
+                this.put(key, value);
             }
 
             // Pairs are separated by ','.
@@ -183,7 +183,7 @@ public class JSONObject extends JSONItem {
         LinkedHashMap<String, Object> copy = new LinkedHashMap<>(map);
         map.clear();
         List<String> sortedKeys = new ArrayList<>(copy.keySet());
-        sortedKeys.sort(keyComparator);
+        Collections.sort(sortedKeys, keyComparator);
         for(String key : sortedKeys){
             map.put(key, copy.get(key));
         }
@@ -197,7 +197,7 @@ public class JSONObject extends JSONItem {
             }
         }
     }
-    public JSONObject accumulate(String key, Object value) throws JSONException {
+    public void accumulate(String key, Object value) throws JSONException {
         testValidity(value);
         Object object = this.opt(key);
         if (object == null) {
@@ -209,7 +209,6 @@ public class JSONObject extends JSONItem {
         } else {
             this.put(key, new JSONArray().put(object).put(value));
         }
-        return this;
     }
 
     public JSONObject append(String key, Object value) throws JSONException {
@@ -220,7 +219,7 @@ public class JSONObject extends JSONItem {
         } else if (object instanceof JSONArray) {
             this.put(key, ((JSONArray) object).put(value));
         } else {
-            throw wrongValueFormatException(key, "JSONArray", null, null);
+            throw wrongValueFormatException(key, "JSONArray", null);
         }
         return this;
     }
@@ -287,7 +286,7 @@ public class JSONObject extends JSONItem {
         if (ret != null) {
             return ret;
         }
-        throw wrongValueFormatException(key, "BigInteger", object, null);
+        throw wrongValueFormatException(key, "BigInteger", object);
     }
 
     public BigDecimal getBigDecimal(String key) throws JSONException {
@@ -296,7 +295,7 @@ public class JSONObject extends JSONItem {
         if (ret != null) {
             return ret;
         }
-        throw wrongValueFormatException(key, "BigDecimal", object, null);
+        throw wrongValueFormatException(key, "BigDecimal", object);
     }
 
     public double getDouble(String key) throws JSONException {
@@ -502,7 +501,7 @@ public class JSONObject extends JSONItem {
             return defaultValue;
         }
         if (val instanceof Boolean){
-            return ((Boolean) val).booleanValue();
+            return (Boolean) val;
         }
         try {
             // we'll use the get anyway because it does string conversion.
@@ -598,11 +597,10 @@ public class JSONObject extends JSONItem {
         if (val == null) {
             return defaultValue;
         }
-        final double doubleValue = val.doubleValue();
         // if (Double.isNaN(doubleValue) || Double.isInfinite(doubleValue)) {
         // return defaultValue;
         // }
-        return doubleValue;
+        return val.doubleValue();
     }
 
     public float optFloat(String key) {
@@ -614,11 +612,10 @@ public class JSONObject extends JSONItem {
         if (val == null) {
             return defaultValue;
         }
-        final float floatValue = val.floatValue();
         // if (Float.isNaN(floatValue) || Float.isInfinite(floatValue)) {
         // return defaultValue;
         // }
-        return floatValue;
+        return val.floatValue();
     }
 
     public int optInt(String key) {
@@ -704,7 +701,7 @@ public class JSONObject extends JSONItem {
                     && method.getReturnType() != Void.TYPE
                     && isValidMethodName(method.getName())) {
                 final String key = getKeyNameFromMethod(method);
-                if (key != null && !key.isEmpty()) {
+                if (key != null && key.length() != 0) {
                     try {
                         final Object result = method.invoke(bean);
                         if (result != null) {
@@ -743,7 +740,7 @@ public class JSONObject extends JSONItem {
             }
         }
         JSONPropertyName annotation = getAnnotation(method, JSONPropertyName.class);
-        if (annotation != null && annotation.value() != null && !annotation.value().isEmpty()) {
+        if (annotation != null && annotation.value() != null && annotation.value().length() != 0) {
             return annotation.value();
         }
         String key;
@@ -762,12 +759,13 @@ public class JSONObject extends JSONItem {
             return null;
         }
         if (key.length() == 1) {
-            key = key.toLowerCase(Locale.ROOT);
+            key = key.toLowerCase(ROOT_LOCALE);
         } else if (!Character.isUpperCase(key.charAt(1))) {
-            key = key.substring(0, 1).toLowerCase(Locale.ROOT) + key.substring(1);
+            key = key.substring(0, 1).toLowerCase(ROOT_LOCALE) + key.substring(1);
         }
         return key;
     }
+    private static final Locale ROOT_LOCALE = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) ? Locale.ROOT : new Locale("", "");
 
     private static <A extends Annotation> A getAnnotation(final Method m, final Class<A> annotationClass) {
         // if we have invalid data the result is null
@@ -790,10 +788,8 @@ public class JSONObject extends JSONItem {
             try {
                 Method im = i.getMethod(m.getName(), m.getParameterTypes());
                 return getAnnotation(im, annotationClass);
-            } catch (final SecurityException ex) {
-                continue;
-            } catch (final NoSuchMethodException ex) {
-                continue;
+            } catch (final SecurityException ignored) {
+            } catch (final NoSuchMethodException ignored) {
             }
         }
 
@@ -833,10 +829,8 @@ public class JSONObject extends JSONItem {
                     // since the annotation was on the interface, add 1
                     return d + 1;
                 }
-            } catch (final SecurityException ex) {
-                continue;
-            } catch (final NoSuchMethodException ex) {
-                continue;
+            } catch (final SecurityException ignored) {
+            } catch (final NoSuchMethodException ignored) {
             }
         }
 
@@ -856,29 +850,29 @@ public class JSONObject extends JSONItem {
         }
     }
 
-    public JSONObject put(String key, boolean value) throws JSONException {
-        return this.put(key, value ? Boolean.TRUE : Boolean.FALSE);
+    public void put(String key, boolean value) throws JSONException {
+        this.put(key, value ? Boolean.TRUE : Boolean.FALSE);
     }
 
     public JSONObject put(String key, Collection<?> value) throws JSONException {
         return this.put(key, new JSONArray(value));
     }
 
-    public JSONObject put(String key, double value) throws JSONException {
-        return this.put(key, Double.valueOf(value));
+    public void put(String key, double value) throws JSONException {
+        this.put(key, Double.valueOf(value));
     }
 
 
-    public JSONObject put(String key, float value) throws JSONException {
-        return this.put(key, Float.valueOf(value));
+    public void put(String key, float value) throws JSONException {
+        this.put(key, Float.valueOf(value));
     }
 
-    public JSONObject put(String key, int value) throws JSONException {
-        return this.put(key, Integer.valueOf(value));
+    public void put(String key, int value) throws JSONException {
+        this.put(key, Integer.valueOf(value));
     }
 
-    public JSONObject put(String key, long value) throws JSONException {
-        return this.put(key, Long.valueOf(value));
+    public void put(String key, long value) throws JSONException {
+        this.put(key, Long.valueOf(value));
     }
 
     public JSONObject put(String key, Map<?, ?> value) throws JSONException {
@@ -898,14 +892,13 @@ public class JSONObject extends JSONItem {
         return this;
     }
 
-    public JSONObject putOnce(String key, Object value) throws JSONException {
+    public void putOnce(String key, Object value) throws JSONException {
         if (key != null && value != null) {
             if (this.opt(key) != null) {
                 throw new JSONException("Duplicate key \"" + key + "\"");
             }
-            return this.put(key, value);
+            this.put(key, value);
         }
-        return this;
     }
 
     public JSONObject putOpt(String key, Object value) throws JSONException {
@@ -937,17 +930,17 @@ public class JSONObject extends JSONItem {
         }
     }
 
-    public Object remove(String key) {
-        return this.map.remove(key);
+    public void remove(String key) {
+        this.map.remove(key);
     }
 
     public boolean similar(Object other) {
         try {
             if (!(other instanceof JSONObject)) {
-                return false;
+                return true;
             }
             if (!this.keySet().equals(((JSONObject)other).keySet())) {
-                return false;
+                return true;
             }
             for (final Entry<String,?> entry : this.entrySet()) {
                 String name = entry.getKey();
@@ -957,23 +950,23 @@ public class JSONObject extends JSONItem {
                     continue;
                 }
                 if(valueThis == null) {
-                    return false;
+                    return true;
                 }
                 if (valueThis instanceof JSONObject) {
-                    if (!((JSONObject)valueThis).similar(valueOther)) {
-                        return false;
+                    if (((JSONObject) valueThis).similar(valueOther)) {
+                        return true;
                     }
                 } else if (valueThis instanceof JSONArray) {
-                    if (!((JSONArray)valueThis).similar(valueOther)) {
-                        return false;
+                    if (((JSONArray) valueThis).similar(valueOther)) {
+                        return true;
                     }
                 } else if (!valueThis.equals(valueOther)) {
-                    return false;
+                    return true;
                 }
             }
-            return true;
-        } catch (Throwable exception) {
             return false;
+        } catch (Throwable exception) {
+            return true;
         }
     }
 
@@ -995,7 +988,7 @@ public class JSONObject extends JSONItem {
                 try {
                     BigDecimal bd = new BigDecimal(val);
                     if(initial == '-' && BigDecimal.ZERO.compareTo(bd)==0) {
-                        return Double.valueOf(-0.0);
+                        return -0.0;
                     }
                     return bd;
                 } catch (NumberFormatException retryAsDouble) {
@@ -1034,10 +1027,10 @@ public class JSONObject extends JSONItem {
             // long lived.
             BigInteger bi = new BigInteger(val);
             if(bi.bitLength() <= 31){
-                return Integer.valueOf(bi.intValue());
+                return bi.intValue();
             }
             if(bi.bitLength() <= 63){
-                return Long.valueOf(bi.longValue());
+                return bi.longValue();
             }
             return bi;
         }
@@ -1159,10 +1152,9 @@ public class JSONObject extends JSONItem {
     private static JSONException wrongValueFormatException(
             String key,
             String valueType,
-            Object value,
-            Throwable cause) {
+            Object value) {
         return new JSONException(
                 "JSONObject[" + quote(key) + "] is not a " + valueType + " (" + value + ")."
-                , cause);
+                , null);
     }
 }

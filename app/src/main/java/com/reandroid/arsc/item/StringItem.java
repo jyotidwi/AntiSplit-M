@@ -15,29 +15,31 @@
   */
 package com.reandroid.arsc.item;
 
+import android.os.Build;
+
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.coder.ThreeByteCharsetDecoder;
 import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.pool.StringPool;
+import com.reandroid.json.JSONConvert;
+import com.reandroid.json.JSONObject;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.EmptyIterator;
-import com.reandroid.json.JSONConvert;
-import com.reandroid.json.JSONObject;
-import org.xmlpull.v1.XmlSerializer;
 
+import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetDecoder;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 public class StringItem extends StringBlock implements JSONConvert<JSONObject>, Comparable<StringItem> {
 
@@ -54,30 +56,23 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         return getUsers(parentClass, null);
     }
     public<T extends Block> Iterator<T> getUsers(Class<T> parentClass,
-                                                 Predicate<T> resultFilter){
+                                                 com.abdurazaaqmohammed.AntiSplit.main.Predicate<T> resultFilter){
 
         Collection<ReferenceItem> referencedList = getReferencedList();
         if(referencedList.size() == 0){
             return EmptyIterator.of();
         }
-        return new ComputeIterator<>(referencedList.iterator(), new Function<ReferenceItem, T>() {
-            @Override
-            public T apply(ReferenceItem referenceItem) {
-                T result = referenceItem.getReferredParent(parentClass);
-                if (resultFilter != null && !resultFilter.test(result)) {
-                    result = null;
-                }
-                return result;
+        return new ComputeIterator<>(referencedList.iterator(), referenceItem -> {
+            T result = referenceItem.getReferredParent(parentClass);
+            if (resultFilter != null && !resultFilter.test(result)) {
+                result = null;
             }
+            return result;
         });
-
     }
 
-    public boolean removeReference(ReferenceItem ref){
-        return mReferencedList.remove(ref);
-    }
-    public boolean removeAllReference(Collection<ReferenceItem> referenceItems){
-        return mReferencedList.removeAll(referenceItems);
+    public void removeReference(ReferenceItem ref){
+        mReferencedList.remove(ref);
     }
     public void removeAllReference(){
         mReferencedList.clear();
@@ -116,12 +111,7 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
             }
         }
     }
-    private void reUpdateReferences(int newIndex){
-        ReferenceItem[] referenceItems = mReferencedList.toArray(new ReferenceItem[0]);
-        for(ReferenceItem ref:referenceItems){
-            ref.set(newIndex);
-        }
-    }
+
     public void onPreRemoveInternal(){
         mStyleToRemove = getStyle();
     }
@@ -132,13 +122,7 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
             styleItem.onRemoved();
         }
     }
-    @Override
-    public void onIndexChanged(int oldIndex, int newIndex){
-        reUpdateReferences(newIndex);
-    }
-    public void serializeText(XmlSerializer serializer) throws IOException {
-        serializeText(serializer, false);
-    }
+
     public void serializeText(XmlSerializer serializer, boolean escapeValues) throws IOException {
         String text = get();
         if(text == null){
@@ -150,9 +134,6 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
             text = XmlSanitizer.escapeSpecialCharacter(text);
         }
         serializer.text(text);
-    }
-    public void serializeAttribute(XmlSerializer serializer, String name) throws IOException {
-        serializeAttribute(serializer, null, name);
     }
     public void serializeAttribute(XmlSerializer serializer, String namespace, String name) throws IOException {
         String text = get();
@@ -274,7 +255,10 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
             if(isUtf8){
                 return tryThreeByteDecoder(allStringBytes, offLen[0], offLen[1]);
             }
-            return new String(allStringBytes, offLen[0], offLen[1], StandardCharsets.UTF_16LE);
+
+            return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) ?
+                    new String(allStringBytes, offLen[0], offLen[1], com.abdurazaaqmohammed.AntiSplit.main.LegacyUtils.UTF_16)
+                    : com.abdurazaaqmohammed.AntiSplit.main.LegacyUtils.byteArrayToString(allStringBytes, offLen[0], offLen[1], com.abdurazaaqmohammed.AntiSplit.main.LegacyUtils.UTF_16);
         }
     }
     private String tryThreeByteDecoder(byte[] bytes, int offset, int length){
@@ -283,7 +267,9 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
             CharBuffer charBuffer = DECODER_3B.decode(byteBuffer);
             return charBuffer.toString();
         } catch (CharacterCodingException e) {
-            return new String(bytes, offset, length, StandardCharsets.UTF_8);
+            return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) ?
+                    new String(bytes, offset, length, com.abdurazaaqmohammed.AntiSplit.main.LegacyUtils.UTF_8)
+                    : com.abdurazaaqmohammed.AntiSplit.main.LegacyUtils.byteArrayToString(bytes, offset, length, com.abdurazaaqmohammed.AntiSplit.main.LegacyUtils.UTF_8);
         }
     }
     public boolean hasStyle(){
@@ -429,7 +415,7 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         byte[] bts;
         byte[] lenBytes=new byte[2];
         if(str!=null){
-            bts=str.getBytes(StandardCharsets.UTF_8);
+            bts = com.abdurazaaqmohammed.AntiSplit.main.LegacyUtils.stringToByteArray(com.abdurazaaqmohammed.AntiSplit.main.LegacyUtils.UTF_8, str);
             int strLen=bts.length;
             if((strLen & 0xff80)!=0){
                 lenBytes=new byte[4];
@@ -477,7 +463,8 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         return addBytes(lenBytes, bts, new byte[2]);
     }
     static byte[] getUtf16Bytes(String str){
-        return str.getBytes(StandardCharsets.UTF_16LE);
+        return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) ? str.getBytes(com.abdurazaaqmohammed.AntiSplit.main.LegacyUtils.UTF_16) :
+                com.abdurazaaqmohammed.AntiSplit.main.LegacyUtils.stringToByteArray(com.abdurazaaqmohammed.AntiSplit.main.LegacyUtils.UTF_16, str);
     }
 
     private static byte[] addBytes(byte[] bts1, byte[] bts2, byte[] bts3){
@@ -510,7 +497,7 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         return result;
     }
 
-    private static final CharsetDecoder UTF16LE_DECODER = StandardCharsets.UTF_16LE.newDecoder();
+    private static final CharsetDecoder UTF16LE_DECODER = com.abdurazaaqmohammed.AntiSplit.main.LegacyUtils.UTF_16.newDecoder();
     private static final CharsetDecoder DECODER_3B = ThreeByteCharsetDecoder.INSTANCE;
 
     public static final String NAME_string = ObjectsUtil.of("string");

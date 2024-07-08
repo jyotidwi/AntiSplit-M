@@ -17,7 +17,6 @@ package com.reandroid.archive.writer;
 
 import com.reandroid.archive.ArchiveInfo;
 import com.reandroid.archive.block.CentralEntryHeader;
-import com.reandroid.archive.block.CommonHeader;
 import com.reandroid.archive.block.DataDescriptor;
 import com.reandroid.archive.block.LocalFileHeader;
 

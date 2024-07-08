@@ -170,13 +170,12 @@ public class PathTree<T> implements Comparable<PathTree<?>>, Iterable<PathTree<T
         }
         return this;
     }
-    public boolean add(PathTree<T> element){
+    public void add(PathTree<T> element){
         if(element == null){
-            return false;
+            return;
         }
         element.setParent(this);
         this.elementsMap.put(element.getName(), element);
-        return true;
     }
     public T getItem() {
         return item;
@@ -196,7 +195,7 @@ public class PathTree<T> implements Comparable<PathTree<?>>, Iterable<PathTree<T
         return !isDirectory();
     }
     public boolean isRoot(){
-        return isDirectory() && getParent() == null;
+        return !isDirectory() || getParent() != null;
     }
     public String getName() {
         return name;
@@ -213,7 +212,7 @@ public class PathTree<T> implements Comparable<PathTree<?>>, Iterable<PathTree<T
     public int getDepth(){
         int result = 0;
         PathTree<T> parent = this;
-        while (parent != null && !parent.isRoot()){
+        while (parent != null && parent.isRoot()){
             result ++;
             parent = parent.getParent();
         }
@@ -224,7 +223,7 @@ public class PathTree<T> implements Comparable<PathTree<?>>, Iterable<PathTree<T
         PathTree<?>[] results = new PathTree<?>[length];
         PathTree<T> parent = this;
         int i = length - 1;
-        while (parent != null && !parent.isRoot()){
+        while (parent != null && parent.isRoot()){
             results[i] = parent;
             i --;
             parent = parent.getParent();
@@ -234,8 +233,8 @@ public class PathTree<T> implements Comparable<PathTree<?>>, Iterable<PathTree<T
     public String getPath(){
         StringBuilder builder = new StringBuilder();
         PathTree<?>[] elements = getParentElements();
-        for(int i = 0; i < elements.length; i++){
-            builder.append(elements[i].getName());
+        for (PathTree<?> element : elements) {
+            builder.append(element.getName());
         }
         return builder.toString();
     }

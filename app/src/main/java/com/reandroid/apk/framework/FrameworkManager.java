@@ -22,7 +22,7 @@ public abstract class FrameworkManager {
 
     public FrameworkManager(){
     }
-    public abstract FrameworkApk get(int version);
+    public abstract FrameworkApk get();
     public abstract FrameworkApk getBestMatch(int version);
     public abstract Integer getNearestVersion(int version);
     public abstract Integer getLatestVersion();

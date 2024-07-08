@@ -42,9 +42,7 @@ public  class ExpandableBlockContainer extends BlockContainer<Block> {
         }
         Block[] old=mChildes;
         mChildes=new Block[count];
-        for(int i=0;i<old.length;i++){
-            mChildes[i]=old[i];
-        }
+        System.arraycopy(old, 0, mChildes, 0, old.length);
     }
     @Override
     protected void onRefreshed() {

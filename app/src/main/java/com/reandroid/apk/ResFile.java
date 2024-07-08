@@ -26,7 +26,6 @@ import com.reandroid.utils.collection.FilterIterator;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Predicate;
 
 public class ResFile implements Iterable<Entry> {
 
@@ -44,7 +43,7 @@ public class ResFile implements Iterable<Entry> {
     public Iterator<Entry> iterator() {
         return getEntries().iterator();
     }
-    public Iterator<Entry> iterator(Predicate<? super Entry> filter) {
+    public Iterator<Entry> iterator(com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super Entry> filter) {
         return FilterIterator.of(iterator(), filter);
     }
     public int size() {
@@ -220,5 +219,5 @@ public class ResFile implements Iterable<Entry> {
         return getFilePath();
     }
 
-    public static String EXT_9_PNG = ObjectsUtil.of(".9.png");
+    public static final String EXT_9_PNG = ObjectsUtil.of(".9.png");
 }

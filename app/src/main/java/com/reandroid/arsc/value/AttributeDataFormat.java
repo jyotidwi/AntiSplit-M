@@ -19,7 +19,7 @@ import com.reandroid.utils.StringsUtil;
 
 public enum AttributeDataFormat {
 
-    REFERENCE(1<<0,
+    REFERENCE(1,
             new ValueType[]{
                     ValueType.REFERENCE,
                     ValueType.ATTRIBUTE,
@@ -87,8 +87,8 @@ public enum AttributeDataFormat {
     }
     public boolean contains(ValueType valueType){
         ValueType[] valueTypes = this.valueTypes;
-        for(int i = 0; i < valueTypes.length; i++){
-            if(valueType == valueTypes[i]){
+        for (ValueType type : valueTypes) {
+            if (valueType == type) {
                 return true;
             }
         }

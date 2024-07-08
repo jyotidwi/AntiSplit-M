@@ -30,7 +30,7 @@ public class ZipByteOutput extends ZipOutput{
         return bis.toByteArray();
     }
     @Override
-    public long position() throws IOException {
+    public long position() {
         return bis.position();
     }
     @Override
@@ -49,7 +49,7 @@ public class ZipByteOutput extends ZipOutput{
     public void write(InputStream inputStream) throws IOException {
         bis.write(inputStream);
     }
-    public void write(byte[] bytes) throws IOException {
+    public void write(byte[] bytes) {
         bis.write(bytes);
     }
     @Override

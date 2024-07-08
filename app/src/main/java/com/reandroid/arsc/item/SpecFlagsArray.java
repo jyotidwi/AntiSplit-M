@@ -24,7 +24,6 @@ import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 
-import java.io.IOException;
 import java.util.AbstractList;
 
 public class SpecFlagsArray extends IntegerArrayBlock implements BlockLoad, JSONConvert<JSONArray> {
@@ -74,7 +73,7 @@ public class SpecFlagsArray extends IntegerArrayBlock implements BlockLoad, JSON
         return super.get(entryId);
     }
     @Override
-    public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
+    public void onBlockLoaded(Block sender) {
         if(sender==this.entryCount){
             super.setSize(entryCount.get());
         }

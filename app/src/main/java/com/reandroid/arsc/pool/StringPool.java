@@ -161,7 +161,7 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
             uniqueSet.remove(key);
         }
         List<String> sortedList=new ArrayList<>(uniqueSet);
-        sortedList.sort(CompareUtil.STRING_COMPARATOR);
+        Collections.sort(sortedList, CompareUtil.STRING_COMPARATOR);
         insertStringList(sortedList);
     }
     private void insertStringList(List<String> stringList){
@@ -234,9 +234,8 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
     }
     public int clearDuplicates(){
         int results = 0;
-        Iterator<StringGroup<T>> iterator = mUniqueMap.values().iterator();
-        while (iterator.hasNext()){
-            results += iterator.next().clearDuplicates();
+        for (StringGroup<T> ts : mUniqueMap.values()) {
+            results += ts.clearDuplicates();
         }
         return results;
     }
@@ -411,7 +410,7 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
     }
 
     @Override
-    public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
+    public void onBlockLoaded(Block sender) {
         StringPoolHeader header = getHeaderBlock();
         if(sender == header.getFlagUtf8()){
             mArrayStrings.setUtf8(header.isUtf8());

@@ -17,13 +17,12 @@ package com.reandroid.utils.collection;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.function.Predicate;
 
-public class FilterIterator<T> implements Iterator<T>, Predicate<T> {
+public class FilterIterator<T> implements Iterator<T>, com.abdurazaaqmohammed.AntiSplit.main.Predicate<T> {
     private final Iterator<? extends T> iterator;
     private T mNext;
-    private final Predicate<? super T> mFilter;
-    public FilterIterator(Iterator<? extends T> iterator, Predicate<? super T> filter){
+    private final com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super T> mFilter;
+    public FilterIterator(Iterator<? extends T> iterator, com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super T> filter){
         this.iterator = iterator;
         this.mFilter = filter;
     }
@@ -93,7 +92,7 @@ public class FilterIterator<T> implements Iterator<T>, Predicate<T> {
             return item.equals(excludeItem);
         }
     }
-    public static<T1> Iterator<T1> of(Iterator<? extends T1> iterator,  Predicate<? super T1> filter){
+    public static<T1> Iterator<T1> of(Iterator<? extends T1> iterator,  com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super T1> filter){
         if(iterator == null || !iterator.hasNext()){
             return EmptyIterator.of();
         }

@@ -28,12 +28,11 @@ public class XMLNamespace implements Namespace, Cloneable {
         this.prefix = prefix;
     }
 
-    XMLNamespace newCopy(XMLNode parent){
+    void newCopy(XMLNode parent){
         XMLNamespace xmlNamespace = new XMLNamespace(getUri(), getPrefix());
         if(parent instanceof XMLElement){
             ((XMLElement)parent).addNamespace(xmlNamespace);
         }
-        return xmlNamespace;
     }
     @Override
     public String getUri() {
@@ -55,9 +54,6 @@ public class XMLNamespace implements Namespace, Cloneable {
     }
 
     static boolean looksNamespace(String name, String value){
-        if(value==null || !name.startsWith("xmlns:")){
-            return false;
-        }
-        return true;
+        return value != null && name.startsWith("xmlns:");
     }
 }

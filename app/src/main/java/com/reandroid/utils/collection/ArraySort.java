@@ -23,9 +23,9 @@ public class ArraySort {
         IntSort sorter = new IntSort(elements, start, length);
         return sorter.sort();
     }
-    public static<T> boolean sort(Object[] elements, Comparator<T> comparator){
+    public static<T> void sort(Object[] elements, Comparator<T> comparator){
         ObjectSort sorter = new ObjectSort(elements, 0, elements.length, comparator);
-        return sorter.sort();
+        sorter.sort();
     }
     public static boolean sort(Object[] elements, Comparator<?> comparator, int length){
         ObjectSort sorter = new ObjectSort(elements, 0, length, comparator);
@@ -66,13 +66,7 @@ public class ArraySort {
         public int compareToMid(int i) {
             int data = elementData[i];
             int mid = this.mid;
-            if(data == mid){
-                return 0;
-            }
-            if(data < mid){
-                return -1;
-            }
-            return 1;
+            return Integer.compare(data, mid);
         }
         @Override
         public void onSwap(int i, int j) {

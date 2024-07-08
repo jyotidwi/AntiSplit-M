@@ -192,7 +192,7 @@ public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> im
         return start;
     }
     @Override
-    public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
+    public void onBlockLoaded(Block sender) {
         if(sender == countReference){
             int count = countReference.get();
             setSize(count);

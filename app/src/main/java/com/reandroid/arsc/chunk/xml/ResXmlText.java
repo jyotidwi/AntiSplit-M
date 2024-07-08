@@ -21,10 +21,9 @@ import com.reandroid.arsc.item.ResXmlString;
 import com.reandroid.arsc.pool.ResXmlStringPool;
 
 public class ResXmlText extends BaseXmlChunk {
-    private final IntegerItem mReserved;
     public ResXmlText() {
         super(ChunkType.XML_CDATA, 1);
-        this.mReserved=new IntegerItem();
+        IntegerItem mReserved = new IntegerItem();
         addChild(mReserved);
         setStringReference(0);
     }

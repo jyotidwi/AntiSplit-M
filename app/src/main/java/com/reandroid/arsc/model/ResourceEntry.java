@@ -35,8 +35,7 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Predicate;
+
 
 public class ResourceEntry implements Iterable<Entry>{
     private final int resourceId;
@@ -263,16 +262,11 @@ public class ResourceEntry implements Iterable<Entry>{
     public Iterator<Entry> iterator(boolean skipNull){
         return getPackageBlock().getEntries(getResourceId(), skipNull);
     }
-    public Iterator<Entry> iterator(Predicate<Entry> filter){
+    public Iterator<Entry> iterator(com.abdurazaaqmohammed.AntiSplit.main.Predicate<Entry> filter){
         return new FilterIterator<>(getPackageBlock().getEntries(getResourceId()), filter);
     }
     public Iterator<ResConfig> getConfigs(){
-        return new ComputeIterator<>(iterator(false), new Function<Entry, ResConfig>() {
-            @Override
-            public ResConfig apply(Entry entry) {
-                return entry.getResConfig();
-            }
-        });
+        return new ComputeIterator<>(iterator(false), Entry::getResConfig);
     }
     public String getHexId(){
         return HexUtil.toHex8(getResourceId());

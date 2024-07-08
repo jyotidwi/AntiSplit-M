@@ -131,16 +131,15 @@ public class AttributeBag {
         AttributeBagItem[] bagItems= getBagItems();
         int len=bagItems.length;
         AttributeBagItem[] foundBags = new AttributeBagItem[len];
-        for(int i=0;i<len;i++){
-            AttributeBagItem item=bagItems[i];
-            if(item.isType()){
+        for (AttributeBagItem item : bagItems) {
+            if (item.isType()) {
                 continue;
             }
             int data = item.getData();
             if ((attrValue & data) != data) {
                 continue;
             }
-            if(attrValue == data){
+            if (attrValue == data) {
                 return new AttributeBagItem[]{item};
             }
             int index = indexOf(foundBags, data);
@@ -179,10 +178,9 @@ public class AttributeBag {
         AttributeBagItem[] results=new AttributeBagItem[count];
         int index=0;
         int len=bagItems.length;
-        for(int i=0;i<len;i++){
-            AttributeBagItem item=bagItems[i];
-            if(item!=null){
-                results[index]=item;
+        for (AttributeBagItem item : bagItems) {
+            if (item != null) {
+                results[index] = item;
                 index++;
             }
         }
@@ -194,8 +192,8 @@ public class AttributeBag {
         }
         int result=0;
         int len=bagItems.length;
-        for (int i = 0; i < len; i++) {
-            if(bagItems[i]!=null){
+        for (AttributeBagItem bagItem : bagItems) {
+            if (bagItem != null) {
                 result++;
             }
         }

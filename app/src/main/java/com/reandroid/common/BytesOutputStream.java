@@ -47,7 +47,7 @@ public class BytesOutputStream extends ByteArrayOutputStream {
     }
 
     @Override
-    public void write(byte[] b) throws IOException {
+    public void write(byte[] b) {
         this.write(b, 0, b.length);
     }
 
@@ -73,9 +73,7 @@ public class BytesOutputStream extends ByteArrayOutputStream {
             newCapacity = minCapacity;
         }
         byte[] bytes = new byte[newCapacity];
-        for(int i = 0; i < oldCapacity; i ++){
-            bytes[i] = buf[i];
-        }
+        System.arraycopy(buf, 0, bytes, 0, oldCapacity);
         this.buf = bytes;
     }
 
@@ -96,7 +94,7 @@ public class BytesOutputStream extends ByteArrayOutputStream {
         }
         inputStream.close();
     }
-    public void write(BytesInputStream bis) throws IOException {
+    public void write(BytesInputStream bis) {
         byte[] bytes = bis.toByteArray();
         write(bytes, 0, bytes.length);
     }
@@ -114,9 +112,7 @@ public class BytesOutputStream extends ByteArrayOutputStream {
             return buf;
         }
         byte[] results = new byte[count];
-        for(int i = 0; i < count; i++){
-            results[i] = buf[i];
-        }
+        System.arraycopy(buf, 0, results, 0, count);
         this.buf = results;
         return results;
     }

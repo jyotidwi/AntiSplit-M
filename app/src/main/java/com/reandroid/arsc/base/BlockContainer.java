@@ -45,10 +45,9 @@ public abstract class BlockContainer<T extends Block> extends Block implements B
             return;
         }
         int length = childes.length;
-        for(int i = 0; i < length; i++){
-            T item = childes[i];
-            if(item instanceof BlockRefresh){
-                ((BlockRefresh)item).refresh();
+        for (T item : childes) {
+            if (item instanceof BlockRefresh) {
+                ((BlockRefresh) item).refresh();
             }
         }
     }
@@ -67,13 +66,12 @@ public abstract class BlockContainer<T extends Block> extends Block implements B
             return;
         }
         int max = childes.length;
-        for(int i = 0; i < max; i++){
-            if(counter.FOUND){
+        for (T childe : childes) {
+            if (counter.FOUND) {
                 return;
             }
-            T item = childes[i];
-            if(item != null){
-                item.onCountUpTo(counter);
+            if (childe != null) {
+                childe.onCountUpTo(counter);
             }
         }
     }
@@ -88,9 +86,8 @@ public abstract class BlockContainer<T extends Block> extends Block implements B
         }
         int result = 0;
         int max = childes.length;
-        for(int i = 0; i < max; i++){
-            T item = childes[i];
-            if(item != null){
+        for (T item : childes) {
+            if (item != null) {
                 result += item.countBytes();
             }
         }
@@ -107,9 +104,8 @@ public abstract class BlockContainer<T extends Block> extends Block implements B
         }
         byte[] results = null;
         int length = childes.length;
-        for(int i = 0; i < length; i++){
-            T item = childes[i];
-            if(item != null){
+        for (T item : childes) {
+            if (item != null) {
                 results = addBytes(results, item.getBytes());
             }
         }
@@ -126,9 +122,8 @@ public abstract class BlockContainer<T extends Block> extends Block implements B
         }
         int result = 0;
         int length = childes.length;
-        for(int i = 0; i < length; i++){
-            T item = childes[i];
-            if(item != null){
+        for (T item : childes) {
+            if (item != null) {
                 result += item.writeBytes(stream);
             }
         }
@@ -142,9 +137,8 @@ public abstract class BlockContainer<T extends Block> extends Block implements B
             return;
         }
         int length = childes.length;
-        for(int i = 0; i < length; i++){
-            T item = childes[i];
-            if(item != null){
+        for (T item : childes) {
+            if (item != null) {
                 item.readBytes(reader);
             }
         }

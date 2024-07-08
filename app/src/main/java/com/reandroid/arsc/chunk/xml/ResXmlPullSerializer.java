@@ -121,28 +121,28 @@ public class ResXmlPullSerializer implements XmlSerializer {
     }
 
     @Override
-    public void setOutput(OutputStream os, String encoding) throws IOException, IllegalArgumentException, IllegalStateException {
+    public void setOutput(OutputStream os, String encoding) throws IllegalArgumentException, IllegalStateException {
         throw new IllegalArgumentException("Can not set OutputStream");
     }
 
     @Override
-    public void setOutput(Writer writer) throws IOException, IllegalArgumentException, IllegalStateException {
+    public void setOutput(Writer writer) throws IllegalArgumentException, IllegalStateException {
         throw new IllegalArgumentException("Can not set OutputStream");
     }
     @Override
-    public void startDocument(String encoding, Boolean standalone) throws IOException, IllegalArgumentException, IllegalStateException {
+    public void startDocument(String encoding, Boolean standalone) throws IllegalArgumentException, IllegalStateException {
         if(mCurrentElement != null){
             mEndDocument = true;
         }
     }
 
     @Override
-    public void endDocument() throws IOException, IllegalArgumentException, IllegalStateException {
+    public void endDocument() throws IllegalArgumentException, IllegalStateException {
         mEndDocument = true;
     }
 
     @Override
-    public void setPrefix(String prefix, String namespace) throws IOException, IllegalArgumentException, IllegalStateException {
+    public void setPrefix(String prefix, String namespace) throws IllegalArgumentException, IllegalStateException {
         ResXmlElement element = getCurrentElement();
         if(element == null){
             // TODO: throw?
@@ -204,7 +204,7 @@ public class ResXmlPullSerializer implements XmlSerializer {
     }
 
     @Override
-    public ResXmlPullSerializer startTag(String namespace, String name) throws IOException, IllegalArgumentException, IllegalStateException {
+    public ResXmlPullSerializer startTag(String namespace, String name) throws IllegalArgumentException, IllegalStateException {
         flushText();
         ResXmlElement element = getCurrentElement();
         String prefix = null;
@@ -250,7 +250,7 @@ public class ResXmlPullSerializer implements XmlSerializer {
     }
 
     @Override
-    public ResXmlPullSerializer endTag(String namespace, String name) throws IOException, IllegalArgumentException, IllegalStateException {
+    public ResXmlPullSerializer endTag(String namespace, String name) throws IllegalArgumentException, IllegalStateException {
         flushText();
         mCurrentElement.calculateAttributesOrder();
         mCurrentElement = mCurrentElement.getParentElement();
@@ -258,49 +258,49 @@ public class ResXmlPullSerializer implements XmlSerializer {
     }
 
     @Override
-    public ResXmlPullSerializer text(String text) throws IOException, IllegalArgumentException, IllegalStateException {
+    public ResXmlPullSerializer text(String text) throws IllegalArgumentException, IllegalStateException {
         appendText(text);
         return this;
     }
 
     @Override
-    public ResXmlPullSerializer text(char[] buf, int start, int len) throws IOException, IllegalArgumentException, IllegalStateException {
+    public ResXmlPullSerializer text(char[] buf, int start, int len) throws IllegalArgumentException, IllegalStateException {
         return text(new String(buf, start, len));
     }
 
     @Override
-    public void cdsect(String text) throws IOException, IllegalArgumentException, IllegalStateException {
+    public void cdsect(String text) throws IllegalArgumentException, IllegalStateException {
 
     }
 
     @Override
-    public void entityRef(String text) throws IOException, IllegalArgumentException, IllegalStateException {
+    public void entityRef(String text) throws IllegalArgumentException, IllegalStateException {
         appendText(XMLUtil.decodeEntityRef(text));
     }
 
     @Override
-    public void processingInstruction(String text) throws IOException, IllegalArgumentException, IllegalStateException {
+    public void processingInstruction(String text) throws IllegalArgumentException, IllegalStateException {
 
     }
 
     @Override
-    public void comment(String text) throws IOException, IllegalArgumentException, IllegalStateException {
+    public void comment(String text) throws IllegalArgumentException, IllegalStateException {
         ResXmlElement current = getCurrentElement();
         current.setComment(text);
     }
 
     @Override
-    public void docdecl(String text) throws IOException, IllegalArgumentException, IllegalStateException {
+    public void docdecl(String text) throws IllegalArgumentException, IllegalStateException {
 
     }
 
     @Override
-    public void ignorableWhitespace(String text) throws IOException, IllegalArgumentException, IllegalStateException {
+    public void ignorableWhitespace(String text) throws IllegalArgumentException, IllegalStateException {
 
     }
 
     @Override
-    public void flush() throws IOException {
+    public void flush() {
 
     }
 

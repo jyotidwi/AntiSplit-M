@@ -4,14 +4,14 @@ plugins {
 
 android {
     namespace = "com.abdurazaaqmohammed.AntiSplit"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.abdurazaaqmohammed.AntiSplit"
-        minSdk = 16
-        targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        minSdk = 1
+        targetSdk = 35
+        versionCode = 7
+        versionName = "1.4.1"
 
     }
 

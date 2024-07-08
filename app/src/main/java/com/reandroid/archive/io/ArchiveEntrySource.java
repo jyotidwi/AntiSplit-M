@@ -55,11 +55,11 @@ public class ArchiveEntrySource<T extends ZipInput> extends InputSource {
                 new Inflater(true), 512);
     }
     @Override
-    public long getLength() throws IOException{
+    public long getLength() {
         return getArchiveEntry().getDataSize();
     }
     @Override
-    public long getCrc() throws IOException{
+    public long getCrc() {
         return getArchiveEntry().getCrc();
     }
 }

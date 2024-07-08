@@ -44,7 +44,7 @@ public class BlockInputSource<T extends Block> extends ByteInputSource {
         return block;
     }
     @Override
-    public long getLength() throws IOException{
+    public long getLength() {
         Block block = getBlock();
         return block.countBytes();
     }

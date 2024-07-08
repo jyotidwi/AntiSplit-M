@@ -359,7 +359,7 @@ public class ResXmlPullParser implements XmlResourceParser {
         return false;
     }
     @Override
-    public void setProperty(String name, Object value) throws XmlPullParserException {
+    public void setProperty(String name, Object value) {
     }
     @Override
     public Object getProperty(String name) {
@@ -383,10 +383,10 @@ public class ResXmlPullParser implements XmlResourceParser {
         return "UTF-8";
     }
     @Override
-    public void defineEntityReplacementText(String entityName, String replacementText) throws XmlPullParserException {
+    public void defineEntityReplacementText(String entityName, String replacementText) {
     }
     @Override
-    public int getNamespaceCount(int depth) throws XmlPullParserException {
+    public int getNamespaceCount(int depth) {
         if(isCountNamespacesAsAttribute()){
             return 0;
         }
@@ -400,7 +400,7 @@ public class ResXmlPullParser implements XmlResourceParser {
         return 0;
     }
     @Override
-    public String getNamespacePrefix(int pos) throws XmlPullParserException {
+    public String getNamespacePrefix(int pos) {
         ResXmlElement element = getCurrentElement();
         if(element!=null){
             return element.getNamespaceAt(pos).getPrefix();
@@ -408,7 +408,7 @@ public class ResXmlPullParser implements XmlResourceParser {
         return null;
     }
     @Override
-    public String getNamespaceUri(int pos) throws XmlPullParserException {
+    public String getNamespaceUri(int pos) {
         ResXmlElement element = getCurrentElement();
         if(element!=null){
             return element.getNamespaceAt(pos).getUri();
@@ -443,7 +443,7 @@ public class ResXmlPullParser implements XmlResourceParser {
         return 0;
     }
     @Override
-    public boolean isWhitespace() throws XmlPullParserException {
+    public boolean isWhitespace() {
         String text = getText();
         if(text == null){
             return true;
@@ -493,7 +493,7 @@ public class ResXmlPullParser implements XmlResourceParser {
         return null;
     }
     @Override
-    public boolean isEmptyElementTag() throws XmlPullParserException {
+    public boolean isEmptyElementTag() {
         ResXmlElement element = getCurrentElement();
         if(element!=null){
             return element.size() == 0 && element.getAttributeCount()==0;
@@ -601,11 +601,11 @@ public class ResXmlPullParser implements XmlResourceParser {
         return namespace.getUri();
     }
     @Override
-    public int getEventType() throws XmlPullParserException {
+    public int getEventType() {
         return mEventList.getType();
     }
     @Override
-    public int next() throws XmlPullParserException, IOException {
+    public int next() {
         mEventList.next();
         int type = mEventList.getType();
         if(type == START_TAG){
@@ -614,11 +614,11 @@ public class ResXmlPullParser implements XmlResourceParser {
         return type;
     }
     @Override
-    public int nextToken() throws XmlPullParserException, IOException {
+    public int nextToken() {
         return next();
     }
     @Override
-    public void require(int type, String namespace, String name) throws XmlPullParserException, IOException {
+    public void require(int type, String namespace, String name) throws XmlPullParserException {
         if (type != this.getEventType()
                 || (namespace != null && !namespace.equals(getNamespace()))
                 || (name != null && !name.equals(getName()))) {
@@ -627,7 +627,7 @@ public class ResXmlPullParser implements XmlResourceParser {
         }
     }
     @Override
-    public String nextText() throws XmlPullParserException, IOException {
+    public String nextText() throws XmlPullParserException {
         int event = getEventType();
         if (event != START_TAG) {
             throw new XmlPullParserException("precondition: START_TAG", this, null);
@@ -641,7 +641,7 @@ public class ResXmlPullParser implements XmlResourceParser {
         return "";
     }
     @Override
-    public int nextTag() throws XmlPullParserException, IOException {
+    public int nextTag() throws XmlPullParserException {
         int event = getEventType();
         if (event != START_TAG) {
             throw new XmlPullParserException("precondition: START_TAG", this, null);
@@ -694,8 +694,8 @@ public class ResXmlPullParser implements XmlResourceParser {
         reportNamespaceAttrs = true;
     }
 
-    public static interface DocumentLoadedListener{
-        public ResXmlDocument onDocumentLoaded(ResXmlDocument resXmlDocument);
+    public interface DocumentLoadedListener{
+        ResXmlDocument onDocumentLoaded(ResXmlDocument resXmlDocument);
     }
 
 }

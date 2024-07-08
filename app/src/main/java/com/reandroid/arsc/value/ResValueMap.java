@@ -75,12 +75,12 @@ public class ResValueMap extends AttributeValue implements Comparable<ResValueMa
     }
     @Override
     boolean allowNullPrefixEncode(){
-        return true;
+        return false;
     }
     @Override
     public String decodeName(boolean includePrefix){
         int resourceId = getNameId();
-        if(!PackageBlock.isResourceId(resourceId)){
+        if(PackageBlock.isResourceId(resourceId)){
             if(resourceId != 0 && getAttributeType() == null){
                 return ValueCoder.decodeUnknownNameId(resourceId);
             }

@@ -68,11 +68,11 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
     }
     /**
      * returns null if parsing is ok, else returns unknown qualifiers
-     * */
-    public String[] parseQualifiers(String qualifiers){
+     */
+    public void parseQualifiers(String qualifiers){
         QualifierParser parser = new QualifierParser(this, qualifiers);
         parser.parse();
-        return parser.getErrors();
+        parser.getErrors();
     }
     public String getLocale(){
         StringBuilder builder = new StringBuilder();
@@ -1336,7 +1336,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             if(flag== null){
                 return;
             }
-            mBuilder.append('-').append(flag.toString());
+            mBuilder.append('-').append(flag);
         }
         private void appendDp(String prefix, int number){
             if(number == 0){
@@ -1473,9 +1473,8 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             int length = qualifiers.length;
             String[] tmp = new String[length];
             int count = 0;
-            for(int i = 0; i < length; i++){
-                String qualifier = qualifiers[i];
-                if(qualifier == null || qualifier.length() == 0){
+            for (String qualifier : qualifiers) {
+                if (qualifier == null || qualifier.length() == 0) {
                     continue;
                 }
                 tmp[count] = qualifier;
@@ -1618,11 +1617,8 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
                 return false;
             }
             Matcher matcher = PATTERN_LOCALE_NUMBERING_SYSTEM.matcher(qualifier);
-            if(!matcher.find()){
-                return false;
-            }
+            return matcher.find();
             //TODO: where to set ?
-            return true;
         }
         private void parseLocaleScriptVariant(){
             if(this.mLanguageRegionParsed || isEmpty()){
@@ -1776,8 +1772,8 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             if(length != 2  && length !=3 ){
                 return false;
             }
-            for(int i = 0; i < length; i++){
-                if(!isAtoZLower(chars[i])) {
+            for (char aChar : chars) {
+                if (!isAtoZLower(aChar)) {
                     return false;
                 }
             }
@@ -1794,7 +1790,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             char[] chars = qualifier.toCharArray();
             if(length == 2){
                 for(char ch : chars){
-                    if(!isAtoZUpper(ch)){
+                    if(isAtoZUpper(ch)){
                         return false;
                     }
                 }
@@ -1829,7 +1825,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
                     if(!isDigit(ch)){
                         return false;
                     }
-                }else if(!isAtoZUpper(ch)) {
+                }else if(isAtoZUpper(ch)) {
                     return false;
                 }
             }
@@ -1848,7 +1844,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             return ch <= 'z' && ch >= 'a';
         }
         private static boolean isAtoZUpper(char ch){
-            return ch <= 'Z' && ch >= 'A';
+            return ch > 'Z' || ch < 'A';
         }
 
         private static final Pattern PATTERN_PREFIX_NUMBER = Pattern.compile("^([mcnv]+)([0-9]+)$");

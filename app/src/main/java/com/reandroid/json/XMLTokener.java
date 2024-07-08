@@ -15,7 +15,7 @@ public class XMLTokener extends JSONTokener {
    public static final java.util.HashMap<String, Character> entity;
 
    static {
-       entity = new java.util.HashMap<String, Character>(8);
+       entity = new java.util.HashMap<>(8);
        entity.put("amp",  XML.AMP);
        entity.put("apos", XML.APOS);
        entity.put("gt",   XML.GT);
@@ -95,7 +95,7 @@ public class XMLTokener extends JSONTokener {
 
     static String unescapeEntity(String e) {
         // validate
-        if (e == null || e.isEmpty()) {
+        if (e == null || e.length() == 0) {
             return "";
         }
         // if our entity is an encoded unicode point, parse it.

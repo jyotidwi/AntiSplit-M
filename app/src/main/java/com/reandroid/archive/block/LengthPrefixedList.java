@@ -78,8 +78,8 @@ public abstract class LengthPrefixedList<T extends Block> extends FixedBlockCont
         this.elements.add(element);
         return element;
     }
-    public boolean remove(T element){
-        return this.elements.remove(element);
+    public void remove(T element){
+        this.elements.remove(element);
     }
     public void sort(Comparator<T> comparator){
         this.elements.sort(comparator);

@@ -17,15 +17,14 @@ package com.reandroid.utils.collection;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.function.Predicate;
 
 public class InstanceIterator<T> implements Iterator<T> {
     private final Iterator<?> iterator;
     private final Class<T> instance;
-    private final Predicate<? super T> filter;
+    private final com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super T> filter;
     private T mCurrent;
 
-    public InstanceIterator(Iterator<?> iterator, Class<T> instance, Predicate<? super T> filter){
+    public InstanceIterator(Iterator<?> iterator, Class<T> instance, com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super T> filter){
         this.iterator = iterator;
         this.instance = instance;
         this.filter = filter;
@@ -44,7 +43,7 @@ public class InstanceIterator<T> implements Iterator<T> {
         }
         Iterator<?> iterator = this.iterator;
         Class<T> instance = this.instance;
-        Predicate<? super T> filter = this.filter;
+        com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super T> filter = this.filter;
         while (iterator.hasNext()){
             Object obj = iterator.next();
             if(obj == null){
@@ -75,7 +74,7 @@ public class InstanceIterator<T> implements Iterator<T> {
         }
         return new InstanceIterator<>(iterator, instance);
     }
-    public static<T1> Iterator<T1> of(Iterator<?> iterator, Class<T1> instance, Predicate<? super T1> filter){
+    public static<T1> Iterator<T1> of(Iterator<?> iterator, Class<T1> instance, com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super T1> filter){
         if(!iterator.hasNext()){
             return EmptyIterator.of();
         }

@@ -24,8 +24,6 @@
  import com.reandroid.json.JSONArray;
  import com.reandroid.json.JSONConvert;
 
- import java.io.IOException;
-
  public class StagedAliasEntryArray extends BlockArray<StagedAliasEntry>
          implements BlockLoad, JSONConvert<JSONArray> {
      private final IntegerItem count;
@@ -39,9 +37,8 @@
          if(childes==null){
              return false;
          }
-         for(int i=0;i<childes.length;i++){
-             StagedAliasEntry entry=childes[i];
-             if(entry.isEqual(aliasEntry)){
+         for (StagedAliasEntry entry : childes) {
+             if (entry.isEqual(aliasEntry)) {
                  return true;
              }
          }
@@ -52,9 +49,8 @@
          if(childes==null){
              return null;
          }
-         for(int i=0;i<childes.length;i++){
-             StagedAliasEntry entry=childes[i];
-             if(stagedResId==entry.getStagedResId()){
+         for (StagedAliasEntry entry : childes) {
+             if (stagedResId == entry.getStagedResId()) {
                  return entry;
              }
          }
@@ -78,7 +74,7 @@
          return new StagedAliasEntry();
      }
      @Override
-     public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
+     public void onBlockLoaded(Block sender) {
          if(sender==this.count){
              setSize(this.count.get());
          }

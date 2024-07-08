@@ -20,7 +20,6 @@ import com.reandroid.utils.collection.ArraySort;
 import com.reandroid.utils.collection.CollectionUtil;
 
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 public class ZipEntryMap implements Comparator<InputSource>, Iterable<InputSource>{
@@ -47,7 +46,7 @@ public class ZipEntryMap implements Comparator<InputSource>, Iterable<InputSourc
         this.moduleName = moduleName;
     }
 
-    public Iterator<InputSource> iterator(Predicate<? super InputSource> filter){
+    public Iterator<InputSource> iterator(com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super InputSource> filter){
         return ArrayIterator.of(toArray(), filter);
     }
     @Override
@@ -61,8 +60,7 @@ public class ZipEntryMap implements Comparator<InputSource>, Iterable<InputSourc
         InputSource[] sources = toArray();
         int length = sources.length;
         LinkedHashMap<String, InputSource> map = new LinkedHashMap<>(length);
-        for(int i = 0; i < length; i++){
-            InputSource inputSource = sources[i];
+        for (InputSource inputSource : sources) {
             map.put(inputSource.getAlias(), inputSource);
         }
         return map;
@@ -90,7 +88,7 @@ public class ZipEntryMap implements Comparator<InputSource>, Iterable<InputSourc
             return sources;
         }
     }
-    public InputSource[] toArray(Predicate<? super InputSource> filter){
+    public InputSource[] toArray(com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super InputSource> filter){
         return CollectionUtil.toList(iterator(filter)).toArray(new InputSource[0]);
     }
     private void onChanged(boolean changed){
@@ -120,14 +118,14 @@ public class ZipEntryMap implements Comparator<InputSource>, Iterable<InputSourc
             onChanged(changed);
         }
     }
-    public InputSource remove(Predicate<? super InputSource> filter){
+    public InputSource remove(com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super InputSource> filter){
         Iterator<InputSource> iterator = iterator(filter);
         if(iterator.hasNext()){
             return remove(iterator.next());
         }
         return null;
     }
-    public void removeAll(Predicate<? super InputSource> filter){
+    public void removeAll(com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super InputSource> filter){
         Iterator<InputSource> iterator = iterator(filter);
         while (iterator.hasNext()){
             remove(iterator.next());
@@ -142,11 +140,10 @@ public class ZipEntryMap implements Comparator<InputSource>, Iterable<InputSourc
     public void removeAll(Pattern pattern){
         synchronized (mLock){
             boolean removed = false;
-            LinkedHashMap<String, InputSource> map = this.mSourceMap;
             for(InputSource inputSource : toArray()){
                 String name = inputSource.getAlias();
                 if(pattern.matcher(name).matches()){
-                    if(map.remove(name) != null){
+                    if(this.mSourceMap.remove(name) != null){
                         removed = true;
                     }
                 }
@@ -167,11 +164,10 @@ public class ZipEntryMap implements Comparator<InputSource>, Iterable<InputSourc
             return source;
         }
     }
-    public InputSource remove(String name){
+    public void remove(String name){
         synchronized (mLock){
             InputSource inputSource = mSourceMap.remove(name);
             onChanged(inputSource != null);
-            return inputSource;
         }
     }
     public void addAll(InputSource[] sources){
@@ -182,9 +178,8 @@ public class ZipEntryMap implements Comparator<InputSource>, Iterable<InputSourc
             int length = sources.length;
             LinkedHashMap<String, InputSource> map = this.mSourceMap;
             boolean added = false;
-            for(int i = 0; i < length; i++){
-                InputSource inputSource = sources[i];
-                if(inputSource == null){
+            for (InputSource inputSource : sources) {
+                if (inputSource == null) {
                     continue;
                 }
                 String name = inputSource.getName();
@@ -192,7 +187,7 @@ public class ZipEntryMap implements Comparator<InputSource>, Iterable<InputSourc
                 name = inputSource.getAlias();
                 map.remove(name);
                 map.put(name, inputSource);
-                if(!added){
+                if (!added) {
                     onChanged(true);
                 }
                 added = true;
@@ -234,8 +229,7 @@ public class ZipEntryMap implements Comparator<InputSource>, Iterable<InputSourc
         InputSource[] sources = toArray();
         int length = sources.length;
 
-        for(int i = 0; i < length; i++){
-            InputSource inputSource = sources[i];
+        for (InputSource inputSource : sources) {
             inputSource.setSort(-1);
         }
 

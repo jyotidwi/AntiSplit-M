@@ -16,6 +16,7 @@
 package com.reandroid.arsc.pool;
 
 import com.reandroid.arsc.array.*;
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.chunk.xml.ResXmlIDMap;
 import com.reandroid.arsc.group.StringGroup;
@@ -154,4 +155,9 @@ public class ResXmlStringPool extends StringPool<ResXmlString> {
         HAS_STYLE_NOTIFIED=true;
     }
     private static boolean HAS_STYLE_NOTIFIED;
+
+    @Override
+    public void onBlockLoaded(Block sender) {
+
+    }
 }

@@ -15,6 +15,7 @@
  */
 package com.reandroid.apkeditor.common;
 
+import com.abdurazaaqmohammed.AntiSplit.main.Predicate;
 import com.reandroid.apk.ApkUtil;
 import com.reandroid.app.AndroidManifest;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
@@ -25,7 +26,6 @@ import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.EmptyList;
 
 import java.util.List;
-import java.util.function.Predicate;
 
 public class AndroidManifestHelper {
 
@@ -48,12 +48,12 @@ public class AndroidManifestHelper {
             }
             if (value.equals("com.android.dynamic.apk.fused.modules")){
                 ResXmlAttribute attribute = element.searchAttributeByResourceId(AndroidManifest.ID_value);
-                    if (attribute != null){
-                        String attributeValue = attribute.getValueAsString();
-                        if (attributeValue != null && attributeValue.equals(ApkUtil.DEF_MODULE_NAME)) {
-                            return true;
-                        }
+                if (attribute != null){
+                    String attributeValue = attribute.getValueAsString();
+                    if (attributeValue != null && attributeValue.equals(ApkUtil.DEF_MODULE_NAME)) {
+                        return true;
                     }
+                }
             }
             return value.startsWith("com.android.vending.")
                     || value.startsWith("com.android.stamp.");
@@ -61,7 +61,7 @@ public class AndroidManifestHelper {
     }
 
     public static void removeAttributeFromManifestByName(AndroidManifestBlock androidManifestBlock,
-                                                                 String resourceName){
+                                                         String resourceName){
         ResXmlElement manifestElement = androidManifestBlock.getManifestElement();
         if(manifestElement == null){
             return;
@@ -70,7 +70,7 @@ public class AndroidManifestHelper {
     }
 
     public static void removeAttributeFromManifestAndApplication(AndroidManifestBlock androidManifestBlock,
-                                                                 int resourceId, String nameForLogging){
+                                                                 int resourceId){
         if(resourceId == 0){
             return;
         }

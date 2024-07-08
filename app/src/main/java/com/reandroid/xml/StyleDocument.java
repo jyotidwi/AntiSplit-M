@@ -31,7 +31,7 @@ public class StyleDocument extends XMLDocument implements
         super();
     }
     public boolean hasElements(){
-        return getElements().hasNext();
+        return !getElements().hasNext();
     }
     public Iterator<StyleElement> getElements(){
         return iterator(StyleElement.class);
@@ -93,13 +93,11 @@ public class StyleDocument extends XMLDocument implements
         return writer.toString();
     }
     void writeStyledText(Appendable appendable) throws IOException {
-        Iterator<XMLNode> iterator = iterator();
-        while (iterator.hasNext()){
-            XMLNode xmlNode = iterator.next();
-            if(xmlNode instanceof StyleText){
+        for (XMLNode xmlNode : this) {
+            if (xmlNode instanceof StyleText) {
                 StyleText styleText = (StyleText) xmlNode;
                 styleText.writeStyledText(appendable);
-            } else if(xmlNode instanceof StyleElement){
+            } else if (xmlNode instanceof StyleElement) {
                 StyleElement element = (StyleElement) xmlNode;
                 element.writeStyledText(appendable);
             }
@@ -168,15 +166,13 @@ public class StyleDocument extends XMLDocument implements
     }
     public static StyleDocument copyInner(XMLElement xmlElement){
         StyleDocument styleDocument = new StyleDocument();
-        Iterator<XMLNode> iterator = xmlElement.iterator();
-        while (iterator.hasNext()){
-            XMLNode xmlNode = iterator.next();
-            if(xmlNode instanceof XMLElement){
+        for (XMLNode xmlNode : xmlElement) {
+            if (xmlNode instanceof XMLElement) {
                 StyleElement styleElement = new StyleElement();
                 styleDocument.add(styleElement);
                 styleElement.copyFrom((XMLElement) xmlNode);
-            }else if(xmlNode instanceof XMLText){
-                XMLText xmlText = (XMLText)xmlNode;
+            } else if (xmlNode instanceof XMLText) {
+                XMLText xmlText = (XMLText) xmlNode;
                 StyleText styleText = new StyleText(xmlText.getText());
                 styleDocument.add(styleText);
             }

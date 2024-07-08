@@ -33,7 +33,6 @@ import com.reandroid.utils.HexUtil;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.collection.EmptyIterator;
-import com.reandroid.xml.StyleDocument;
 
 import java.io.IOException;
 import java.io.OutputStream;

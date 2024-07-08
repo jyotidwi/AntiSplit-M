@@ -123,7 +123,7 @@ import java.util.zip.ZipEntry;
         try {
             frameworkTable.readBytes(reader);
         } catch (IOException exception) {
-            logError("Error re-loading framework: ", exception);
+            logError(exception);
         }
         return frameworkTable;
     }
@@ -284,9 +284,9 @@ import java.util.zip.ZipEntry;
             apkLogger.logMessage(msg);
         }
     }
-    private void logError(String msg, Throwable tr) {
+    private void logError(Throwable tr) {
         if(apkLogger!=null){
-            apkLogger.logError(msg, tr);
+            apkLogger.logError("Error re-loading framework: ", tr);
         }
     }
     private void logVerbose(String msg) {

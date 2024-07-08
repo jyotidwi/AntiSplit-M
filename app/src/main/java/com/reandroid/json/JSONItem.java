@@ -15,11 +15,11 @@
  */
 package com.reandroid.json;
 
+import com.abdurazaaqmohammed.AntiSplit.main.Base64;
+
 import java.io.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Collection;
 import java.util.Map;
 
@@ -43,7 +43,7 @@ public abstract class JSONItem {
         write(outputStream, INDENT_FACTOR);
     }
     public void write(OutputStream outputStream, int indentFactor) throws IOException {
-        Writer writer=new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
+        Writer writer=new OutputStreamWriter(outputStream, com.abdurazaaqmohammed.AntiSplit.main.LegacyUtils.UTF_8);
         writer= write(writer, indentFactor, 0);
         writer.flush();
         writer.close();
@@ -121,7 +121,7 @@ public abstract class JSONItem {
     }
 
     public static Writer quote(String string, Writer w) throws IOException {
-        if (string == null || string.isEmpty()) {
+        if (string == null || string.length() == 0) {
             w.write("\"\"");
             return w;
         }
@@ -165,7 +165,7 @@ public abstract class JSONItem {
                     break;
                 default:
                     if (c < ' ' || (c >= '\u0080' && c < '\u00a0')
-                            || (c >= '\u2000' && c < '\u2100')) {
+                            || (c >= '\u2000' && c < '℀')) {
                         w.write("\\u");
                         hhhh = Integer.toHexString(c);
                         w.write("0000", 0, 4 - hhhh.length());

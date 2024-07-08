@@ -22,19 +22,18 @@ import com.reandroid.utils.collection.CollectionUtil;
 import java.io.File;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.function.Predicate;
 
 public class FileIterator implements Iterator<File> {
 
     private final File file;
-    private final Predicate<File> filter;
+    private final com.abdurazaaqmohammed.AntiSplit.main.Predicate<File> filter;
     private final Comparator<File> comparator;
     private final File[] files;
     private int index;
     private File currentFile;
     private FileIterator currentIterator;
 
-    public FileIterator(File file, Predicate<File> filter, Comparator<File> comparator) {
+    public FileIterator(File file, com.abdurazaaqmohammed.AntiSplit.main.Predicate<File> filter, Comparator<File> comparator) {
         this.file = file;
         this.filter = filter;
         this.comparator = comparator;
@@ -50,7 +49,7 @@ public class FileIterator implements Iterator<File> {
         this.files = files;
         this.index = -2;
     }
-    public FileIterator(File file, Predicate<File> filter) {
+    public FileIterator(File file, com.abdurazaaqmohammed.AntiSplit.main.Predicate<File> filter) {
         this(file, filter, null);
     }
     public FileIterator(File file, Comparator<File> comparator) {
@@ -138,7 +137,7 @@ public class FileIterator implements Iterator<File> {
         return StringsUtil.toUpperCase(file1.getName())
                 .compareTo(StringsUtil.toUpperCase(file2.getName()));
     };
-    public static Predicate<File> getExtensionFilter(String extension){
+    public static com.abdurazaaqmohammed.AntiSplit.main.Predicate<File> getExtensionFilter(String extension){
         if(extension == null){
             return CollectionUtil.getAcceptAll();
         }

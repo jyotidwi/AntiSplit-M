@@ -50,10 +50,10 @@ public abstract class Block {
     public void notifyBlockLoad() throws IOException {
         notifyBlockLoad(null);
     }
-    private void notifyBlockLoad(BlockReader reader) throws IOException{
+    private void notifyBlockLoad(BlockReader reader) {
         BlockLoad blockLoad=mBlockLoad;
         if(blockLoad!=null){
-            blockLoad.onBlockLoaded(reader, this);
+            blockLoad.onBlockLoaded(this);
         }
     }
     protected void onReadBytes(BlockReader reader) throws IOException{
@@ -81,10 +81,10 @@ public abstract class Block {
         }
         mIndex=index;
         if(old!=-1 && index!=-1){
-            onIndexChanged(old, index);
+            onIndexChanged(index);
         }
     }
-    public void onIndexChanged(int oldIndex, int newIndex){
+    public void onIndexChanged(int newIndex){
 
     }
     public final void setParent(Block parent){
@@ -326,8 +326,8 @@ public abstract class Block {
             return 0;
         }
         int hash = 1;
-        for(int i = 0; i < length; i++){
-            hash = hash * 31 + (bytes[i] & 0xff);
+        for (byte aByte : bytes) {
+            hash = hash * 31 + (aByte & 0xff);
         }
         return hash;
     }
@@ -340,8 +340,8 @@ public abstract class Block {
             return 0;
         }
         long hash = 1;
-        for(int i = 0; i < length; i++){
-            hash = hash * 31 + (bytes[i] & 0xff);
+        for (byte aByte : bytes) {
+            hash = hash * 31 + (aByte & 0xff);
         }
         return hash;
     }

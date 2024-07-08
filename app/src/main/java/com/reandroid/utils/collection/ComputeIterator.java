@@ -17,15 +17,14 @@ package com.reandroid.utils.collection;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import com.abdurazaaqmohammed.AntiSplit.main.Function;
 
 public class ComputeIterator<E, T> implements Iterator<T> {
     private final Iterator<? extends E> iterator;
     private final Function<? super E, T> function;
-    private final Predicate<T> filter;
+    private final com.abdurazaaqmohammed.AntiSplit.main.Predicate<T> filter;
     private T mNext;
-    public ComputeIterator(Iterator<? extends E> iterator, Function<? super E, T> function, Predicate<T> filter){
+    public ComputeIterator(Iterator<? extends E> iterator, Function<? super E, T> function, com.abdurazaaqmohammed.AntiSplit.main.Predicate<T> filter){
         this.iterator = iterator;
         this.function = function;
         this.filter = filter;

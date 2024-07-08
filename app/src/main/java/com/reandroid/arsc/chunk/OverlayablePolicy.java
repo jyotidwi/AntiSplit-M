@@ -25,7 +25,6 @@ import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 
-import java.io.IOException;
 import java.util.Collection;
 
 public class OverlayablePolicy extends Chunk<OverlayablePolicyHeader> implements BlockLoad,
@@ -73,7 +72,7 @@ public class OverlayablePolicy extends Chunk<OverlayablePolicyHeader> implements
         getHeaderBlock().getEntryCount().set(getTableRefArray().size());
     }
     @Override
-    public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
+    public void onBlockLoaded(Block sender) {
         IntegerItem entryCount = getHeaderBlock().getEntryCount();
         if(sender==entryCount){
             this.tableRefArray.setSize(entryCount.get());
@@ -169,9 +168,9 @@ public class OverlayablePolicy extends Chunk<OverlayablePolicyHeader> implements
             }
             PolicyFlag[] results=new PolicyFlag[count];
             int j=0;
-            for(int i=0;i<tmp.length;i++){
-                if(tmp[i]!=null){
-                    results[j]=tmp[i];
+            for (PolicyFlag policyFlag : tmp) {
+                if (policyFlag != null) {
+                    results[j] = policyFlag;
                     j++;
                 }
             }
@@ -248,9 +247,9 @@ public class OverlayablePolicy extends Chunk<OverlayablePolicyHeader> implements
             }
             PolicyFlag[] results=new PolicyFlag[count];
             int j=0;
-            for(int i=0;i<tmp.length;i++){
-                if(tmp[i]!=null){
-                    results[j]=tmp[i];
+            for (PolicyFlag policyFlag : tmp) {
+                if (policyFlag != null) {
+                    results[j] = policyFlag;
                     j++;
                 }
             }

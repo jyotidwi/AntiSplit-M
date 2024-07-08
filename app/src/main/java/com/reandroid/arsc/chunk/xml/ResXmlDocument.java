@@ -107,10 +107,10 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         };
     }
 
-    public int autoSetAttributeNamespaces() {
-        return autoSetAttributeNamespaces(true);
+    public void autoSetAttributeNamespaces() {
+        autoSetAttributeNamespaces(true);
     }
-    public int autoSetAttributeNamespaces(boolean removeNoIdPrefix) {
+    public void autoSetAttributeNamespaces(boolean removeNoIdPrefix) {
         int changedCount = 0;
         Iterator<ResXmlElement> iterator = getElements();
         while (iterator.hasNext()) {
@@ -121,7 +121,6 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
             removeUnusedNamespaces();
             getStringPool().removeUnusedStrings();
         }
-        return changedCount;
     }
     public int autoSetAttributeNames() {
         return autoSetAttributeNames(true);
@@ -152,7 +151,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         }
         return count;
     }
-    public String refreshFull(){
+    public void refreshFull(){
         int sizeOld = getHeaderBlock().getChunkSize();
         StringBuilder message = new StringBuilder();
         boolean appendOnce = false;
@@ -198,9 +197,8 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
             appendOnce = true;
         }
         if(appendOnce){
-            return message.toString();
+            message.toString();
         }
-        return null;
     }
     public void destroy(){
         synchronized (this){
@@ -333,10 +331,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         if(chunkType==ChunkType.XML_CDATA){
             return true;
         }
-        if(chunkType==ChunkType.XML_LAST_CHUNK){
-            return true;
-        }
-        return false;
+        return chunkType == ChunkType.XML_LAST_CHUNK;
     }
     @Override
     public ResXmlStringPool getStringPool(){

@@ -33,7 +33,6 @@ import com.reandroid.utils.collection.ComputeIterator;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.function.Predicate;
 
 public class TypeBlockArray extends BlockArray<TypeBlock>
         implements JSONConvert<JSONArray>, Comparator<TypeBlock> {
@@ -154,9 +153,8 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
             return null;
         }
         int max=items.length;
-        for(int i=0;i<max;i++){
-            TypeBlock block=items[i];
-            if(block.getResConfig().isEqualQualifiers(qualifiers)){
+        for (TypeBlock block : items) {
+            if (block.getResConfig().isEqualQualifiers(qualifiers)) {
                 return block;
             }
         }
@@ -171,12 +169,11 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
             return null;
         }
         int length = items.length;
-        for(int i = 0; i < length; i++){
-            TypeBlock typeBlock = items[i];
-            if(typeBlock == null){
+        for (TypeBlock typeBlock : items) {
+            if (typeBlock == null) {
                 continue;
             }
-            if(config.equals(typeBlock.getResConfig())){
+            if (config.equals(typeBlock.getResConfig())) {
                 return typeBlock;
             }
         }
@@ -191,12 +188,11 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
             return null;
         }
         int length = items.length;
-        for(int i = 0; i < length; i++){
-            TypeBlock typeBlock = items[i];
-            if(typeBlock == null || sparse != typeBlock.isSparse()){
+        for (TypeBlock typeBlock : items) {
+            if (typeBlock == null || sparse != typeBlock.isSparse()) {
                 continue;
             }
-            if(config.equals(typeBlock.getResConfig())){
+            if (config.equals(typeBlock.getResConfig())) {
                 return typeBlock;
             }
         }
@@ -209,8 +205,7 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
             return;
         }
         int max=allChildes.length;
-        for(int i=0;i<max;i++){
-            TypeBlock typeBlock = allChildes[i];
+        for (TypeBlock typeBlock : allChildes) {
             typeBlock.setTypeId(id);
         }
     }
@@ -230,16 +225,15 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
             return 0;
         }
         int length = childes.length;
-        for(int i=0; i < length; i++){
-            TypeBlock typeBlock = childes[i];
-            if(typeBlock == null){
+        for (TypeBlock typeBlock : childes) {
+            if (typeBlock == null) {
                 continue;
             }
             byte id = typeBlock.getTypeId();
-            if(id == 0){
+            if (id == 0) {
                 continue;
             }
-            if(specBlock != null){
+            if (specBlock != null) {
                 specBlock.setTypeId(id);
             }
             mTypeId = id;
@@ -262,12 +256,7 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         return super.iterator(NON_EMPTY_TESTER);
     }
     public Iterator<TypeBlock> iterator(ResConfig resConfig){
-        return iterator(new Predicate<TypeBlock>() {
-            @Override
-            public boolean test(TypeBlock typeBlock) {
-                return typeBlock.getResConfig().equals(resConfig);
-            }
-        });
+        return iterator(typeBlock -> typeBlock.getResConfig().equals(resConfig));
     }
     public boolean hasDuplicateResConfig(boolean ignoreEmpty){
         Set<Integer> uniqueHashSet = new HashSet<>();
@@ -446,13 +435,10 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         return typeBlock1.compareTo(typeBlock2);
     }
 
-    private static final Predicate<TypeBlock> NON_EMPTY_TESTER = new Predicate<TypeBlock>() {
-        @Override
-        public boolean test(TypeBlock typeBlock) {
-            if(typeBlock == null || typeBlock.isNull()){
-                return false;
-            }
-            return !typeBlock.isEmpty();
+    private static final com.abdurazaaqmohammed.AntiSplit.main.Predicate<TypeBlock> NON_EMPTY_TESTER = typeBlock -> {
+        if(typeBlock == null || typeBlock.isNull()){
+            return false;
         }
+        return !typeBlock.isEmpty();
     };
 }

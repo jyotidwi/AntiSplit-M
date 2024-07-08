@@ -15,11 +15,11 @@
  */
 package com.reandroid.arsc.base;
 
+import com.abdurazaaqmohammed.AntiSplit.main.Predicate;
 import com.reandroid.common.ArraySupplier;
 import com.reandroid.utils.collection.*;
 
 import java.util.*;
-import java.util.function.Predicate;
 
 public abstract class BlockArray<T extends Block> extends BlockContainer<T>
         implements BlockArrayCreator<T>, ArraySupplier<T> {
@@ -215,10 +215,10 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
         }
         return false;
     }
-    public boolean sort(Comparator<? super T> comparator){
+    public void sort(Comparator<? super T> comparator){
         T[] elementData = this.elementData;
         if(comparator == null || elementData.length < 2){
-            return false;
+            return;
         }
         ArraySort.sort(elementData, comparator);
         boolean changed = false;
@@ -229,7 +229,6 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
                 changed = true;
             }
         }
-        return changed;
     }
     public void insertItem(int index, T item){
         int count = size();
@@ -319,13 +318,13 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
     }
     protected void onPostShift(int index){
     }
-    public boolean add(T block){
+    public void add(T block){
         if(block == null){
-            return false;
+            return;
         }
         if(isFlexible()){
             addAtNull(block);
-            return true;
+            return;
         }
         T[] oldElementData = elementData;
         int index = oldElementData.length;
@@ -336,7 +335,6 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
         elementData[index] = block;
         block.setIndex(index);
         block.setParent(this);
-        return true;
     }
     private void addAtNull(T block){
         allocateIfFull();
@@ -490,18 +488,18 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
             return false;
         }
         int length = items.length;
-        for(int i = 0; i < length; i++){
-            if(items[i] == block){
+        for (T item : items) {
+            if (item == block) {
                 return true;
             }
         }
         return false;
     }
-    public int remove(Predicate<? super T> predicate){
-        return remove(CollectionUtil.toList(iterator(predicate)), null);
+    public int remove(com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super T> Predicate){
+        return remove(CollectionUtil.toList(iterator(Predicate)), null);
     }
-    public int remove(Collection<T> blockList){
-        return remove(blockList, null);
+    public void remove(Collection<T> blockList){
+        remove(blockList, null);
     }
     protected int remove(Collection<T> blockList, Collection<T> removedList){
         int count = 0;
@@ -513,26 +511,24 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
         if(length == 0){
             return count;
         }
-        Iterator<T> iterator = blockList.iterator();
-        while (iterator.hasNext()){
-            T block = iterator.next();
-            if(block == null){
+        for (T block : blockList) {
+            if (block == null) {
                 continue;
             }
             int index = block.getIndex();
-            if(index < 0 || index >= length){
+            if (index < 0 || index >= length) {
                 continue;
             }
             T item = items[index];
-            if(item != block){
+            if (item != block) {
                 continue;
             }
             items[index] = null;
             onPreRemove(item);
-            if(removedList != null){
+            if (removedList != null) {
                 removedList.add(item);
             }
-            count ++;
+            count++;
         }
         trimNullBlocks();
         return count;
@@ -576,10 +572,9 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
         }
         T[] update= newArrayInstance(count);
         int index=0;
-        for(int i=0;i<len;i++){
-            T block=items[i];
-            if(block!=null){
-                update[index]=block;
+        for (T block : items) {
+            if (block != null) {
+                update[index] = block;
                 block.setIndex(index);
                 index++;
             }
@@ -612,12 +607,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
         }
         int size = index + amount;
         T[] update = newArrayInstance(size);
-        int end;
-        if(index>size){
-            end=size;
-        }else {
-            end = index;
-        }
+        int end = Math.min(index, size);
         if(end > 0){
             System.arraycopy(old, 0, update, 0, end);
         }
@@ -719,8 +709,8 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
     private class PredicateIterator implements Iterator<T> {
         private int mCursor;
         private final int mMaxSize;
-        private final Predicate<? super T> mTester;
-        PredicateIterator(Predicate<? super T> tester){
+        private final com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super T> mTester;
+        PredicateIterator(com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super T> tester){
             this.mTester = tester;
             mCursor = 0;
             mMaxSize = BlockArray.this.size();
@@ -755,7 +745,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
             return mCursor;
         }
         private boolean test(T item){
-            Predicate<? super T> tester = mTester;
+            com.abdurazaaqmohammed.AntiSplit.main.Predicate<? super T> tester = mTester;
             if(tester != null){
                 return tester.test(item);
             }

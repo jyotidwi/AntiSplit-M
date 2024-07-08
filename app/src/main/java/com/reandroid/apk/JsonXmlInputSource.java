@@ -15,6 +15,8 @@
   */
 package com.reandroid.apk;
 
+import android.os.Build;
+
 import com.reandroid.archive.FileInputSource;
 import com.reandroid.archive.InputSource;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
@@ -52,7 +54,9 @@ public class JsonXmlInputSource extends InputSource {
             JSONObject jsonObject=new JSONObject(inputStream);
             resXmlDocument.fromJson(jsonObject);
         }catch (JSONException ex){
-            throw new IOException(inputSource.getAlias()+": "+ex.getMessage(), ex);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
+                throw new IOException(inputSource.getAlias()+": "+ex.getMessage(), ex);
+            }
         }
         return resXmlDocument;
     }

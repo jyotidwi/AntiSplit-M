@@ -22,7 +22,7 @@ public class JSONPointer {
     public static class Builder {
 
         // Segments for the eventual JSONPointer string
-        private final List<String> refTokens = new ArrayList<String>();
+        private final List<String> refTokens = new ArrayList<>();
 
         public JSONPointer build() {
             return new JSONPointer(this.refTokens);
@@ -53,7 +53,7 @@ public class JSONPointer {
         if (pointer == null) {
             throw new NullPointerException("pointer cannot be null");
         }
-        if (pointer.isEmpty() || pointer.equals("#")) {
+        if (pointer.length() == 0 || pointer.equals("#")) {
             this.refTokens = Collections.emptyList();
             return;
         }
@@ -130,7 +130,7 @@ public class JSONPointer {
             JSONArray currentArr = (JSONArray) current;
             if (index >= currentArr.length()) {
                 throw new JSONPointerException(format("index %s is out of bounds - the array has %d elements", indexToken,
-                        Integer.valueOf(currentArr.length())));
+                        currentArr.length()));
             }
             try {
 				return currentArr.get(index);
@@ -144,7 +144,7 @@ public class JSONPointer {
 
     @Override
     public String toString() {
-        StringBuilder rval = new StringBuilder("");
+        StringBuilder rval = new StringBuilder();
         for (String token: this.refTokens) {
             rval.append('/').append(escape(token));
         }

@@ -143,9 +143,8 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
             return null;
         }
         int length = items.length;
-        for(int i = 0; i < length; i++){
-            SpecTypePair specTypePair = items[i];
-            if(specTypePair != null && specTypePair.getTypeId() == typeId){
+        for (SpecTypePair specTypePair : items) {
+            if (specTypePair != null && specTypePair.getTypeId() == typeId) {
                 return specTypePair;
             }
         }
@@ -240,18 +239,17 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
         }
         int result=0;
         boolean firstFound=false;
-        for (int i=0;i<childes.length;i++){
-            SpecTypePair pair=childes[i];
-            if(pair==null){
+        for (SpecTypePair pair : childes) {
+            if (pair == null) {
                 continue;
             }
-            int id=pair.getId();
-            if(!firstFound){
-                result=id;
+            int id = pair.getId();
+            if (!firstFound) {
+                result = id;
             }
-            firstFound=true;
-            if(id<result){
-                result=id;
+            firstFound = true;
+            if (id < result) {
+                result = id;
             }
         }
         return result;
@@ -262,14 +260,13 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
             return 0;
         }
         int result=0;
-        for (int i=0;i<childes.length;i++){
-            SpecTypePair pair=childes[i];
-            if(pair==null){
+        for (SpecTypePair pair : childes) {
+            if (pair == null) {
                 continue;
             }
-            int id=pair.getId();
-            if(id>result){
-                result=id;
+            int id = pair.getId();
+            if (id > result) {
+                result = id;
             }
         }
         return result;
@@ -352,9 +349,8 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
         if(childes==null){
             return null;
         }
-        for(int i=0;i<childes.length;i++){
-            SpecTypePair specTypePair=childes[i];
-            if(typeName.equals(specTypePair.getTypeName())){
+        for (SpecTypePair specTypePair : childes) {
+            if (typeName.equals(specTypePair.getTypeName())) {
                 return specTypePair;
             }
         }

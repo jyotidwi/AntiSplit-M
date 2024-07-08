@@ -385,12 +385,10 @@ public class TypeBlock extends Chunk<TypeHeader>
     }
     @Override
     public String toString(){
-        StringBuilder builder=new StringBuilder();
-        builder.append(getTypeName());
-        builder.append('{');
-        builder.append(getHeaderBlock());
-        builder.append('}');
-        return builder.toString();
+        return getTypeName() +
+                '{' +
+                getHeaderBlock() +
+                '}';
     }
 
     public static boolean canHaveResourceFile(String typeName){

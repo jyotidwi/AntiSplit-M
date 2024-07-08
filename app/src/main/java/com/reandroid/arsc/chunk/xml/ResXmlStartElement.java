@@ -24,7 +24,6 @@ import java.util.Iterator;
 
 public class ResXmlStartElement extends BaseXmlChunk {
     private final ShortItem mAttributeStart;
-    private final ShortItem mAttributeUnitSize;
     private final ShortItem mAttributeCount;
     private final ShortItem mIdAttributePosition;
     private final ShortItem mClassAttributePosition;
@@ -34,7 +33,7 @@ public class ResXmlStartElement extends BaseXmlChunk {
     public ResXmlStartElement() {
         super(ChunkType.XML_START_ELEMENT, 7);
         mAttributeStart = new ShortItem(ATTRIBUTES_DEFAULT_START);
-        mAttributeUnitSize = new ShortItem(ATTRIBUTES_UNIT_SIZE);
+        ShortItem mAttributeUnitSize = new ShortItem(ATTRIBUTES_UNIT_SIZE);
         mAttributeCount = new ShortItem();
         mIdAttributePosition = new ShortItem();
         mClassAttributePosition = new ShortItem();

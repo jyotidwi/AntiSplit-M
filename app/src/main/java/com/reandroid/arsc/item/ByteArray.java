@@ -136,9 +136,7 @@ public class ByteArray extends BlockItem {
     public final byte[] getByteArray(int offset, int length){
         byte[] bts = getBytesInternal();
         byte[] result = new byte[length];
-        if (result.length >= 0) {
-            System.arraycopy(bts, offset, result, 0, result.length);
-        }
+        System.arraycopy(bts, offset, result, 0, result.length);
         return result;
     }
 

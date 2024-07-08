@@ -42,9 +42,8 @@ public class XMLDocument extends XMLNodeTree implements Document<XMLElement> {
         XMLDocument document = new XMLDocument();
         document.encoding = encoding;
         document.standalone = standalone;
-        Iterator<XMLNode> iterator = iterator();
-        while(iterator.hasNext()){
-            iterator.next().newCopy(document);
+        for (XMLNode xmlNode : this) {
+            xmlNode.newCopy(document);
         }
         return document;
     }

@@ -60,7 +60,7 @@ public abstract class AttributeValue extends ValueItem{
             return new ResourceEntry(getPackageBlock(), encodeResult.value);
         }
         if(prefix == null){
-            if(!allowNullPrefixEncode()){
+            if(allowNullPrefixEncode()){
                 return null;
             }
         }
@@ -89,7 +89,7 @@ public abstract class AttributeValue extends ValueItem{
             return new ResourceEntry(getPackageBlock(), encodeResult.value);
         }
         if(prefix == null){
-            if(!allowNullPrefixEncode()){
+            if(allowNullPrefixEncode()){
                 return null;
             }
         }
@@ -102,7 +102,7 @@ public abstract class AttributeValue extends ValueItem{
         return resourceEntry;
     }
     boolean allowNullPrefixEncode(){
-        return false;
+        return true;
     }
     public void setName(String name, int nameId){
         setNameId(nameId);

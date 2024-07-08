@@ -173,8 +173,8 @@ class ResConfigValueContainer extends ByteArray {
         if(bytes == null){
             return true;
         }
-        for(int i = 0; i < bytes.length; i++){
-            if(bytes[i] != 0){
+        for (byte aByte : bytes) {
+            if (aByte != 0) {
                 return false;
             }
         }

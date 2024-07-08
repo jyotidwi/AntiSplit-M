@@ -34,10 +34,7 @@ public class FileUtil {
         }
         return new File(dir, name);
     }
-    @Deprecated
-    public static void writeUtf8(File file, String content) throws IOException {
-        IOUtil.writeUtf8(content, file);
-    }
+
     public static String combineFilePath(String parent, String name){
         return combinePath(File.separatorChar, parent, name);
     }

@@ -15,10 +15,10 @@
  */
 package com.reandroid.arsc.item;
 
+import com.abdurazaaqmohammed.AntiSplit.main.LegacyUtils;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.utils.StringsUtil;
 
-import java.nio.charset.StandardCharsets;
 
 public class FixedLengthString  extends StringItem {
     private final int bytesLength;
@@ -69,7 +69,7 @@ public class FixedLengthString  extends StringItem {
             return null;
         }
         int length = getEndNullPosition(bytes);
-        return new String(bytes,0, length, StandardCharsets.UTF_16LE);
+        return new String(bytes,0, length, LegacyUtils.UTF_16);
     }
     private static int getEndNullPosition(byte[] bytes){
         int length = bytes.length;

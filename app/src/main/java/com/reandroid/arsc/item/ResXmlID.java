@@ -31,8 +31,8 @@ public class ResXmlID extends IntegerItem {
     public ResXmlID(){
         this(0);
     }
-    public boolean removeReference(ReferenceItem ref){
-        return mReferencedList.remove(ref);
+    public void removeReference(ReferenceItem ref){
+        mReferencedList.remove(ref);
     }
     public List<ReferenceItem> getReferencedList(){
         return mReferencedList;
@@ -53,10 +53,7 @@ public class ResXmlID extends IntegerItem {
             ref.set(newIndex);
         }
     }
-    @Override
-    public void onIndexChanged(int oldIndex, int newIndex){
-        //TODO: We have to ignore this to avoid conflict with ResXmlIDMap.removeSafely
-    }
+
     public String getName(){
         ResXmlString xmlString = getResXmlString();
         if(xmlString==null){

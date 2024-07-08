@@ -123,11 +123,10 @@ public class StringsUtil {
         }
         String[] results = new String[count];
         int index = 0;
-        for(int i = 0; i < length; i++){
-            String str = strings[i];
-            if(str != null){
+        for (String str : strings) {
+            if (str != null) {
                 results[index] = str;
-                index ++;
+                index++;
             }
         }
         return results;
@@ -287,7 +286,7 @@ public class StringsUtil {
             builder.append(' ');
         }
         builder.append('[');
-        builder.append(elements.toString());
+        builder.append(elements);
         if(count < size){
             builder.append(" ... ");
         }

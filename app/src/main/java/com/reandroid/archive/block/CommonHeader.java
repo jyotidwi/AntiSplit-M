@@ -15,16 +15,14 @@
  */
 package com.reandroid.archive.block;
 
+import com.abdurazaaqmohammed.AntiSplit.main.LegacyUtils;
 import com.reandroid.archive.Archive;
 import com.reandroid.archive.ZipSignature;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 
 public abstract class CommonHeader extends ZipHeader {
     private final int offsetFileName;
@@ -293,7 +291,7 @@ public abstract class CommonHeader extends ZipHeader {
         if(fileName==null){
             fileName="";
         }
-        byte[] nameBytes = fileName.getBytes(StandardCharsets.UTF_8);
+        byte[] nameBytes = LegacyUtils.stringToByteArray(com.abdurazaaqmohammed.AntiSplit.main.LegacyUtils.UTF_8, fileName);
         getGeneralPurposeFlag().setUtf8(true, false);
         int length = nameBytes.length;
         setFileNameLength(length);
@@ -322,7 +320,7 @@ public abstract class CommonHeader extends ZipHeader {
         if(length>max){
             length = max;
         }
-        return new String(bytes, offset, length, StandardCharsets.UTF_8);
+        return LegacyUtils.byteArrayToString(bytes, offset, length, com.abdurazaaqmohammed.AntiSplit.main.LegacyUtils.UTF_8);
     }
     public String decodeComment(){
         int length = getExtraLength();
@@ -335,9 +333,9 @@ public abstract class CommonHeader extends ZipHeader {
         if(length>max){
             length = max;
         }
-        return new String(bytes, offset, length, StandardCharsets.UTF_8);
+        return LegacyUtils.byteArrayToString(bytes, offset, length, com.abdurazaaqmohammed.AntiSplit.main.LegacyUtils.UTF_8);
     }
-    void onUtf8Changed(boolean oldValue){
+    void onUtf8Changed(){
         String str = mFileName;
         if(str != null){
             setFileName(str);
@@ -420,7 +418,7 @@ public abstract class CommonHeader extends ZipHeader {
             }
             this.localFileHeader.putBit(offset +1, 3, flag);
             if(notify){
-                this.localFileHeader.onUtf8Changed(oldUtf8);
+                this.localFileHeader.onUtf8Changed();
             }
         }
 
@@ -434,7 +432,7 @@ public abstract class CommonHeader extends ZipHeader {
             boolean oldUtf8 = getUtf8();
             this.localFileHeader.putShort(offset, value);
             if(oldUtf8 != getUtf8()){
-                this.localFileHeader.onUtf8Changed(oldUtf8);
+                this.localFileHeader.onUtf8Changed();
             }
         }
         public void initDefault(){

@@ -66,9 +66,8 @@ public class LengthPrefixedBlock extends ExpandableBlockContainer{
         onSizeLoaded(dataSize);
         BlockReader chunkReader = reader.create(dataSize);
         Block[] childes = getChildes();
-        for(int i=0;i<childes.length;i++){
-            Block child = childes[i];
-            if(child == numberBlock){
+        for (Block child : childes) {
+            if (child == numberBlock) {
                 continue;
             }
             child.readBytes(chunkReader);

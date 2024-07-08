@@ -16,9 +16,7 @@
 package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.chunk.ChunkType;
-import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.model.ResourceLibrary;
-import com.reandroid.common.Namespace;
 import com.reandroid.xml.XMLNamespace;
 
 import java.util.HashSet;
@@ -34,15 +32,7 @@ public class ResXmlStartNamespace extends ResXmlNamespaceChunk {
         this.mReferencedAttributes = new HashSet<>();
         this.mReferencedElements = new HashSet<>();
     }
-    @Override
-    void onUriReferenceChanged(int old, int uriReference){
-        for(ResXmlAttribute attribute : mReferencedAttributes){
-            attribute.setUriReference(uriReference);
-        }
-        for(ResXmlStartElement element : mReferencedElements){
-            element.setNamespaceReference(uriReference);
-        }
-    }
+
     ResXmlEndNamespace getEnd(){
         return (ResXmlEndNamespace) getPair();
     }

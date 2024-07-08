@@ -33,11 +33,7 @@ public class ARSCLib {
         Properties properties=getProperties();
         return properties.getProperty("lib.repo", "https://github.com/REAndroid");
     }
-    public static String getDescription(){
-        Properties properties=getProperties();
-        return properties.getProperty("lib.description", "Failed to load properties");
-    }
-    
+
     private static Properties getProperties(){
         if(sProperties==null){
             sProperties=loadProperties();

@@ -46,7 +46,7 @@ public class ArchiveUtil {
             }else {
                 builder = new StringBuilder(length);
                 if(dots != null){
-                    builder.append(dots.toString());
+                    builder.append(dots);
                     dots = null;
                 }
                 builder.append(ch);

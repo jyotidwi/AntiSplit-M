@@ -34,7 +34,7 @@ public class ByteInputSource extends InputSource {
         return bytes.length;
     }
     @Override
-    public InputStream openStream() throws IOException {
+    public InputStream openStream() {
         return new BytesInputStream(getBytes());
     }
     public byte[] getBytes() {

@@ -16,7 +16,6 @@
 package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.coder.XmlSanitizer;
-import com.reandroid.arsc.refactor.ResourceMergeOption;
 import com.reandroid.json.JSONObject;
 import com.reandroid.xml.XMLNode;
 import com.reandroid.xml.XMLText;
@@ -157,7 +156,7 @@ public class ResXmlTextNode extends ResXmlNode {
         serializer.text(getText());
     }
     @Override
-    public void parse(XmlPullParser parser) throws IOException, XmlPullParserException {
+    public void parse(XmlPullParser parser) throws XmlPullParserException {
         setLineNumber(parser.getLineNumber());
         String text;
         int event = parser.getEventType();
@@ -178,7 +177,7 @@ public class ResXmlTextNode extends ResXmlNode {
         return new XMLText(getText());
     }
 
-    public void mergeWithName(ResourceMergeOption mergeOption, ResXmlTextNode textNode){
+    public void mergeWithName(ResXmlTextNode textNode){
         setText(textNode.getText());
     }
     @Override
@@ -208,16 +207,22 @@ public class ResXmlTextNode extends ResXmlNode {
             return "";
         }
         String decode;
-        if(entityRef.equals("lt")){
-            decode = "<";
-        }else if(entityRef.equals("gt")){
-            decode = ">";
-        }else if(entityRef.equals("amp")){
-            decode = "&";
-        }else if(entityRef.equals("quote")){
-            decode = "\"";
-        }else {
-            decode = "&" + entityRef + ";";
+        switch (entityRef) {
+            case "lt":
+                decode = "<";
+                break;
+            case "gt":
+                decode = ">";
+                break;
+            case "amp":
+                decode = "&";
+                break;
+            case "quote":
+                decode = "\"";
+                break;
+            default:
+                decode = "&" + entityRef + ";";
+                break;
         }
         return decode;
     }
