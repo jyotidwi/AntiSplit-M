@@ -1,6 +1,8 @@
 # AntiSplit M
 Android app to AntiSplit (merge) split APKs (APKS/XAPK/APKM) to regular .APK file
 
+**This branch supports all Android versions but it doesn't work properly (Removing splits information from manifest not working), don't use it**
+
 This project is a simple GUI implementation of Merge utilities from [REAndroid APKEditor](https://github.com/REAndroid/APKEditor).
 
 There are already some apps that can perform this task like Apktool M, AntiSplit G2, NP Manager, but they are all closed source. 
