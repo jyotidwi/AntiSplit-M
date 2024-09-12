@@ -179,14 +179,21 @@ public class FileUtils {
         }
 
         if (isDownloadsDocument(uri)) {
-            try (Cursor cursor = context.getContentResolver().query(uri, new String[]{MediaStore.MediaColumns.DISPLAY_NAME}, null, null, null)) {
-                if (cursor != null && cursor.moveToFirst()) {
-                    String fileName = cursor.getString(0);
-                    String path = Environment.getExternalStorageDirectory() + "/Download/" + fileName;
-                    if (!TextUtils.isEmpty(path)) {
-                        return path;
+            String docId = DocumentsContract.getDocumentId(uri);
+            if (docId.startsWith("msf:")) {
+                final String[] split = docId.split(":");
+                selection = "_id=?";
+                selectionArgs = new String[] { split[1] };
+                String relativePath = getDataColumn(context, MediaStore.Downloads.EXTERNAL_CONTENT_URI, selection, selectionArgs);
+                if(TextUtils.isEmpty(relativePath)) try (Cursor cursor = context.getContentResolver().query(uri, new String[]{MediaStore.MediaColumns.DISPLAY_NAME}, null, null, null)) {
+                    if (cursor != null && cursor.moveToFirst()) {
+                        String fileName = cursor.getString(0);
+                        String path = Environment.getExternalStorageDirectory() + "/Download/" + fileName;
+                        if (!TextUtils.isEmpty(path)) {
+                            return path;
+                        }
                     }
-                }
+                } else return relativePath;
             }
 
             String id = DocumentsContract.getDocumentId(uri);
