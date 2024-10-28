@@ -6,7 +6,6 @@
     <string name="ask">Hỏi nơi lưu tệp mỗi lần (nếu bị tắt, hãy lưu APK đã hợp nhất vào cùng thư mục nơi chứa tệp được chia)</string>
     <string name="auto_update">Kiểm tra cập nhật tự động</string>
     <string name="automatically_select">Tự động chọn phần chia cho thông số kỹ thuật thiết bị của bạn</string>
-    <string name="black_theme">Chủ đề màu đen</string>
     <string name="cancel">Hủy</string>
     <string name="check_update_now">Kiểm tra cập nhật ngay bây giờ</string>
     <string name="close">Đóng</string>

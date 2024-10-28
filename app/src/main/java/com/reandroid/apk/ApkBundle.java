@@ -187,7 +187,10 @@ public class ApkBundle implements Closeable {
                 versionCodes[i] = -1;
             }
         }
-        if(base == -1) load(apkList);
+        if(base == -1) {
+            // It is a valid usage to merge only some files and then merge that merged file with the base later.
+            base = versionCodes[0]; // Just set first file as base for checking.
+        }
         List<File> mismatchedDpis = new ArrayList<>();
         StringBuilder mismatchedLangs = new StringBuilder();
         for(int i = 0; i < size; i++) {

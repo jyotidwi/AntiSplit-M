@@ -149,7 +149,7 @@ public class Merger {
                     final CountDownLatch latch = new CountDownLatch(1);
                     MainActivity act = ((MainActivity) context);
                     act.getHandler().post(() ->
-                            act.runOnUiThread(new AlertDialog.Builder(context).setTitle(rss.getString(R.string.warning)).setMessage(R.string.pairip_warning)
+                            act.styleAlertDialog(new AlertDialog.Builder(context).setTitle(rss.getString(R.string.warning)).setMessage(R.string.pairip_warning)
                                     .setPositiveButton("OK", (dialog, which) -> {
                                         saveToCacheDir[0] = true;
                                         sign[0] = false;
@@ -161,7 +161,7 @@ public class Merger {
                                         } else act.finish();
                                         latch.countDown();
                                     })
-                                    .create()::show));
+                                    .create(), null, false, null));
                     latch.await();
                     break;
                 }
