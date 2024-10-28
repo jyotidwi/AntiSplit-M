@@ -162,29 +162,13 @@ public abstract class InputSource {
         mLength=length;
     }
 
-    public static int getDexNumber(String name){
-        int i = name.lastIndexOf('/');
-        if(i < 0){
-            i = name.lastIndexOf('\\');
-        }
-        if(i >= 0){
-            name = name.substring(i + 1);
-        }
-        if(name.equals("classes.dex")){
-            return 0;
-        }
-        String prefix = "classes";
-        String ext = ".dex";
-        if(!name.startsWith(prefix) || !name.endsWith(ext)){
-            return -1;
-        }
-        String num = name.substring(prefix.length(), name.length() - ext.length());
-        try {
-            return Integer.parseInt(num);
-        }catch (NumberFormatException ignored){
-            return -1;
-        }
+    public static int getDexNumber(String name) {
+        String n;
+        return name.equals("classes.dex") ? 0 : !name.contains("/") && name.startsWith("classes") &&
+                name.endsWith(".dex") &&
+                (n = name.substring(7, name.length() - 4)).matches("\\d") ? Integer.parseInt(n) : -1;
     }
+
     public static int compareDex(String dex1, String dex2){
         int d1 = getDexNumber(dex1);
         int d2 = getDexNumber(dex2);

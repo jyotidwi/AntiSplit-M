@@ -55,6 +55,8 @@
         <item>Türkçe</item>
         <item>українська мова</item>
         <item>Português</item>
+        <item>العربية</item>
+        <item>Tiếng Việt</item>
     </string-array>
     <string-array name="langs">
         <item>en</item>
@@ -66,6 +68,8 @@
         <item>tr</item>
         <item>uk</item>
         <item>pt-BR</item>
+        <item>ar</item>
+        <item>vi</item>
     </string-array>
     <string name="label_parent_dir" translatable="false">…</string>
     <string name="create_issue">Create GitHub Issue</string>
@@ -75,4 +79,5 @@
     <string name="select_from_installed_apps">Select from Installed Apps</string>
     <string name="app_icon_list_label">App icon</string>
     <string name="install">Install</string>
+    <string name="pairip_warning">The app you are trying to merge uses Pairip/Google加固 Integrity to protect it from modification. The merged version will crash on opening unless you know how to modify the APK to bypass it.</string>
 </resources>
