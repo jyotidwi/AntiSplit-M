@@ -190,12 +190,13 @@ class BaseXmlChunk extends Chunk<XmlNodeHeader> {
         if(chunkType==null){
             return super.toString();
         }
-        String builder = chunkType +
-                ": line=" +
-                getLineNumber() +
-                " {" +
-                getName() +
-                "}";
-        return builder;
+        StringBuilder builder=new StringBuilder();
+        builder.append(chunkType.toString());
+        builder.append(": line=");
+        builder.append(getLineNumber());
+        builder.append(" {");
+        builder.append(getName());
+        builder.append("}");
+        return builder.toString();
     }
 }

@@ -43,6 +43,7 @@ public class BlockLocator extends BlockCounter{
         this.current = current;
         if(getCountValue() > bytePosition){
             FOUND = true;
+            return;
         }
     }
 
@@ -78,7 +79,9 @@ public class BlockLocator extends BlockCounter{
             count++;
         }
         Block[] results = new Block[count];
-        System.arraycopy(tmp, 0, results, 0, count);
+        for(int i = 0; i < count; i++){
+            results[i] = tmp[i];
+        }
         return results;
     }
     public static class Result{

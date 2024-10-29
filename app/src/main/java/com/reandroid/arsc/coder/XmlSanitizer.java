@@ -75,14 +75,14 @@ public class XmlSanitizer {
                 || startsWithSpecialCharacter(text, 1);
     }
     private static boolean shouldEscapeSpecial(String text){
-        if(text == null || text.length() == 0){
+        if(android.text.TextUtils.isEmpty(text)){
             return false;
         }
         return isAlreadyEscaped(text, 0)
                 || startsWithSpecialCharacter(text, 0);
     }
     private static boolean shouldEscapeDecoded(String text){
-        if(text == null || text.length() == 0){
+        if(android.text.TextUtils.isEmpty(text)){
             return false;
         }
         return looksDecoded(text, 0);

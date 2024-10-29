@@ -145,7 +145,7 @@ public class XMLText extends XMLNode implements Text {
                 || event == XmlPullParser.ENTITY_REF;
     }
     private static boolean isIndentText(String text){
-        if(text == null || text.length() == 0){
+        if(android.text.TextUtils.isEmpty(text)){
             return true;
         }
         if(text.charAt(0) != '\n'){

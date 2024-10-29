@@ -55,6 +55,9 @@ public class XMLNamespace implements Namespace, Cloneable {
     }
 
     static boolean looksNamespace(String name, String value){
-        return value != null && name.startsWith("xmlns:");
+        if(value==null || !name.startsWith("xmlns:")){
+            return false;
+        }
+        return true;
     }
 }

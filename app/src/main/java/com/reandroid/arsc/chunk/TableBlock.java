@@ -18,41 +18,40 @@ package com.reandroid.arsc.chunk;
 import com.reandroid.arsc.ARSCLib;
 import com.reandroid.arsc.ApkFile;
 import com.reandroid.arsc.array.PackageArray;
+import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.header.InfoHeader;
 import com.reandroid.arsc.header.TableHeader;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.model.ResourceEntry;
+import com.reandroid.arsc.model.ResourceName;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.Entry;
+import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.arsc.value.StagedAliasEntry;
+import com.reandroid.arsc.value.ValueItem;
 import com.reandroid.common.BytesOutputStream;
-import com.reandroid.json.JSONArray;
+import com.reandroid.common.ReferenceResolver;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.ObjectsUtil;
-import com.reandroid.utils.collection.ArrayCollection;
-import com.reandroid.utils.collection.CollectionUtil;
-import com.reandroid.utils.collection.CombiningIterator;
-import com.reandroid.utils.collection.EmptyIterator;
-import com.reandroid.utils.collection.FilterIterator;
-import com.reandroid.utils.collection.IterableIterator;
-import com.reandroid.utils.collection.SingleIterator;
-import com.starry.FileUtils;
+import com.reandroid.utils.collection.*;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Collection;
+import java.io.*;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Predicate;
 
 public class TableBlock extends Chunk<TableHeader>
         implements MainChunk, Iterable<PackageBlock>, JSONConvert<JSONObject> {
+
     private final TableStringPool mTableStringPool;
     private final PackageArray mPackageArray;
     private final List<TableBlock> mFrameWorks;
     private ApkFile mApkFile;
+    private ReferenceResolver referenceResolver;
     private PackageBlock mCurrentPackage;
     private PackageBlock mEmptyTablePackage;
 
@@ -65,16 +64,37 @@ public class TableBlock extends Chunk<TableHeader>
         addChild(mTableStringPool);
         addChild(mPackageArray);
     }
+    // Experimental
+    public void changePackageId(int packageIdOld, int packageIdNew){
+        for (PackageBlock packageBlock : this) {
+            packageBlock.changePackageId(packageIdOld, packageIdNew);
+        }
+    }
+    // Experimental
+    public Iterator<ValueItem> allValues(){
+        return new MergingIterator<>(new ComputeIterator<>(getPackages(),
+                PackageBlock::allValues));
+    }
 
     public PackageBlock getCurrentPackage(){
         return mCurrentPackage;
     }
-
+    public void setCurrentPackage(PackageBlock packageBlock){
+        mCurrentPackage = packageBlock;
+    }
+    public PackageBlock getPackageBlockByTag(Object tag){
+        for(PackageBlock packageBlock : this){
+            if(Objects.equals(tag, packageBlock.getTag())){
+                return packageBlock;
+            }
+        }
+        return null;
+    }
     public Iterator<ResourceEntry> getResources(){
         return new IterableIterator<PackageBlock, ResourceEntry>(getPackages()) {
             @Override
             public Iterator<ResourceEntry> iterator(PackageBlock element) {
-                return element.iterator();
+                return element.getResources();
             }
         };
     }
@@ -130,6 +150,13 @@ public class TableBlock extends Chunk<TableHeader>
         }
         return null;
     }
+    public ResourceEntry getResource(ResourceName resourceName) {
+        if(resourceName != null) {
+            return getResource(resourceName.getPackageName(),
+                    resourceName.getType(), resourceName.getName());
+        }
+        return null;
+    }
     public ResourceEntry getResource(String packageName, String type, String name){
         Iterator<PackageBlock> iterator = getAllPackages(packageName);
         while (iterator.hasNext()){
@@ -163,7 +190,53 @@ public class TableBlock extends Chunk<TableHeader>
         }
         return null;
     }
-
+    public ResourceEntry getLocalResource(int resourceId){
+        return getLocalResource( null, resourceId);
+    }
+    public ResourceEntry getLocalResource(PackageBlock context, int resourceId){
+        Iterator<PackageBlock> iterator = getPackages(context);
+        while (iterator.hasNext()){
+            PackageBlock packageBlock = iterator.next();
+            ResourceEntry resourceEntry = packageBlock.getResource(resourceId);
+            if(resourceEntry != null){
+                return resourceEntry;
+            }
+        }
+        return null;
+    }
+    public ResourceEntry getLocalResource(PackageBlock context, String type, String name){
+        Iterator<PackageBlock> iterator = getPackages(context);
+        while (iterator.hasNext()){
+            PackageBlock packageBlock = iterator.next();
+            ResourceEntry resourceEntry = packageBlock.getResource(type, name);
+            if(resourceEntry != null){
+                return resourceEntry;
+            }
+        }
+        return null;
+    }
+    public ResourceEntry getLocalResource(String type, String name){
+        return getLocalResource((String) null, type, name);
+    }
+    public ResourceEntry getLocalResource(String packageName, String type, String name){
+        Iterator<PackageBlock> iterator = getPackages(packageName);
+        while (iterator.hasNext()){
+            PackageBlock packageBlock = iterator.next();
+            ResourceEntry resourceEntry = packageBlock.getResource(type, name);
+            if(resourceEntry != null){
+                return resourceEntry;
+            }
+        }
+        return null;
+    }
+    public Iterator<ResourceEntry> getLocalResources(String type){
+        return new IterableIterator<PackageBlock, ResourceEntry>(getPackages((String) null)) {
+            @Override
+            public Iterator<ResourceEntry> iterator(PackageBlock element) {
+                return element.getResources(type);
+            }
+        };
+    }
     public ResourceEntry getAttrResource(String prefix, String name){
         Iterator<PackageBlock> iterator = getAllPackages(prefix);
         while (iterator.hasNext()){
@@ -209,7 +282,13 @@ public class TableBlock extends Chunk<TableHeader>
         }
         return null;
     }
-
+    public int resolveResourceId(String packageName, String type, String name){
+        Iterator<Entry> iterator = getEntries(packageName, type, name);
+        if(iterator.hasNext()){
+            return iterator.next().getResourceId();
+        }
+        return 0;
+    }
     public Entry getEntry(String packageName, String type, String name){
         Iterator<PackageBlock> iterator = getAllPackages(packageName);
         Entry result = null;
@@ -258,9 +337,30 @@ public class TableBlock extends Chunk<TableHeader>
             }
         };
     }
-
+    public Iterator<PackageBlock> getPackages(String packageName){
+        return new  FilterIterator<PackageBlock>(getPackages()) {
+            @Override
+            public boolean test(PackageBlock packageBlock){
+                if(packageName != null && packageName.length() > 0){
+                    return packageBlock.packageNameMatches(packageName);
+                }
+                return TableBlock.this == packageBlock.getTableBlock();
+            }
+        };
+    }
+    public Iterator<PackageBlock> getPackages(int packageId){
+        if(packageId == 0){
+            return EmptyIterator.of();
+        }
+        return new FilterIterator<PackageBlock>(getPackages()) {
+            @Override
+            public boolean test(PackageBlock packageBlock){
+                return packageId == packageBlock.getId();
+            }
+        };
+    }
     public Iterator<PackageBlock> getPackages(){
-        return getPackages(null);
+        return getPackages((PackageBlock) null);
     }
     public Iterator<PackageBlock> getPackages(PackageBlock context){
         PackageBlock current;
@@ -323,14 +423,85 @@ public class TableBlock extends Chunk<TableHeader>
             }
         };
     }
-
+    public boolean removeUnusedSpecs(){
+        boolean result = false;
+        for(PackageBlock packageBlock : this){
+            if (packageBlock.removeUnusedSpecs()) {
+                result = true;
+            }
+        }
+        return result;
+    }
+    public String refreshFull(){
+        int sizeOld = getHeaderBlock().getChunkSize();
+        StringBuilder message = new StringBuilder();
+        boolean appendOnce = false;
+        if(getTableStringPool().removeUnusedStrings()){
+            message.append("Removed unused table strings");
+            appendOnce = true;
+        }
+        for(PackageBlock packageBlock : this){
+            String packageMessage = packageBlock.refreshFull(false);
+            if(packageMessage == null){
+                continue;
+            }
+            if(appendOnce){
+                message.append("\n");
+            }
+            message.append("Package: ");
+            message.append(packageBlock.getName());
+            message.append("\n  ");
+            packageMessage = packageMessage.replaceAll("\n", "\n  ");
+            message.append(packageMessage);
+            appendOnce = true;
+        }
+        refresh();
+        int sizeNew = getHeaderBlock().getChunkSize();
+        if(sizeOld != sizeNew){
+            if(appendOnce){
+                message.append("\n");
+            }
+            message.append("Table size changed = ");
+            message.append(sizeOld);
+            message.append(", ");
+            message.append(sizeNew);
+            appendOnce = true;
+        }
+        if(appendOnce){
+            return message.toString();
+        }
+        return null;
+    }
+    private void linkStringsInternal() {
+        linkTableStringsInternal(getTableStringPool());
+        for(PackageBlock packageBlock : this) {
+            packageBlock.linkSpecStringsInternal(packageBlock.getSpecStringPool());
+        }
+    }
     public void linkTableStringsInternal(TableStringPool tableStringPool){
-        for(PackageBlock packageBlock : listPackages()){
+        for(PackageBlock packageBlock : this){
             packageBlock.linkTableStringsInternal(tableStringPool);
         }
     }
-
-
+    public List<Entry> resolveReference(int referenceId){
+        return resolveReference(referenceId, null);
+    }
+    public List<Entry> resolveReferenceWithConfig(int referenceId, ResConfig resConfig){
+        ReferenceResolver resolver = this.referenceResolver;
+        if(resolver == null){
+            resolver = new ReferenceResolver(this);
+            this.referenceResolver = resolver;
+        }
+        return resolver.resolveWithConfig(referenceId, resConfig);
+    }
+    public List<Entry> resolveReference(int referenceId, Predicate<Entry> filter){
+        ReferenceResolver resolver = this.referenceResolver;
+        if(resolver == null){
+            resolver = new ReferenceResolver(this);
+            this.referenceResolver = resolver;
+        }
+        return resolver.resolveAll(referenceId, filter);
+    }
     public Iterator<PackageBlock> iterator(){
         return getPackageArray().iterator();
     }
@@ -359,22 +530,16 @@ public class TableBlock extends Chunk<TableHeader>
         }
         return true;
     }
+    public boolean initializeAsEmpty() {
+        if(isEmpty()) {
+            setNull(true);
+            setCurrentPackage(pickOrEmptyPackage());
+            return true;
+        }
+        return false;
+    }
     public boolean isMultiPackage() {
         return size() > 1;
-    }
-    /**
-     * Use clear();
-     * **/
-    @Deprecated
-    public void destroy(){
-        clear();
-    }
-    /**
-     * Use size();
-     * **/
-    @Deprecated
-    public int countPackages(){
-        return size();
     }
 
     public PackageBlock pickOne(){
@@ -401,10 +566,13 @@ public class TableBlock extends Chunk<TableHeader>
     public void sortPackages(){
         getPackageArray().sort();
     }
-    public Collection<PackageBlock> listPackages(){
+    public Iterable<PackageBlock> listPackages(){
         return getPackageArray().listItems();
     }
-
+    public Iterator<ResConfig> getResConfigs(){
+        return new MergingIterator<>(new ComputeIterator<>(iterator(),
+                PackageBlock::getResConfigs));
+    }
     @Override
     public TableStringPool getStringPool() {
         return mTableStringPool;
@@ -425,7 +593,9 @@ public class TableBlock extends Chunk<TableHeader>
     public TableStringPool getTableStringPool(){
         return mTableStringPool;
     }
-
+    public PackageBlock getPackageBlockById(int pkgId){
+        return getPackageArray().getPackageBlockById(pkgId);
+    }
     public PackageBlock newPackage(int id, String name){
         PackageBlock packageBlock = getPackageArray().createNext();
         packageBlock.setId(id);
@@ -434,11 +604,30 @@ public class TableBlock extends Chunk<TableHeader>
         }
         return packageBlock;
     }
-
+    public PackageBlock getOrCreatePackage(int id, String name){
+        PackageBlock packageBlockId = getPackageArray()
+                .getPackageBlockById(id);
+        if(packageBlockId == null){
+            return newPackage(id, name);
+        }
+        if(name == null){
+            return packageBlockId;
+        }
+        PackageBlock packageBlockName = getPackageArray()
+                .getPackageBlockByName(name);
+        if(packageBlockId == packageBlockName){
+            return packageBlockId;
+        }
+        return newPackage(id, name);
+    }
     public PackageArray getPackageArray(){
         return mPackageArray;
     }
-
+    public void trimConfigSizes(int resConfigSize){
+        for(PackageBlock packageBlock : this) {
+            packageBlock.trimConfigSizes(resConfigSize);
+        }
+    }
 
     private void refreshPackageCount(){
         int count = getPackageArray().size();
@@ -450,11 +639,7 @@ public class TableBlock extends Chunk<TableHeader>
     }
     @Override
     protected void onPreRefresh() {
-        List<PackageBlock> emptyList = CollectionUtil.toList(
-                FilterIterator.of(getPackages(), PackageBlock::isEmpty));
-        for(PackageBlock packageBlock : emptyList){
-            removePackage(packageBlock);
-        }
+        getPackageArray().removeIf(PackageBlock::isEmpty);
         super.onPreRefresh();
     }
 
@@ -491,6 +676,7 @@ public class TableBlock extends Chunk<TableHeader>
             infoHeader=reader.readHeaderBlock();
         }
         reader.close();
+        linkStringsInternal();
     }
 
     public void readBytes(File file) throws IOException{
@@ -509,9 +695,13 @@ public class TableBlock extends Chunk<TableHeader>
         if(dir!=null && !dir.exists()){
             dir.mkdirs();
         }
-        try(OutputStream outputStream = FileUtils.getOutputStream(file)) {
-            return super.writeBytes(outputStream);
-        }
+        OutputStream outputStream=new FileOutputStream(file);
+        int length = super.writeBytes(outputStream);
+        outputStream.close();
+        return length;
+    }
+    public int searchResourceIdAlias(int resourceId){
+        return resolveStagedAlias(resourceId, 0);
     }
     public int resolveStagedAlias(int stagedResId, int def){
         StagedAliasEntry stagedAliasEntry = getStagedAlias(stagedResId);
@@ -550,7 +740,9 @@ public class TableBlock extends Chunk<TableHeader>
         return "android".equals(packageBlock.getName())
                 && packageBlock.getId() == 0x01;
     }
-
+    public boolean hasFramework(){
+        return getFrameWorks().size() != 0;
+    }
     public void addFrameworks(Iterator<TableBlock> iterator) {
         List<TableBlock> frameworkList = CollectionUtil.toList(iterator);
         for(TableBlock framework : frameworkList) {
@@ -576,10 +768,18 @@ public class TableBlock extends Chunk<TableHeader>
         }
         return false;
     }
+    public void removeFramework(TableBlock tableBlock){
+        mFrameWorks.remove(tableBlock);
+    }
     public void clearFrameworks(){
         mFrameWorks.clear();
     }
-
+    public PackageBlock parsePublicXml(XmlPullParser parser) throws IOException,
+            XmlPullParserException {
+        PackageBlock packageBlock = newPackage(0, null);
+        packageBlock.parsePublicXml(parser);
+        return packageBlock;
+    }
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject=new JSONObject();
@@ -587,10 +787,6 @@ public class TableBlock extends Chunk<TableHeader>
         jsonObject.put(ARSCLib.NAME_arsc_lib_version, ARSCLib.getVersion());
 
         jsonObject.put(NAME_packages, getPackageArray().toJson());
-        JSONArray jsonArray = getStringPool().toJson();
-        if(jsonArray!=null){
-            jsonObject.put(NAME_styled_strings, jsonArray);
-        }
         return jsonObject;
     }
     @Override
@@ -599,12 +795,10 @@ public class TableBlock extends Chunk<TableHeader>
         refresh();
     }
     public void merge(TableBlock tableBlock){
-        if(tableBlock==null||tableBlock==this){
+        if(tableBlock == null || tableBlock == this){
             return;
         }
-        if(size() == 0 && getStringPool().isEmpty()){
-            getStringPool().merge(tableBlock.getStringPool());
-        }
+        getStringPool().merge(tableBlock.getStringPool());
         getPackageArray().merge(tableBlock.getPackageArray());
         refresh();
     }
@@ -639,35 +833,67 @@ public class TableBlock extends Chunk<TableHeader>
     }
     @Override
     public String toString(){
-        String builder = getClass().getSimpleName() +
-                ": packages = " +
-                mPackageArray.size() +
-                ", size = " +
-                getHeaderBlock().getChunkSize() +
-                " bytes";
-        return builder;
+        StringBuilder builder=new StringBuilder();
+        builder.append(getClass().getSimpleName());
+        builder.append(": packages = ");
+        builder.append(mPackageArray.size());
+        builder.append(", size = ");
+        builder.append(getHeaderBlock().getChunkSize());
+        builder.append(" bytes");
+        return builder.toString();
     }
 
-    @Deprecated
-    public static TableBlock loadWithAndroidFramework(InputStream inputStream) throws IOException{
-        return load(inputStream);
-    }
     public static TableBlock load(File file) throws IOException{
-        try (InputStream fis =FileUtils.getInputStream(file)) {
-            return load(fis);
-        }
+        return load(new FileInputStream(file));
     }
     public static TableBlock load(InputStream inputStream) throws IOException{
         TableBlock tableBlock=new TableBlock();
         tableBlock.readBytes(inputStream);
         return tableBlock;
     }
+    public static TableBlock createEmpty() {
+        TableBlock tableBlock = new TableBlock();
+        tableBlock.initializeAsEmpty();
+        return tableBlock;
+    }
 
+    public static boolean isResTableBlock(InputStream inputStream){
+        try {
+            HeaderBlock headerBlock= BlockReader.readHeaderBlock(inputStream);
+            return isResTableBlock(headerBlock);
+        } catch (IOException ignored) {
+            return false;
+        }
+    }
+    public static boolean isResTableBlock(BlockReader blockReader){
+        if(blockReader==null){
+            return false;
+        }
+        try {
+            HeaderBlock headerBlock = blockReader.readHeaderBlock();
+            return isResTableBlock(headerBlock);
+        } catch (IOException ignored) {
+            return false;
+        }
+    }
+    public static boolean isResTableBlock(HeaderBlock headerBlock){
+        if(headerBlock==null){
+            return false;
+        }
+        ChunkType chunkType=headerBlock.getChunkType();
+        return chunkType==ChunkType.TABLE;
+    }
     public static final String FILE_NAME = ObjectsUtil.of("resources.arsc");
+    public static final String FILE_NAME_JSON = ObjectsUtil.of("resources.arsc.json");
 
     private static final String NAME_packages = ObjectsUtil.of("packages");
     public static final String NAME_styled_strings = ObjectsUtil.of("styled_strings");
 
+    public static final String JSON_FILE_NAME = ObjectsUtil.of("resources.arsc.json");
+    public static final String DIRECTORY_NAME = ObjectsUtil.of("resources");
+
+    public static final String RES_JSON_DIRECTORY_NAME = ObjectsUtil.of("res-json");
+    public static final String RES_FILES_DIRECTORY_NAME = ObjectsUtil.of("res-files");
 
     public static final String ATTR_null_table = ObjectsUtil.of("null-table");
 }

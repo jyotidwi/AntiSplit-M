@@ -20,16 +20,21 @@ import com.reandroid.arsc.array.LibraryInfoArray;
 import com.reandroid.arsc.array.SpecTypePairArray;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.coder.CommonType;
+import com.reandroid.arsc.coder.EncodeResult;
+import com.reandroid.arsc.coder.ValueCoder;
+import com.reandroid.arsc.coder.xml.XmlEncodeException;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.PackageBody;
 import com.reandroid.arsc.container.SpecTypePair;
-import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.header.PackageHeader;
+import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.list.OverlayableList;
 import com.reandroid.arsc.list.StagedAliasList;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.model.ResourceLibrary;
+import com.reandroid.arsc.model.ResourceName;
+import com.reandroid.arsc.model.ResourceType;
 import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.pool.TypeStringPool;
@@ -39,15 +44,25 @@ import com.reandroid.common.Namespace;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
-import com.reandroid.utils.*;
+import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.*;
 import com.reandroid.utils.io.IOUtil;
+import com.reandroid.xml.XMLElement;
+import com.reandroid.xml.XMLFactory;
+import com.reandroid.xml.XMLUtil;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 
 
@@ -101,6 +116,10 @@ public class PackageBlock extends Chunk<PackageHeader>
     public void setTag(Object tag){
         this.mTag = tag;
     }
+
+    public Iterator<ResourceType> getTypes() {
+        return ComputeIterator.of(getSpecTypePairs(), ResourceType::new);
+    }
     public ResourceEntry getResource(int resourceId){
         int packageId = (resourceId >> 24 ) & 0xff;
         if(packageId == 0){
@@ -142,6 +161,12 @@ public class PackageBlock extends Chunk<PackageHeader>
         }
         return new ResourceEntry(this, entry.getResourceId());
     }
+    public ResourceEntry getResource(ResourceName resourceName) {
+        if(resourceName == null || !resourceName.matchesPackageName(getName())) {
+            return null;
+        }
+        return getResource(resourceName.getType(), resourceName.getName());
+    }
     public ResourceEntry getResource(String type, String name){
         SpecTypePair specTypePair =
                 getSpecTypePair(type);
@@ -172,16 +197,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         }
         return null;
     }
-
-
-    /**
-     * Use iterator();
-     * **/
-    @Deprecated
-    public Iterator<ResourceEntry> getResources(){
-        return iterator();
-    }
-    public Iterator<ResourceEntry> iterator(){
+    public Iterator<ResourceEntry> getResources() {
         return new IterableIterator<SpecTypePair, ResourceEntry>(getSpecTypePairs()) {
             @Override
             public Iterator<ResourceEntry> iterator(SpecTypePair element) {
@@ -189,7 +205,7 @@ public class PackageBlock extends Chunk<PackageHeader>
             }
         };
     }
-    public Iterator<ResourceEntry> iterator(String type){
+    public Iterator<ResourceEntry> getResources(String type){
         return new IterableIterator<SpecTypePair, ResourceEntry>(getSpecTypePairs()) {
             @Override
             public Iterator<ResourceEntry> iterator(SpecTypePair element) {
@@ -221,8 +237,8 @@ public class PackageBlock extends Chunk<PackageHeader>
         }
         return true;
     }
-    public int removeUnusedSpecs(){
-        return getSpecStringPool().removeUnusedStrings().size();
+    public boolean removeUnusedSpecs(){
+        return getSpecStringPool().removeUnusedStrings();
     }
     public String refreshFull(){
         return refreshFull(true);
@@ -231,10 +247,8 @@ public class PackageBlock extends Chunk<PackageHeader>
         int sizeOld = getHeaderBlock().getChunkSize();
         StringBuilder message = new StringBuilder();
         boolean appendOnce = false;
-        int count = removeUnusedSpecs();
-        if(count != 0){
-            message.append("Removed unused spec strings = ");
-            message.append(count);
+        if(removeUnusedSpecs()){
+            message.append("Removed unused spec strings");
             appendOnce = true;
         }
         getSpecStringPool().sort();
@@ -381,9 +395,6 @@ public class PackageBlock extends Chunk<PackageHeader>
     public OverlayableList getOverlayableList(){
         return mBody.getOverlayableList();
     }
-    public BlockList<OverlayablePolicy> getOverlayablePolicyList(){
-        return mBody.getOverlayablePolicyList();
-    }
     public void sortTypes(){
         getSpecTypePairArray().sort();
     }
@@ -517,8 +528,8 @@ public class PackageBlock extends Chunk<PackageHeader>
     public void trimConfigSizes(int resConfigSize){
         getSpecTypePairArray().trimConfigSizes(resConfigSize);
     }
-    public Collection<LibraryInfo> listLibraryInfo(){
-        return getLibraryBlock().listLibraryInfo();
+    public Iterator<LibraryInfo> getLibraryInfo(){
+        return getLibraryBlock().iterator();
     }
 
     public void addLibrary(LibraryBlock libraryBlock){
@@ -535,7 +546,9 @@ public class PackageBlock extends Chunk<PackageHeader>
     public LibraryBlock getLibraryBlock(){
         return mBody.getLibraryBlock();
     }
-
+    public Entry getOrCreateEntry(byte typeId, short entryId, String qualifiers){
+        return getSpecTypePairArray().getOrCreateEntry(typeId, entryId, qualifiers);
+    }
     public Entry getOrCreateEntry(byte typeId, short entryId, ResConfig resConfig){
         return getSpecTypePairArray().getOrCreateEntry(typeId, entryId, resConfig);
     }
@@ -568,12 +581,8 @@ public class PackageBlock extends Chunk<PackageHeader>
         });
     }
     private Iterator<SpecTypePair> getIdSpecs(){
-        return getSpecTypePairArray().iterator(new Predicate<SpecTypePair>() {
-            @Override
-            public boolean test(SpecTypePair specTypePair) {
-                return specTypePair != null && specTypePair.isTypeId();
-            }
-        });
+        return getSpecTypePairArray().iterator(
+                specTypePair -> specTypePair != null && specTypePair.isTypeId());
     }
     public SpecTypePair getSpecTypePair(String typeName){
         return getSpecTypePair(typeIdOf(typeName));
@@ -582,7 +591,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         return getSpecTypePairArray().getSpecTypePair((byte) typeId);
     }
 
-    public Collection<SpecTypePair> listSpecTypePairs(){
+    public Iterable<SpecTypePair> listSpecTypePairs(){
         return getSpecTypePairArray().listItems();
     }
     public Iterator<ResConfig> getResConfigs(){
@@ -619,6 +628,11 @@ public class PackageBlock extends Chunk<PackageHeader>
         refreshSpecStringCount();
     }
 
+    public void serializePublicXml(File file) throws IOException {
+        XmlSerializer serializer = XMLFactory.newSerializer(file);
+        serializePublicXml(serializer);
+        IOUtil.close(serializer);
+    }
     public void serializePublicXml(XmlSerializer serializer) throws IOException {
         serializePublicXml(serializer, true);
     }
@@ -657,7 +671,14 @@ public class PackageBlock extends Chunk<PackageHeader>
             serializer.attribute(null, TableBlock.ATTR_null_table, "true");
         }
     }
-
+    public void parsePublicXml(XmlPullParser parser) throws IOException,
+            XmlPullParserException {
+        getPublicXmlParser()
+                .parse(parser);
+    }
+    public PublicXmlParser getPublicXmlParser(){
+        return new PublicXmlParser(this);
+    }
 
     @Override
     public JSONObject toJson() {
@@ -681,9 +702,11 @@ public class PackageBlock extends Chunk<PackageHeader>
             jsonObject.put(NAME_staged_aliases,
                     stagedAlias.getStagedAliasEntryArray().toJson());
         }
-        JSONArray jsonArray = getOverlayableList().toJson();
-        if(jsonArray!=null){
-            jsonObject.put(NAME_overlaybles, jsonArray);
+        if (addTypes) {
+            JSONArray jsonArray = getOverlayableList().toJson();
+            if(jsonArray != null){
+                jsonObject.put(NAME_overlaybles, jsonArray);
+            }
         }
         return jsonObject;
     }
@@ -720,7 +743,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         }
         setName(packageBlock.getName());
         getLibraryBlock().merge(packageBlock.getLibraryBlock());
-        mergeSpecStringPool(packageBlock);
+        getSpecStringPool().merge(packageBlock.getSpecStringPool());
         getSpecTypePairArray().merge(packageBlock.getSpecTypePairArray());
         getOverlayableList().merge(packageBlock.getOverlayableList());
         getStagedAliasList().merge(packageBlock.getStagedAliasList());
@@ -732,9 +755,13 @@ public class PackageBlock extends Chunk<PackageHeader>
             return exist;
         }
         int id = 0;
-        Iterator<Entry> iterator = resourceEntry.iterator(true);
+        Iterator<Entry> iterator = resourceEntry.iterator(mergeOption.getKeepEntryConfigs());
         while (iterator.hasNext()) {
-            Entry entry = mergeWithName(mergeOption, iterator.next());
+            Entry coming = iterator.next();
+            if (coming.isNull()) {
+                continue;
+            }
+            Entry entry = mergeWithName(mergeOption, coming);
             if(id == 0){
                 id = entry.getResourceId();
             }
@@ -749,10 +776,6 @@ public class PackageBlock extends Chunk<PackageHeader>
         Entry result = getOrCreate(entry.getResConfig(), entry.getTypeName(), entry.getName());
         result.mergeWithName(mergeOption, entry);
         return result;
-    }
-    private void mergeSpecStringPool(PackageBlock coming){
-        this.getSpecStringPool().addStrings(
-                coming.getSpecStringPool().toStringList());
     }
 
     @Override
@@ -771,14 +794,14 @@ public class PackageBlock extends Chunk<PackageHeader>
     }
     @Override
     public String toString(){
-        StringBuilder builder=new StringBuilder();
+        StringBuilder builder = new StringBuilder();
         builder.append(super.toString());
         builder.append(", id=");
         builder.append(HexUtil.toHex2((byte) getId()));
         builder.append(", name=");
         builder.append(getName());
-        int libCount=getLibraryBlock().getLibraryCount();
-        if(libCount>0){
+        int libCount = getLibraryBlock().size();
+        if(libCount > 0){
             builder.append(", libraries=");
             builder.append(libCount);
         }
@@ -837,6 +860,134 @@ public class PackageBlock extends Chunk<PackageHeader>
         valueItem.setData(resourceId);
     }
 
+    public static int replacePackageId(int resourceId, int packageIdOld, int packageIdNew){
+        if(!isResourceId(resourceId)){
+            return resourceId;
+        }
+        int id = (resourceId >> 24) & 0xff;
+        if(id != packageIdOld){
+            return resourceId;
+        }
+        resourceId = resourceId & 0xffffff;
+        id = packageIdNew << 24;
+        resourceId = id | resourceId;
+        return resourceId;
+    }
+    public static class PublicXmlParser{
+        private final PackageBlock packageBlock;
+        private boolean mInitializeIds = true;
+        private PublicXmlParser(PackageBlock packageBlock){
+            this.packageBlock = packageBlock;
+        }
+        public PublicXmlParser setInitializeIds(boolean initializeId) {
+            this.mInitializeIds = initializeId;
+            return this;
+        }
+        public PublicXmlParser parse(XmlPullParser parser) throws IOException, XmlPullParserException {
+            parseResourcesAttributes(parser);
+            parseElements(parser);
+            IOUtil.close(parser);
+            return this;
+        }
+        private boolean isInitializeIds(){
+            return mInitializeIds;
+        }
+        private void parseElements(XmlPullParser parser) throws IOException, XmlPullParserException {
+            while (XMLUtil.ensureStartTag(parser) == XmlPullParser.START_TAG){
+                XMLElement element = XMLElement.parseElement(parser);
+                parsePublicTag(element);
+            }
+        }
+        private void parsePublicTag(XMLElement element) throws XmlEncodeException {
+            if(!PackageBlock.TAG_public.equals(element.getName())){
+                return;
+            }
+            String id = element.getAttributeValue(ATTR_id);
+            String type = element.getAttributeValue(ATTR_type);
+            String name = element.getAttributeValue(ATTR_name);
+            if(id == null){
+                throw new XmlEncodeException("Missing attribute: '" + ATTR_id + "', "
+                        + element.getDebugText());
+            }
+            if(type == null){
+                throw new XmlEncodeException("Missing attribute: '" + ATTR_type + "', "
+                        + element.getDebugText());
+            }
+            if(name == null){
+                throw new XmlEncodeException("Missing attribute: '" + ATTR_name + "', "
+                        + element.getDebugText());
+            }
+            EncodeResult encodeResult = ValueCoder.encodeHexOrInteger(id.trim());
+            if(encodeResult == null){
+                throw new XmlEncodeException("Invalid id value: " + element.getDebugText());
+            }
+            int resourceId = encodeResult.value;
+            int packageId = (resourceId >> 24) & 0xff;
+            int i = packageBlock.getId();
+            if(i == 0){
+                packageBlock.setId(packageId);
+            }else if(i != packageId){
+                return;
+            }
+            int typeId = (resourceId >> 16) & 0xff;
+            if(typeId == 0){
+                throw new XmlEncodeException("Type id is zero: '" + id + "', "
+                        + element.getDebugText());
+            }
+            TypeString typeString = packageBlock.getOrCreateTypeString(typeId, type);
+            typeId = typeString.getId();
+            TypeBlock typeBlock = packageBlock.getOrCreateTypeBlock((byte) typeId, "");
+            int entryId = resourceId & 0xffff;
+            Entry entry = typeBlock.getOrCreateEntry((short) entryId);
+            entry.setName(name, true);
+            if(isInitializeIds() && typeBlock.isTypeId()){
+                entry.setValueAsBoolean(false);
+                ValueHeader header = entry.getHeader();
+                header.setPublic(true);
+                header.setWeak(true);
+            }
+        }
+        private void parseResourcesAttributes(XmlPullParser parser) throws IOException, XmlPullParserException {
+            int event = parser.getEventType();
+            boolean documentStarted = false;
+            if(event == XmlPullParser.START_DOCUMENT){
+                documentStarted = true;
+                parser.next();
+            }
+            event = XMLUtil.ensureStartTag(parser);
+            if(event != XmlPullParser.START_TAG){
+                throw new XmlEncodeException("Expecting xml state START_TAG but found: "
+                        + XMLUtil.toEventName(parser.getEventType()));
+            }
+            if(PackageBlock.TAG_resources.equals(parser.getName())){
+                XMLElement element = new XMLElement(PackageBlock.TAG_resources);
+                element.parseAttributes(parser);
+                parseResourcesAttributes(element);
+                parser.next();
+            }else if(documentStarted){
+                throw new XmlEncodeException("Expecting <resources> tag but found: " + parser.getName());
+            }
+        }
+        private void parseResourcesAttributes(XMLElement element) throws IOException {
+            String packageName = element.getAttributeValue(PackageBlock.ATTR_package);
+            if(!StringsUtil.isWhiteSpace(packageName) && !EMPTY_PACKAGE_NAME.equals(packageName)){
+                packageBlock.setName(packageName);
+            }
+            String id = element.getAttributeValue(PackageBlock.ATTR_id);
+            if(!StringsUtil.isWhiteSpace(id) && packageBlock.getId() == 0){
+                EncodeResult encodeResult = ValueCoder
+                        .encodeHexOrInteger(id);
+                if(encodeResult == null || !PackageBlock.isPackageId(encodeResult.value)){
+                    throw new XmlEncodeException("Invalid id value: '" + element.getDebugText() + "'");
+                }
+                packageBlock.setId(encodeResult.value);
+            }
+            String nullTable = element.getAttributeValue(TableBlock.ATTR_null_table);
+            if("true".equals(nullTable)){
+                packageBlock.getTableBlock().setNull(true);
+            }
+        }
+    }
 
     public static PackageBlock createEmptyPackage(TableBlock tableBlock){
         PackageBlock packageBlock = new PackageBlock(){

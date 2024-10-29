@@ -24,7 +24,6 @@ public class ComputeList<T, E> extends ComputeCollection<T, E> implements List<T
         super(list, function);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public List<? extends E> getSource() {
         return (List<? extends E>) super.getSource();

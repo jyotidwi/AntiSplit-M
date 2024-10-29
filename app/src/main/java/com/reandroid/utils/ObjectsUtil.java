@@ -17,6 +17,13 @@ package com.reandroid.utils;
 
 public class ObjectsUtil {
 
+    public static<T> T getNull() throws ClassCastException {
+        return null;
+    }
+    @SuppressWarnings("unchecked")
+    public static<T> T cast(Object obj) throws ClassCastException {
+        return (T) obj;
+    }
     public static<T> T of(T t) {
         return t;
     }

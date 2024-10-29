@@ -15,8 +15,9 @@
  */
 package com.reandroid.common;
 
+import android.text.TextUtils;
+
 import com.reandroid.utils.ObjectsUtil;
-import com.reandroid.utils.StringsUtil;
 
 public interface Namespace {
     String getPrefix();
@@ -25,7 +26,7 @@ public interface Namespace {
     static boolean isValidUri(String uri, int resourceId) {
         int packageId = (resourceId >> 24 ) & 0xff;
         if(packageId == 0) {
-            if(StringsUtil.isEmpty(uri)) {
+            if(TextUtils.isEmpty(uri)) {
                 return true;
             }
             return isExternalUri(uri);

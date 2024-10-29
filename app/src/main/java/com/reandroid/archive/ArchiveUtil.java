@@ -15,11 +15,11 @@
  */
 package com.reandroid.archive;
 
-import com.reandroid.utils.StringsUtil;
+import android.text.TextUtils;
 
 public class ArchiveUtil {
     public static String sanitizePath(String path){
-        if(StringsUtil.isEmpty(path)){
+        if(TextUtils.isEmpty(path)){
             return null;
         }
         path = path.replace('\\', '/');
@@ -46,7 +46,7 @@ public class ArchiveUtil {
             }else {
                 builder = new StringBuilder(length);
                 if(dots != null){
-                    builder.append(dots);
+                    builder.append(dots.toString());
                     dots = null;
                 }
                 builder.append(ch);

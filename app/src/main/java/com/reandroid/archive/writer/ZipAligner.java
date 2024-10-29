@@ -26,9 +26,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ZipAligner {
+
     private final Map<Pattern, Integer> alignmentMap;
     private int defaultAlignment;
-    private boolean enableDataDescriptor;
 
     public ZipAligner(){
         alignmentMap = new HashMap<>();
@@ -48,12 +48,9 @@ public class ZipAligner {
     }
     public void setDefaultAlignment(int defaultAlignment) {
         if(defaultAlignment <= 0){
-            defaultAlignment = 1;
+            defaultAlignment = NO_ALIGNMENT;
         }
         this.defaultAlignment = defaultAlignment;
-    }
-    public void setEnableDataDescriptor(boolean enableDataDescriptor) {
-        this.enableDataDescriptor = enableDataDescriptor;
     }
 
     public void align(long offset, LocalFileHeader lfh){
@@ -61,31 +58,28 @@ public class ZipAligner {
             return;
         }
         lfh.setZipAlign(0);
+        lfh.updateDataDescriptor();
         int padding;
-        if(lfh.getMethod() != Archive.STORED){
+        if(lfh.getMethod() == Archive.DEFLATED){
             padding = 0;
-            createDataDescriptor(lfh);
         }else {
             int alignment = getAlignment(lfh.getFileName());
-            long dataOffset = offset + lfh.countBytes();
-            padding = (int) ((alignment - (dataOffset % alignment)) % alignment);
+            if (alignment == NO_ALIGNMENT) {
+                padding = 0;
+            } else {
+                long dataOffset = offset + lfh.countBytes();
+                padding = (int) ((alignment - (dataOffset % alignment)) % alignment);
+            }
         }
         lfh.setZipAlign(padding);
     }
-    private void createDataDescriptor(LocalFileHeader lfh){
-        DataDescriptor dataDescriptor;
-        if(false){
-            dataDescriptor = DataDescriptor.fromLocalFile(lfh);
-        }else {
-            dataDescriptor = null;
-        }
-        lfh.setDataDescriptor(dataDescriptor);
-    }
     private int getAlignment(String name){
-        for(Map.Entry<Pattern, Integer> entry:alignmentMap.entrySet()){
-            Matcher matcher = entry.getKey().matcher(name);
-            if(matcher.matches()){
-                return entry.getValue();
+        if(!alignmentMap.isEmpty()) {
+            for(Map.Entry<Pattern, Integer> entry:alignmentMap.entrySet()){
+                Matcher matcher = entry.getKey().matcher(name);
+                if(matcher.matches()){
+                    return entry.getValue();
+                }
             }
         }
         return defaultAlignment;
@@ -96,10 +90,15 @@ public class ZipAligner {
         zipAligner.setDefaultAlignment(ALIGNMENT_4);
         Pattern patternNativeLib = Pattern.compile("^lib/.+\\.so$");
         zipAligner.setFileAlignment(patternNativeLib, ALIGNMENT_PAGE);
-        zipAligner.setEnableDataDescriptor(false);
+        return zipAligner;
+    }
+    public static ZipAligner noAlignment(){
+        ZipAligner zipAligner = new ZipAligner();
+        zipAligner.setDefaultAlignment(NO_ALIGNMENT);
         return zipAligner;
     }
 
+    private static final int NO_ALIGNMENT = 1;
     private static final int ALIGNMENT_4 = 4;
     private static final int ALIGNMENT_PAGE = 4096;
 }

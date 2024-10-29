@@ -15,15 +15,18 @@
  */
 package com.reandroid.xml;
 
+import com.reandroid.utils.ObjectsUtil;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlSerializer;
 
+import java.io.Closeable;
 import java.io.IOException;
 
 public class XMLUtil {
 
     public static String decodeEntityRef(String text) {
-        if(text == null || text.length() == 0){
+        if(android.text.TextUtils.isEmpty(text)){
             return "";
         }
         if("lt".equals(text)){
@@ -81,6 +84,16 @@ public class XMLUtil {
         }
         return event;
     }
+    public static int ensureTag(XmlPullParser parser)
+            throws IOException, XmlPullParserException {
+        int event = parser.getEventType();
+        while (event != XmlPullParser.START_TAG &&
+                event != XmlPullParser.END_TAG  &&
+                event != XmlPullParser.END_DOCUMENT){
+            event = parser.next();
+        }
+        return event;
+    }
     public static boolean isEmpty(String s){
         if(s==null){
             return true;
@@ -109,6 +122,42 @@ public class XMLUtil {
         }
         return types[eventType];
     }
+    public static boolean getFeatureSafe(XmlPullParser parser, String name, boolean def){
+        try {
+            return parser.getFeature(name);
+        } catch (Throwable ignored){
+            return def;
+        }
+    }
+    public static void setFeatureSafe(XmlPullParser parser, String name, boolean state){
+        try{
+            parser.setFeature(name, state);
+        }catch (Throwable ignored){
+        }
+    }
+    public static void setFeatureSafe(XmlSerializer serializer, String name, boolean state){
+        try {
+            serializer.setFeature(name, state);
+        } catch (Throwable ignored) {
+        }
+    }
+    public static void close(XmlSerializer serializer) {
+        if(serializer != null) {
+            try {
+                serializer.flush();
+            } catch (IOException ignored) {
+            }
+        }
+        if(serializer instanceof Closeable) {
+            Closeable closeable = (Closeable) serializer;
+            try {
+                closeable.close();
+            } catch (IOException ignored) {
+            }
+        }
+    }
+
+    public static final String FEATURE_INDENT_OUTPUT = ObjectsUtil.of("http://xmlpull.org/v1/doc/features.html#indent-output");
 
     public static String [] EVENT_TYPES = {
             "START_DOCUMENT",

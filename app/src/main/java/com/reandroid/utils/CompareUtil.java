@@ -15,16 +15,22 @@
  */
 package com.reandroid.utils;
 
-import java.util.Arrays;
+import com.reandroid.utils.collection.ArraySort;
+
 import java.util.Comparator;
+import java.util.function.Function;
 
 public class CompareUtil {
 
+    public static<T, E extends Comparable<E>> Comparator<T> computeComparator(Function<? super T, E> function) {
+        return (t1, t2) -> compare(function.apply(t1), function.apply(t2));
+    }
+    @Deprecated
     public static<T extends Comparable<T>> void sort(T[] items) {
         if(items == null || items.length < 2){
             return;
         }
-        Arrays.sort(items, getComparableComparator());
+        ArraySort.sort(items, getComparableComparator());
     }
     public static<T extends Comparable<? super T>> int compare(T[] items1, T[] items2) {
         if(items1 == items2){
@@ -63,6 +69,26 @@ public class CompareUtil {
             return 0;
         }
         if(i1 > i2){
+            return 1;
+        }
+        return -1;
+    }
+    public static int compare(boolean b1, boolean b2){
+        if(b1 == b2){
+            return 0;
+        }
+        if(b1) {
+            return 1;
+        }
+        return -1;
+    }
+    public static int compareUnsigned(int i1, int i2){
+        if(i1 == i2){
+            return 0;
+        }
+        long l1 = i1 & 0xffffffffL;
+        long l2 = i2 & 0xffffffffL;
+        if(l1 > l2){
             return 1;
         }
         return -1;

@@ -20,29 +20,37 @@ import com.reandroid.utils.StringsUtil;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
 
-public abstract class StringBlock extends BlockItem{
+public abstract class StringBlock extends BlockItem implements StringReference {
 
     private String mCache;
 
     public StringBlock() {
         super(0);
-        mCache = "";
+        mCache = StringsUtil.EMPTY;
     }
     public String get(){
         return mCache;
     }
     public void set(String text){
-        if(text == null || text.length() == 0){
+        set(text, true);
+    }
+    public void set(String text, boolean notify){
+        if(android.text.TextUtils.isEmpty(text)){
             text = StringsUtil.EMPTY;
         }
         String old = this.mCache;
-        if(text.equals(old) && countBytes() != 0){
+        boolean firstTime = countBytes() == 0;
+        if(firstTime) {
+            old = null;
+        }else if(text.equals(old)) {
             return;
         }
         this.mCache = text;
         byte[] bytes = encodeString(text);
         setBytesInternal(bytes, false);
-        onStringChanged(old, text);
+        if(notify){
+            onStringChanged(old, text);
+        }
     }
     protected void onBytesChanged(){
         mCache = decodeString(getBytesInternal());
@@ -63,4 +71,5 @@ public abstract class StringBlock extends BlockItem{
         return get();
     }
 
+    public static final CharsetDecoder UTF8_DECODER = StandardCharsets.UTF_8.newDecoder();
 }

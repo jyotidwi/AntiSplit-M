@@ -15,19 +15,17 @@
   */
 package com.reandroid.arsc.coder;
 
-import com.aefyr.pseudoapksigner.Constants;
-
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
-import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
+import java.nio.charset.StandardCharsets;
 
 public class ThreeByteCharsetDecoder extends CharsetDecoder {
     public static final ThreeByteCharsetDecoder INSTANCE = new ThreeByteCharsetDecoder();
     public ThreeByteCharsetDecoder() {
-        super(Charset.forName(Constants.UTF8), 1.0F, 1.0F);
+        super(StandardCharsets.UTF_8, 1.0F, 1.0F);
     }
     @Override
     protected CoderResult decodeLoop(ByteBuffer src, CharBuffer dst) {

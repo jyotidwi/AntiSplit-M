@@ -20,8 +20,6 @@
 
 package com.reandroid.xml.kxml2;
 
-import android.text.TextUtils;
-
 import java.io.*;
 import java.util.Arrays;
 import java.util.Locale;
@@ -45,8 +43,18 @@ public class KXmlSerializer implements XmlSerializer {
     private boolean unicode;
     private String encoding;
 
+    private boolean enableIndentAttributes = true;
+
     public KXmlSerializer(){
     }
+
+    public boolean isEnableIndentAttributes() {
+        return enableIndentAttributes;
+    }
+    public void setEnableIndentAttributes(boolean enableIndentAttributes) {
+        this.enableIndentAttributes = enableIndentAttributes;
+    }
+
     private void append(char c) throws IOException {
         if(mPos >= BUFFER_LEN){
             flushBuffer();
@@ -113,11 +121,11 @@ public class KXmlSerializer implements XmlSerializer {
 
         for (int i = nspCounts[depth - 1]; i < nspCounts[depth]; i++){
             append(" xmlns");
-            if(!TextUtils.isEmpty(nspStack[i * 2])){
+            if(nspStack[i * 2].length() != 0){
                 append(':');
                 append(nspStack[i * 2]);
             }
-            else if(TextUtils.isEmpty(getNamespace()) && !TextUtils.isEmpty(nspStack[i * 2 + 1]))
+            else if(getNamespace().length() == 0 && nspStack[i * 2 + 1].length() != 0)
                 throw new IllegalStateException("Cannot set default namespace for elements in no namespace");
             append("=\"");
             writeEscaped(nspStack[i * 2 + 1], '"');
@@ -181,7 +189,7 @@ public class KXmlSerializer implements XmlSerializer {
         }
     }
     private static void reportInvalidCharacter(char ch){
-        throw new IllegalArgumentException("Illegal character (U+" + Integer.toHexString(ch) + ")");
+        throw new IllegalArgumentException("Illegal character (U+" + Integer.toHexString((int) ch) + ")");
     }
     @Override
     public void docdecl(String dd) throws IOException {
@@ -226,7 +234,7 @@ public class KXmlSerializer implements XmlSerializer {
         for (int i = nspCounts[depth + 1] * 2 - 2; i >= 0;i -= 2){
             if(nspStack[i + 1].equals(namespace)
                     && (includeDefault 
-                    || !TextUtils.isEmpty(nspStack[i]))){
+                    || nspStack[i].length() != 0)){
                 String cand = nspStack[i];
                 for (int j = i + 2; j < nspCounts[depth + 1] * 2; j++){
                     if(nspStack[j].equals(cand)){
@@ -245,9 +253,8 @@ public class KXmlSerializer implements XmlSerializer {
 
         String prefix;
 
-        if(TextUtils.isEmpty(namespace)) {
-            prefix = "";
-        }else {
+        if(namespace.length() == 0) prefix = "";
+        else {
             do {
                 prefix = "n" + (auto++);
                 for (int i = nspCounts[depth + 1] * 2 - 2;i >= 0;i -= 2){
@@ -388,11 +395,10 @@ public class KXmlSerializer implements XmlSerializer {
         String prefix = namespace == null?
                 "" : getPrefix(namespace, true, true);
 
-        if(namespace != null && TextUtils.isEmpty(namespace)){
+        if(namespace != null && namespace.length() == 0){
             for (int i = nspCounts[depth]; i < nspCounts[depth + 1]; i++){
-                if(TextUtils.isEmpty(nspStack[i * 2]) && !TextUtils.isEmpty(nspStack[i * 2 + 1])){
+                if(nspStack[i * 2].length() == 0 && nspStack[i * 2 + 1].length() !=0 )
                     throw new IllegalStateException("Cannot set default namespace for elements in no namespace");
-                }
             }
         }
         elementStack[esp++] = namespace;
@@ -400,7 +406,7 @@ public class KXmlSerializer implements XmlSerializer {
         elementStack[esp] = name;
         append('<');
         indentAttributeReference += 1;
-        if(!TextUtils.isEmpty(prefix)){
+        if(prefix.length() != 0){
             append(prefix);
             append(':');
             indentAttributeReference += prefix.length() + 1;
@@ -420,14 +426,11 @@ public class KXmlSerializer implements XmlSerializer {
         if(!pending) {
             throw new IllegalStateException("illegal position for attribute");
         }
-        if(namespace == null) {
-            namespace = "";
-        }
-        String prefix = TextUtils.isEmpty(namespace) ?
-                "" : getPrefix(namespace, false, true);
+        if(namespace == null) namespace = "";
+        String prefix = namespace.length() == 0 ? "" : getPrefix(namespace, false, true);
         attributeIndent();
         append(' ');
-        if(!TextUtils.isEmpty(prefix)){
+        if(prefix.length() != 0) {
             append(prefix);
             append(':');
         }
@@ -470,7 +473,7 @@ public class KXmlSerializer implements XmlSerializer {
             }
             append("</");
             String prefix = elementStack[depth * 3 + 1];
-            if(!TextUtils.isEmpty(prefix)){
+            if(prefix.length() != 0){
                 append(prefix);
                 append(':');
             }
@@ -532,8 +535,8 @@ public class KXmlSerializer implements XmlSerializer {
 
     private void writeSurrogate(char high, char low) throws IOException {
         if(!Character.isLowSurrogate(low)){
-            throw new IllegalArgumentException("Bad surrogate pair (U+" + Integer.toHexString(high) +
-                    " U+" + Integer.toHexString(low) + ")");
+            throw new IllegalArgumentException("Bad surrogate pair (U+" + Integer.toHexString((int) high) +
+                    " U+" + Integer.toHexString((int) low) + ")");
         }
         int codePoint = Character.toCodePoint(high, low);
         append("&#" + codePoint + ";");
@@ -555,7 +558,7 @@ public class KXmlSerializer implements XmlSerializer {
     }
 
     private void attributeIndent() throws IOException {
-        if(!firstAttributeWritten || !indent[depth]){
+        if(!isEnableIndentAttributes() || !firstAttributeWritten || !indent[depth]){
             return;
         }
         int length = this.indentAttributeReference;

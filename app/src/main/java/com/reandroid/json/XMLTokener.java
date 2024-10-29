@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2002 JSON.org (now "Public Domain")
  * This is NOT property of REAndroid
- * This package is renamed from org.json.* to avoid class conflict when used on anroid platforms
+ * This package is renamed from org.json.* to avoid class conflict when used on android platforms
 */
 package com.reandroid.json;
 
@@ -97,9 +97,7 @@ public class XMLTokener extends JSONTokener {
 
     static String unescapeEntity(String e) {
         // validate
-        if (TextUtils.isEmpty(e)) {
-            return "";
-        }
+        if (TextUtils.isEmpty(e)) return "";
         // if our entity is an encoded unicode point, parse it.
         if (e.charAt(0) == '#') {
             int cp;

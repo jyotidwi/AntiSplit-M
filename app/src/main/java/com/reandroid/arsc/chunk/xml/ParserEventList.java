@@ -17,8 +17,8 @@ package com.reandroid.arsc.chunk.xml;
 
 
 import com.reandroid.arsc.coder.XmlSanitizer;
+import com.reandroid.utils.collection.ArrayCollection;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -28,7 +28,7 @@ public class ParserEventList implements Iterator<ParserEvent> {
     private ParserEvent mCurrent;
     private int type = -1;
     public ParserEventList(){
-        this.eventList = new ArrayList<>();
+        this.eventList = new ArrayCollection<>();
     }
     public void clear(){
         this.eventList.clear();
@@ -54,16 +54,17 @@ public class ParserEventList implements Iterator<ParserEvent> {
         return null;
     }
     public int getLineNumber(){
-        if(type!=ParserEvent.COMMENT
-                && type!=ParserEvent.START_TAG
-                && type!=ParserEvent.END_TAG){
-            return 0;
+        if(type != ParserEvent.COMMENT
+                && type != ParserEvent.TEXT
+                && type != ParserEvent.START_TAG
+                && type != ParserEvent.END_TAG){
+            return -1;
         }
         ResXmlNode xmlNode = getXmlNode();
-        if(mCurrent.isEndComment() || type==ParserEvent.END_TAG){
+        if(mCurrent.isEndComment() || type == ParserEvent.END_TAG){
             return ((ResXmlElement)xmlNode).getEndLineNumber();
         }
-        if(type==ParserEvent.TEXT){
+        if(type == ParserEvent.TEXT){
             return ((ResXmlTextNode)xmlNode).getLineNumber();
         }
         return ((ResXmlElement)xmlNode).getStartLineNumber();

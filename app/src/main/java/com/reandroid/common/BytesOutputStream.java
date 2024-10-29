@@ -73,7 +73,9 @@ public class BytesOutputStream extends ByteArrayOutputStream {
             newCapacity = minCapacity;
         }
         byte[] bytes = new byte[newCapacity];
-        System.arraycopy(buf, 0, bytes, 0, oldCapacity);
+        for(int i = 0; i < oldCapacity; i ++){
+            bytes[i] = buf[i];
+        }
         this.buf = bytes;
     }
 
@@ -112,7 +114,9 @@ public class BytesOutputStream extends ByteArrayOutputStream {
             return buf;
         }
         byte[] results = new byte[count];
-        System.arraycopy(buf, 0, results, 0, count);
+        for(int i = 0; i < count; i++){
+            results[i] = buf[i];
+        }
         this.buf = results;
         return results;
     }

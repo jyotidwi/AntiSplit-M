@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2002 JSON.org (now "Public Domain")
  * This is NOT property of REAndroid
- * This package is renamed from org.json.* to avoid class conflict when used on anroid platforms
+ * This package is renamed from org.json.* to avoid class conflict when used on android platforms
  */
 package com.reandroid.json;
 
@@ -535,7 +535,7 @@ public class JSONObject extends JSONItem {
             if(Double.isNaN(d)) {
                 return defaultValue;
             }
-            return BigDecimal.valueOf(((Number) val).doubleValue());
+            return new BigDecimal(((Number) val).doubleValue());
         }
         if (val instanceof Long || val instanceof Integer
                 || val instanceof Short || val instanceof Byte){
@@ -707,7 +707,7 @@ public class JSONObject extends JSONItem {
                     && method.getReturnType() != Void.TYPE
                     && isValidMethodName(method.getName())) {
                 final String key = getKeyNameFromMethod(method);
-                if (key != null && !TextUtils.isEmpty(key)) {
+                if (!TextUtils.isEmpty(key)) {
                     try {
                         final Object result = method.invoke(bean);
                         if (result != null) {
@@ -746,9 +746,7 @@ public class JSONObject extends JSONItem {
             }
         }
         JSONPropertyName annotation = getAnnotation(method, JSONPropertyName.class);
-        if (annotation != null && !TextUtils.isEmpty(annotation.value())) {
-            return annotation.value();
-        }
+        if (annotation != null && !TextUtils.isEmpty(annotation.value())) return annotation.value();
         String key;
         final String name = method.getName();
         if (name.startsWith("get") && name.length() > 3) {
@@ -764,11 +762,10 @@ public class JSONObject extends JSONItem {
         if (Character.isLowerCase(key.charAt(0))) {
             return null;
         }
-        if (key.length() == 1) {
-            key = key.toLowerCase(LegacyUtils.supportsArraysCopyOfAndDownloadManager ? Locale.ROOT : Locale.getDefault());
-        } else if (!Character.isUpperCase(key.charAt(1))) {
-            key = key.substring(0, 1).toLowerCase(LegacyUtils.supportsArraysCopyOfAndDownloadManager ? Locale.ROOT : Locale.getDefault()) + key.substring(1);
-        }
+        if (key.length() == 1)
+            key = key.toLowerCase(Locale.ROOT);
+        else if (!Character.isUpperCase(key.charAt(1)))
+            key = key.substring(0, 1).toLowerCase(Locale.ROOT) + key.substring(1);
         return key;
     }
 

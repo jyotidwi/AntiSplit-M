@@ -15,8 +15,9 @@
  */
 package com.reandroid.xml.base;
 
+import android.text.TextUtils;
+
 import com.reandroid.common.Namespace;
-import com.reandroid.utils.StringsUtil;
 
 public interface NamedNode {
 
@@ -30,7 +31,7 @@ public interface NamedNode {
         String name = getName();
         if(includePrefix){
             String prefix = getPrefix();
-            if(!StringsUtil.isEmpty(prefix)){
+            if(!TextUtils.isEmpty(prefix)){
                 name = prefix + ":" + name;
             }
         }

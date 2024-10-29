@@ -83,7 +83,7 @@ class OutputSource {
         ceh.writeBytes(zipOutput.getOutputStream());
     }
     void writeDD(ZipOutput apkFileWriter) throws IOException{
-        DataDescriptor dataDescriptor = null;//getLocalFileHeader().getDataDescriptor();
+        DataDescriptor dataDescriptor = getLocalFileHeader().getDataDescriptor();
         if(dataDescriptor == null){
             return;
         }
@@ -125,9 +125,11 @@ class OutputSource {
     }
     LocalFileHeader getLocalFileHeader(){
         if(lfh == null){
-            lfh = createLocalFileHeader();
+            LocalFileHeader lfh = createLocalFileHeader();
             lfh.setFileName(getInputSource().getAlias());
-            clearAlignment(lfh);
+            lfh.setZipAlign(0);
+            lfh.updateDataDescriptor();
+            this.lfh = lfh;
         }
         return lfh;
     }
@@ -139,11 +141,6 @@ class OutputSource {
         lfh.setFileName(inputSource.getAlias());
         lfh.setMethod(inputSource.getMethod());
         return lfh;
-    }
-    private void clearAlignment(LocalFileHeader lfh){
-        lfh.getGeneralPurposeFlag().setHasDataDescriptor(false);
-        lfh.setDataDescriptor(null);
-        lfh.setZipAlign(0);
     }
     void logLargeFileWrite(){
         APKLogger logger =  this.apkLogger;
@@ -174,5 +171,5 @@ class OutputSource {
             apkLogger.logVerbose(msg);
         }
     }
-    private static final long LOG_LARGE_FILE_SIZE = 2L * 1000 * 1000 * 1024;
+    private static final long LOG_LARGE_FILE_SIZE = 2L * 1000 * 1024;
 }

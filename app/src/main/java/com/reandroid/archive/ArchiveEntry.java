@@ -18,8 +18,7 @@ package com.reandroid.archive;
 import com.reandroid.archive.block.CentralEntryHeader;
 import com.reandroid.archive.block.LocalFileHeader;
 import com.reandroid.utils.HexUtil;
-
-import java.io.UnsupportedEncodingException;
+import com.reandroid.utils.io.FilePermissions;
 
 public class ArchiveEntry {
     private final LocalFileHeader localFileHeader;
@@ -27,14 +26,14 @@ public class ArchiveEntry {
         this.localFileHeader = lfh;
     }
     public long getDataSize(){
-        if(getMethod() == Archive.STORED){
+        if(getMethod() != Archive.DEFLATED){
             return getSize();
         }
         return getCompressedSize();
     }
 
     public boolean isCompressed(){
-        return getMethod() != Archive.STORED;
+        return getMethod() == Archive.DEFLATED;
     }
     public int getMethod(){
         return localFileHeader.getMethod();
@@ -84,18 +83,17 @@ public class ArchiveEntry {
     public String getComment(){
         return getCentralEntryHeader().getComment();
     }
-    public void setComment(String comment) {
-        try {
-            getCentralEntryHeader().setComment(comment);
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
+    public void setComment(String comment){
+        getCentralEntryHeader().setComment(comment);
     }
     public boolean isFile() {
         return !isDirectory();
     }
     public boolean isDirectory() {
-        return this.getName().endsWith("/");
+        return getDataSize() == 0 && this.getName().endsWith("/");
+    }
+    public FilePermissions getFilePermissions() {
+        return getCentralEntryHeader().getFilePermissions();
     }
     public CentralEntryHeader getCentralEntryHeader(){
         CentralEntryHeader ceh = localFileHeader.getCentralEntryHeader();

@@ -15,6 +15,7 @@
  */
 package com.reandroid.apkeditor.common;
 
+import com.reandroid.apk.APKLogger;
 import com.reandroid.apk.ApkUtil;
 import com.reandroid.apkeditor.merge.LogUtil;
 import com.reandroid.app.AndroidManifest;
@@ -66,13 +67,16 @@ public class AndroidManifestHelper {
                                                                  String resourceName){
         ResXmlElement manifestElement = androidManifestBlock.getManifestElement();
         if(manifestElement == null){
+            LogUtil.logMessage("WARN: AndroidManifest don't have <manifest>");
             return;
         }
-        manifestElement.removeAttributesWithName(resourceName);
+            int removed = manifestElement.removeAttributesWithName(resourceName);
+            if (removed > 0 ) {
+                LogUtil.logMessage("Removed-attribute : " + resourceName);
+        }
     }
-
     public static void removeAttributeFromManifestById(AndroidManifestBlock androidManifestBlock,
-                                                       int resourceId){
+                                                         int resourceId){
         ResXmlElement manifestElement = androidManifestBlock.getManifestElement();
         if(manifestElement == null){
             LogUtil.logMessage("WARN: AndroidManifest don't have <manifest>");
@@ -84,32 +88,17 @@ public class AndroidManifestHelper {
         }
     }
 
+
     public static void removeAttributeFromManifestAndApplication(AndroidManifestBlock androidManifestBlock,
                                                                  int resourceId){
-        if(resourceId == 0){
-            return;
-        }
+        if(resourceId == 0) return;
         ResXmlElement manifestElement = androidManifestBlock.getManifestElement();
-        if(manifestElement == null){
-
-            return;
-        }
-        int removed = manifestElement.removeAttributesWithId(resourceId);
+        if(manifestElement == null) return;
+        manifestElement.removeAttributesWithId(resourceId);
         ResXmlElement applicationElement = manifestElement.getElement(
                 AndroidManifest.TAG_application);
-        if(removed > 1){
-
-        }
-        if(applicationElement == null){
-            return;
-        }
-        removed = applicationElement.removeAttributesWithId(resourceId);
-        if(removed > 1){
-
-        }
-        if(removed > 0){
-
-        }
+        if(applicationElement == null) return;
+        applicationElement.removeAttributesWithId(resourceId);
     }
     @Deprecated
     public static int removeApplicationAttribute(AndroidManifestBlock manifestBlock, int resourceId){

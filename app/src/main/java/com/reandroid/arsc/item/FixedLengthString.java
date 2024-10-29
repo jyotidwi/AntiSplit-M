@@ -15,11 +15,9 @@
  */
 package com.reandroid.arsc.item;
 
-import com.aefyr.pseudoapksigner.Constants;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.utils.StringsUtil;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 
 public class FixedLengthString  extends StringItem {
@@ -48,13 +46,18 @@ public class FixedLengthString  extends StringItem {
         return decodeUtf16Bytes(bytes);
     }
     @Override
-    public StyleItem getStyle(){
+    public StyleItem getOrCreateStyle(){
         return null;
     }
     @Override
     int calculateReadLength(BlockReader reader){
         return bytesLength;
     }
+
+    @Override
+    protected void onStringChanged(String old, String text) {
+    }
+
     @Override
     public int compareTo(StringItem stringItem){
         if(stringItem == null){
@@ -71,11 +74,7 @@ public class FixedLengthString  extends StringItem {
             return null;
         }
         int length = getEndNullPosition(bytes);
-        try {
-            return new String(bytes,0, length, Constants.UTF16);
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
+        return new String(bytes,0, length, StandardCharsets.UTF_16LE);
     }
     private static int getEndNullPosition(byte[] bytes){
         int length = bytes.length;

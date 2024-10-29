@@ -24,8 +24,6 @@ import com.reandroid.utils.io.IOUtil;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.json.JSONObject;
 import com.reandroid.xml.XMLFactory;
-import com.starry.FileUtils;
-
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
@@ -46,6 +44,97 @@ public class PackageIdentifier extends IdentifierMap<TypeIdentifier>{
         this(0, null);
     }
 
+    private void initializePackageJson(PackageBlock packageBlock){
+        File jsonFile = searchPackageJsonFromTag();
+        if(jsonFile == null){
+            return;
+        }
+        try {
+            JSONObject jsonObject = new JSONObject(new FileInputStream(jsonFile));
+            packageBlock.fromJson(jsonObject);
+            if(getName() == null){
+                setName(packageBlock.getName());
+            }
+        } catch (FileNotFoundException ignored) {
+        }
+    }
+    // public.xml file is assumed to be stored via setTag during loadPublicXml(File)
+    private File searchPackageJsonFromTag(){
+        Object tag = getTag();
+        if(!(tag instanceof File)){
+            return null;
+        }
+        File publicXml = (File) tag;
+        File dir = publicXml.getParentFile();
+        //values
+        if(dir == null || !"values".equals(dir.getName())){
+            return null;
+        }
+        dir = dir.getParentFile();
+        //res
+        if(dir == null){
+            return null;
+        }
+        dir = dir.getParentFile();
+        if(dir == null){
+            return null;
+        }
+        File json = new File(dir, "package.json");
+        if(!json.isFile()){
+            return null;
+        }
+        return json;
+    }
+    public List<ResourceIdentifier> listDuplicateResources(){
+        List<ResourceIdentifier> results = new ArrayList<>();
+        for(TypeIdentifier typeIdentifier : list()){
+            results.addAll(typeIdentifier.listDuplicates());
+        }
+        return results;
+    }
+    public boolean hasDuplicateResources(){
+        for(TypeIdentifier typeIdentifier : getItems()){
+            if(typeIdentifier.hasDuplicates()){
+                return true;
+            }
+        }
+        return false;
+    }
+    public List<ResourceIdentifier> ensureUniqueResourceNames(){
+        List<ResourceIdentifier> results = new ArrayList<>();
+        for(TypeIdentifier typeIdentifier : list()){
+            results.addAll(typeIdentifier.ensureUniqueResourceNames());
+        }
+        return results;
+    }
+    public void setResourceNamesToPackage(){
+        setResourceNamesToPackage(getPackageBlock());
+    }
+    public void setResourceNamesToPackage(PackageBlock packageBlock){
+        if(packageBlock == null){
+            return;
+        }
+        for(SpecTypePair specTypePair:packageBlock.listSpecTypePairs()){
+            Iterator<ResourceEntry> itr = specTypePair.getResources();
+            while (itr.hasNext()){
+                setResourceNamesToEntry(itr.next());
+            }
+        }
+    }
+    public void setResourceNamesToEntry(ResourceEntry resourceEntry){
+        ResourceIdentifier ri = getResourceIdentifier(resourceEntry.getResourceId());
+        if(ri == null){
+            return;
+        }
+        resourceEntry.setName(ri.getName());
+    }
+    public ResourceIdentifier getResourceIdentifier(int resourceId){
+        TypeIdentifier typeIdentifier = get((resourceId >> 16) & 0xff);
+        if(typeIdentifier != null){
+            return typeIdentifier.get(resourceId & 0xffff);
+        }
+        return null;
+    }
     public ResourceIdentifier getResourceIdentifier(String type, String name){
         TypeIdentifier typeIdentifier = get(type);
         if(typeIdentifier != null){
@@ -53,13 +142,24 @@ public class PackageIdentifier extends IdentifierMap<TypeIdentifier>{
         }
         return null;
     }
+    public int getResourcesCount(){
+        int result = 0;
+        for(TypeIdentifier ti : getItems()){
+            result += ti.size();
+        }
+        return result;
+    }
 
     public void writePublicXml(File file) throws IOException {
         XmlSerializer serializer = XMLFactory.newSerializer(file);
         write(serializer);
         IOUtil.close(serializer);
     }
-
+    public void writePublicXml(OutputStream outputStream) throws IOException {
+        XmlSerializer serializer = XMLFactory.newSerializer(outputStream);
+        serializer.setOutput(outputStream, StandardCharsets.UTF_8.name());
+        write(serializer);
+    }
     public void write(XmlSerializer serializer) throws IOException {
         serializer.startDocument("utf-8", null);
         serializer.text("\n");

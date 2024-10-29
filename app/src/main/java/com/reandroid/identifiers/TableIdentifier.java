@@ -15,14 +15,25 @@
  */
 package com.reandroid.identifiers;
 
+import android.os.Build;
+
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.utils.StringsUtil;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
 
 public class TableIdentifier{
     private final List<PackageIdentifier> mPackages;
@@ -82,6 +93,40 @@ public class TableIdentifier{
         file = new File(file, PackageBlock.VALUES_DIRECTORY_NAME);
         file = new File(file, PackageBlock.PUBLIC_XML);
         return file;
+    }
+    public void loadPublicXml(Collection<File> pubXmlFileList) throws IOException {
+        for(File file : pubXmlFileList){
+            try {
+                loadPublicXml(file);
+            } catch (XmlPullParserException ex) {
+                if (Build.VERSION.SDK_INT > 9) throw new IOException(ex);
+                else throw new RuntimeException(ex);
+            }
+        }
+    }
+    public PackageIdentifier loadPublicXml(File file) throws IOException, XmlPullParserException {
+        PackageIdentifier packageIdentifier = new PackageIdentifier();
+        packageIdentifier.loadPublicXml(file);
+        add(packageIdentifier);
+        packageIdentifier.setTag(file);
+        return packageIdentifier;
+    }
+    public PackageIdentifier loadPublicXml(InputStream inputStream) throws IOException, XmlPullParserException {
+        PackageIdentifier packageIdentifier = new PackageIdentifier();
+        packageIdentifier.loadPublicXml(inputStream);
+        add(packageIdentifier);
+        return packageIdentifier;
+    }
+    public PackageIdentifier loadPublicXml(Reader reader) throws IOException, XmlPullParserException {PackageIdentifier packageIdentifier = new PackageIdentifier();
+        packageIdentifier.loadPublicXml(reader);
+        add(packageIdentifier);
+        return packageIdentifier;
+    }
+    public PackageIdentifier loadPublicXml(XmlPullParser parser) throws IOException, XmlPullParserException {
+        PackageIdentifier packageIdentifier = new PackageIdentifier();
+        packageIdentifier.loadPublicXml(parser);
+        add(packageIdentifier);
+        return packageIdentifier;
     }
     public ResourceIdentifier get(String packageName, String type, String name){
         PackageIdentifier packageIdentifier = mNameMap.get(packageName);

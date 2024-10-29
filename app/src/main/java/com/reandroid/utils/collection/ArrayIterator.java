@@ -106,7 +106,7 @@ public class ArrayIterator<T> implements Iterator<T>, SizedItem, SizedIterator{
         return new ArrayIterator<>(elements, start, length);
     }
     private static boolean isEmpty(Object[] elements){
-        if(elements == null){
+        if(elements == null || elements.length == 0){
             return true;
         }
         for(Object element : elements){

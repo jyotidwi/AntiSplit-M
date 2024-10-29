@@ -15,15 +15,100 @@
  */
 package com.reandroid.utils;
 
+import android.text.TextUtils;
+
+import com.reandroid.utils.collection.ArrayIterator;
+
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 public class StringsUtil {
 
     public static final String EMPTY = ObjectsUtil.of("");
 
+    public static byte[] getASCII(String text){
+        int length = text.length();
+        byte[] results = new byte[length];
+        for(int i = 0; i < length; i++){
+            results[i] = (byte) text.charAt(i);
+        }
+        return results;
+    }
+    public static boolean isDigits(String text){
+        if(TextUtils.isEmpty(text)){
+            return false;
+        }
+        int length = text.length();
+        for(int i = 0; i < length; i++){
+            if(!isDigit(text.charAt(i))){
+                return false;
+            }
+        }
+        return true;
+    }
+    public static boolean isAzOrDigitsOr(String text, char[] chars){
+        if(TextUtils.isEmpty(text)){
+            return false;
+        }
+        int length = text.length();
+        for(int i = 0; i < length; i++){
+            if(!isAzOrDigitsOr(text.charAt(i), chars)){
+                return false;
+            }
+        }
+        return true;
+    }
+    public static boolean isAzOrDigits(String text){
+        if(TextUtils.isEmpty(text)){
+            return false;
+        }
+        int length = text.length();
+        for(int i = 0; i < length; i++){
+            if(!isAzOrDigits(text.charAt(i))){
+                return false;
+            }
+        }
+        return true;
+    }
+    public static boolean isAz(String text){
+        if(TextUtils.isEmpty(text)){
+            return false;
+        }
+        int length = text.length();
+        for(int i = 0; i < length; i++){
+            if(!isAz(text.charAt(i))){
+                return false;
+            }
+        }
+        return true;
+    }
+    public static boolean isLowerAZ(String text){
+        if(TextUtils.isEmpty(text)){
+            return false;
+        }
+        int length = text.length();
+        for(int i = 0; i < length; i++){
+            if(!isLowerAZ(text.charAt(i))){
+                return false;
+            }
+        }
+        return true;
+    }
+    public static boolean isUpperAZ(String text){
+        if(TextUtils.isEmpty(text)){
+            return false;
+        }
+        int length = text.length();
+        for(int i = 0; i < length; i++){
+            if(!isUpperAZ(text.charAt(i))){
+                return false;
+            }
+        }
+        return true;
+    }
     public static boolean containsUpperAZ(String text){
-        if(isEmpty(text)){
+        if(TextUtils.isEmpty(text)){
             return false;
         }
         int length = text.length();
@@ -34,12 +119,45 @@ public class StringsUtil {
         }
         return false;
     }
-
+    public static boolean isDigit(char ch){
+        return ch >= '0' && ch <= '9';
+    }
+    public static boolean isAz(char ch){
+        return ch >= 'A' && ch <= 'Z' ||
+                ch >= 'a' && ch <= 'z';
+    }
+    public static boolean isAzOrDigitsOr(char ch, char[] chars){
+        return isAzOrDigits(ch) || contains(chars, ch);
+    }
+    public static boolean isAzOrDigits(char ch){
+        return ch >= 'A' && ch <= 'Z' ||
+                ch >= 'a' && ch <= 'z'||
+                ch >= '0' && ch <= '9';
+    }
+    public static boolean isLowerAZ(char ch){
+        return ch >= 'a' && ch <= 'z';
+    }
     public static boolean isUpperAZ(char ch){
         return ch >= 'A' && ch <= 'Z';
     }
-
-
+    public static boolean isWhiteSpace(String text){
+        return text == null || skipWhitespace(text) == text.length();
+    }
+    public static int skipWhitespace(String text){
+        return skipWhitespace(0, text);
+    }
+    public static int skipWhitespace(int start, String text){
+        int length = text.length();
+        for(int i = start; i < length; i++){
+            if(!isWhiteSpace(text.charAt(i))) {
+                return i;
+            }
+        }
+        return length;
+    }
+    public static boolean isWhiteSpace(char ch){
+        return ch == ' ' || ch == '\n' || ch == '\t' || ch == '\r';
+    }
     public static int compare(String[] strings1, String[] strings2){
         if(strings1 == strings2){
             return 0;
@@ -112,7 +230,7 @@ public class StringsUtil {
         }
         int count = 0;
         for(int i = 0; i < length; i++){
-            if(isEmpty(strings[i])){
+            if(TextUtils.isEmpty(strings[i])){
                 strings[i] = null;
             }else {
                 count ++;
@@ -123,11 +241,10 @@ public class StringsUtil {
         }
         String[] results = new String[count];
         int index = 0;
-        for(int i = 0; i < length; i++){
-            String str = strings[i];
-            if(str != null){
+        for (String str : strings) {
+            if (str != null) {
                 results[index] = str;
-                index ++;
+                index++;
             }
         }
         return results;
@@ -139,9 +256,7 @@ public class StringsUtil {
         return split(text, search, true);
     }
     public static String[] split(String text, char[] search, boolean skipConsecutive) {
-        if(text == null || text.length() == 0){
-            return new String[0];
-        }
+        if(android.text.TextUtils.isEmpty(text)) return new String[0];
         int count = countChar(text, search, skipConsecutive);
         if(count == 0){
             return new String[]{text};
@@ -171,7 +286,7 @@ public class StringsUtil {
         return results;
     }
     public static String[] split(String text, char search, boolean skipConsecutive) {
-        if(text == null || text.length() == 0){
+        if(android.text.TextUtils.isEmpty(text)){
             return new String[0];
         }
         int count = countChar(text, search, skipConsecutive);
@@ -203,7 +318,7 @@ public class StringsUtil {
         return results;
     }
     public static int countChar(String text, char[] search, boolean skipConsecutive) {
-        if(text == null || text.length() == 0){
+        if(android.text.TextUtils.isEmpty(text)){
             return 0;
         }
         int length = text.length();
@@ -223,7 +338,7 @@ public class StringsUtil {
         return result;
     }
     public static int countChar(String text, char search, boolean skipConsecutive) {
-        if(text == null || text.length() == 0){
+        if(android.text.TextUtils.isEmpty(text)){
             return 0;
         }
         int length = text.length();
@@ -288,9 +403,7 @@ public class StringsUtil {
         }
         builder.append('[');
         builder.append(elements);
-        if(count < size){
-            builder.append(" ... ");
-        }
+        if(count < size) builder.append(" ... ");
         builder.append(']');
         return builder.toString();
     }
@@ -322,16 +435,11 @@ public class StringsUtil {
         return builder.toString();
     }
     public static String emptyToNull(String text){
-        if(isEmpty(text)){
-            return null;
-        }
-        return text;
+        return TextUtils.isEmpty(text) ? null : text;
     }
-    public static boolean isEmpty(String text){
-        return text == null || text.length() == 0;
-    }
+
     public static String toUpperCase(String str){
-        if(str == null || str.length() == 0){
+        if(TextUtils.isEmpty(str)){
             return str;
         }
         char[] chars = str.toCharArray();
@@ -381,7 +489,12 @@ public class StringsUtil {
         int i = ch - 'A';
         return (char) (i + 'a');
     }
-
+    public static void toStringSort(List<?> itemList){
+        if(itemList == null || itemList.size() < 2){
+            return;
+        }
+        itemList.sort(CompareUtil.getToStringComparator());
+    }
     public static String formatNumber(long number, long maximumValue){
         int minLength = Long.toString(maximumValue).length();
         return trailZeros(number, minLength);
@@ -401,7 +514,9 @@ public class StringsUtil {
         return text;
     }
 
-
+    public static String appendPostfix(String text, char ch, int count){
+        return append(text, ch, count, false);
+    }
     public static String append(String text, char ch, int count, boolean prefix){
         StringBuilder builder = new StringBuilder(text.length() + count);
         if(!prefix){
@@ -423,6 +538,12 @@ public class StringsUtil {
         return CompareUtil.compare(s1, s2);
     }
 
+    public static String join(Iterable<?> iterable, Object separator){
+        return join(iterable.iterator(), separator);
+    }
+    public static String join(Object[] items, Object separator){
+        return join(ArrayIterator.of(items), separator);
+    }
     public static String join(Iterator<?> iterator, Object separator){
         StringBuilder builder = new StringBuilder();
         boolean appendOnce = false;
@@ -437,6 +558,59 @@ public class StringsUtil {
             return builder.toString();
         }
         return EMPTY;
+    }
+    public static int diffStart(String str1, String str2){
+        if(TextUtils.isEmpty(str1) || TextUtils.isEmpty(str2) || str1.equals(str2)){
+            return -1;
+        }
+        int length = NumbersUtil.min(str1.length(), str2.length());
+        for(int i = 0; i < length; i++){
+            if(str1.charAt(i) != str2.charAt(i)){
+                return i;
+            }
+        }
+        return -1;
+    }
+    public static String trimStart(String str, char ch) {
+        if(str == null) {
+            return null;
+        }
+        int start = 0;
+        while (str.charAt(start) == ch) {
+            start ++;
+        }
+        if(start == 0) {
+            return str;
+        }
+        return str.substring(start);
+    }
+    public static int indexOfFrom(String str, int start, char ch) {
+        if(str == null || start < 0) {
+            return -1;
+        }
+        int length = str.length();
+        for(int i = start; i < length; i++) {
+            if(str.charAt(i) == ch) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    public static boolean endsWith(String str, char ch) {
+        if(str == null) {
+            return false;
+        }
+        int length = str.length();
+        if(length == 0) {
+            return false;
+        }
+        return str.charAt(length - 1) == ch;
+    }
+    public static boolean startsWith(String str, char ch) {
+        if(TextUtils.isEmpty(str)) {
+            return false;
+        }
+        return str.charAt(0) == ch;
     }
 
     private static final int MAX_STRING_APPEND = 5;

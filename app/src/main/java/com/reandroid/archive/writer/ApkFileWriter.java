@@ -39,6 +39,7 @@ public class ApkFileWriter extends ApkWriter<ZipFileOutput, FileOutputSource> {
     }
     @Override
     void prepareOutputs(FileOutputSource[] outList) throws IOException {
+        logMessage("Buffering compress changed files ...");
         BufferFileInput buffer = writeBuffer(outList);
         buffer.unlock();
         this.buffer = buffer;

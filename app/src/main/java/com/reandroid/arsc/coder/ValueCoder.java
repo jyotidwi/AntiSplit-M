@@ -147,7 +147,7 @@ public class ValueCoder {
         return CoderUnknownNameId.INS.encode(text);
     }
     public static EncodeResult encodeUnknownResourceId(String text){
-        if(text == null || text.length() == 0){
+        if(android.text.TextUtils.isEmpty(text)){
             return null;
         }
         EncodeResult encodeResult = encodeNull(text);
@@ -171,7 +171,7 @@ public class ValueCoder {
         if(isEmpty(expectedDataFormats)){
             return encodeAny(text);
         }
-        if(text == null || text.length() == 0){
+        if(android.text.TextUtils.isEmpty(text)){
             return null;
         }
         EncodeResult encodeResult = encodeUnknown(text);
@@ -184,7 +184,7 @@ public class ValueCoder {
         if(isEmpty(expectedTypes)){
             return encodeAny(text);
         }
-        if(text == null || text.length() == 0){
+        if(android.text.TextUtils.isEmpty(text)){
             return null;
         }
         EncodeResult encodeResult = encodeUnknown(text);
@@ -197,7 +197,7 @@ public class ValueCoder {
         return encodeAny(text);
     }
     private static boolean isEmpty(Object[] objects){
-        if(objects == null){
+        if(objects == null || objects.length == 0){
             return true;
         }
         for(Object obj : objects){
@@ -208,7 +208,7 @@ public class ValueCoder {
         return true;
     }
     private static EncodeResult encodeWithin(String text, AttributeDataFormat... expectedDataFormats){
-        if(text == null || text.length() == 0){
+        if(android.text.TextUtils.isEmpty(text)){
             return null;
         }
         for(AttributeDataFormat dataFormat : expectedDataFormats){
@@ -220,7 +220,7 @@ public class ValueCoder {
         return null;
     }
     private static EncodeResult encodeWithin(String text, ValueType... expectedTypes){
-        if(text == null || text.length() == 0){
+        if(android.text.TextUtils.isEmpty(text)){
             return null;
         }
         EncodeResult encodeResult;
@@ -241,7 +241,7 @@ public class ValueCoder {
         return null;
     }
     private static EncodeResult encodeAny(String text){
-        if(text == null || text.length() == 0){
+        if(android.text.TextUtils.isEmpty(text)){
             return null;
         }
         EncodeResult encodeResult = encodeUnknown(text);

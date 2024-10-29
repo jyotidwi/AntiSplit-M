@@ -50,19 +50,29 @@ public class ZipEntryMap implements Comparator<InputSource>, Iterable<InputSourc
     public Iterator<InputSource> iterator(Predicate<? super InputSource> filter){
         return ArrayIterator.of(toArray(), filter);
     }
+    public Iterator<InputSource> iteratorWithPath(Predicate<? super String> filter){
+        return iterator(inputSource -> filter.test(inputSource.getAlias()));
+    }
+    public Iterator<InputSource> withinDirectory(String directory) {
+        return withinDirectory(directory, true);
+    }
+    public Iterator<InputSource> withinDirectory(String directory, boolean includeSubDirectory) {
+        if(directory.length() != 0 && !directory.endsWith("/")) {
+            directory = directory + '/';
+        }
+        String prefix = directory;
+        if (includeSubDirectory) {
+            return iterator(inputSource -> inputSource.getAlias().startsWith(prefix));
+        } else {
+            return iterator(inputSource -> inputSource.getParentPath().equals(prefix));
+        }
+    }
     @Override
     public Iterator<InputSource> iterator(){
         return ArrayIterator.of(toArray());
     }
     public PathTree<InputSource> getPathTree(){
-        InputSource[] inputSources = toArray();
-        PathTree<InputSource> root = PathTree.newRoot();
-        int length = inputSources.length;
-        for(int i = 0; i < length; i ++){
-            InputSource item = inputSources[i];
-            root.add(item.getAlias(), item);
-        }
-        return root;
+        return Archive.buildPathTree(toArray());
     }
     public LinkedHashMap<String, InputSource> toAliasMap(){
         InputSource[] sources = toArray();
@@ -127,26 +137,13 @@ public class ZipEntryMap implements Comparator<InputSource>, Iterable<InputSourc
             onChanged(changed);
         }
     }
-    public InputSource remove(Predicate<? super InputSource> filter){
-        Iterator<InputSource> iterator = iterator(filter);
-        if(iterator.hasNext()){
-            return remove(iterator.next());
-        }
-        return null;
-    }
-    public void removeAll(Predicate<? super InputSource> filter){
+    public void removeIf(Predicate<? super InputSource> filter){
         Iterator<InputSource> iterator = iterator(filter);
         while (iterator.hasNext()){
             remove(iterator.next());
         }
     }
-    public void clear(){
-        synchronized (mLock){
-            mSourceMap.clear();
-            onChanged(true);
-        }
-    }
-    public void removeAll(Pattern pattern){
+    public void removeIf(Pattern pattern){
         synchronized (mLock){
             boolean removed = false;
             LinkedHashMap<String, InputSource> map = this.mSourceMap;
@@ -159,6 +156,12 @@ public class ZipEntryMap implements Comparator<InputSource>, Iterable<InputSourc
                 }
             }
             onChanged(removed);
+        }
+    }
+    public void clear(){
+        synchronized (mLock){
+            mSourceMap.clear();
+            onChanged(true);
         }
     }
     public InputSource remove(InputSource inputSource){
@@ -205,6 +208,14 @@ public class ZipEntryMap implements Comparator<InputSource>, Iterable<InputSourc
                 added = true;
             }
             onChanged(added);
+        }
+    }
+    public void addAll(Iterable<? extends InputSource> iterable) {
+        addAll(iterable.iterator());
+    }
+    public void addAll(Iterator<? extends InputSource> iterator) {
+        while (iterator.hasNext()) {
+            add(iterator.next());
         }
     }
     public void add(InputSource inputSource){

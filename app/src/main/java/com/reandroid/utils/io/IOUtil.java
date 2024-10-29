@@ -15,13 +15,36 @@
  */
 package com.reandroid.utils.io;
 
+import com.reandroid.common.FileChannelInputStream;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 @SuppressWarnings({"ResultOfMethodCallIgnored"})
 public class IOUtil {
 
-
+    public static String readUtf8(File file) throws IOException {
+        return new String(readFully(file), StandardCharsets.UTF_8);
+    }
+    public static String readUtf8(InputStream inputStream) throws IOException {
+        return new String(readFully(inputStream), StandardCharsets.UTF_8);
+    }
+    public static void writeUtf8(String content, File file) throws IOException {
+        File tmp = file;
+        if(file.isFile()) {
+            tmp = FileUtil.toTmpName(file);
+        }
+        writeUtf8(content, FileUtil.outputStream(tmp));
+        if(!tmp.equals(file)) {
+            file.delete();
+            tmp.renameTo(file);
+        }
+    }
+    public static void writeUtf8(String content, OutputStream outputStream) throws IOException {
+        byte[] bytes = content.getBytes();
+        outputStream.write(bytes, 0, bytes.length);
+        outputStream.close();
+    }
     public static void writeAll(InputStream inputStream, File file) throws IOException {
         FileUtil.ensureParentDirectory(file);
         File tmp = file;
@@ -31,7 +54,7 @@ public class IOUtil {
         writeAll(inputStream, FileUtil.outputStream(tmp), true);
         if(!tmp.equals(file)) {
             file.delete();
-            tmp.renameTo(tmp);
+            tmp.renameTo(file);
         }
     }
     public static void writeAll(InputStream inputStream, OutputStream outputStream) throws IOException {
@@ -56,6 +79,9 @@ public class IOUtil {
             inputStream.close();
             outputStream.close();
         }
+    }
+    public static byte[] readFully(File file) throws IOException {
+        return FileChannelInputStream.read(file, (int) file.length());
     }
     public static byte[] readFully(InputStream inputStream) throws IOException{
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();

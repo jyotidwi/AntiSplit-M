@@ -35,13 +35,13 @@ public class HexUtil {
         return toHex(prefix, num, 1);
     }
     public static String toHex2(byte num){
-        return toHex(num & 0x00000000000000ffL, 2);
+        return toHex((long)(num & 0x00000000000000ffL), 2);
     }
     public static String toHex2(String prefix, byte num){
-        return toHex(prefix, num & 0x00000000000000ffL, 2);
+        return toHex(prefix, (long)(num & 0x00000000000000ffL), 2);
     }
     public static String toHex4(short num){
-        return toHex(num & 0x000000000000ffffL, 4);
+        return toHex((long)(num & 0x000000000000ffffL), 4);
     }
     public static String toHex8(int num){
         return toHex(num, 8);

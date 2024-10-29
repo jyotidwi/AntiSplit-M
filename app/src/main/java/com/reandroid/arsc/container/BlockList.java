@@ -21,16 +21,17 @@ import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.utils.collection.ArrayCollection;
-import com.reandroid.utils.collection.InstanceIterator;
+import com.reandroid.utils.collection.Swappable;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 
-public class BlockList<T extends Block> extends Block implements BlockRefresh {
+public class BlockList<T extends Block> extends Block implements BlockRefresh, Swappable {
     private ArrayCollection<T> mItems;
     private Creator<? extends T> mCreator;
 
@@ -66,8 +67,8 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
             mItems.setSize(size);
         }
     }
-    public void removeAll(){
-        mItems.removeAll();
+    public void clearTemporarily() {
+        mItems.clearTemporarily();
     }
     public void setElements(T[] elements){
         if(elements == null || elements.length == 0){
@@ -132,6 +133,12 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
     public Iterator<T> clonedIterator(){
         return mItems.clonedIterator();
     }
+    public Iterator<T> clonedIterator(int start){
+        return clonedIterator(start, size() - start);
+    }
+    public Iterator<T> clonedIterator(int start, int length){
+        return mItems.clonedIterator(start, length);
+    }
     public Iterator<T> arrayIterator(){
         return mItems.arrayIterator();
     }
@@ -146,6 +153,16 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
     }
     public<T1> Iterator<T1> iterator(Class<T1> instance){
         return mItems.iterator(instance);
+    }
+
+    public int countIf(Predicate<? super T> predicate){
+        return mItems.count(predicate);
+    }
+    public int countFromLast(Predicate<? super T> predicate){
+        return mItems.countFromLast(predicate);
+    }
+    public ArrayCollection<T> subListIf(Predicate<? super T> predicate) {
+        return mItems.subListIf(predicate);
     }
     public void clearChildes(){
         if(mItems.isEmpty()){
@@ -167,7 +184,26 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
         if(size() < 2){
             return false;
         }
-        if(mItems.sortItems(comparator)){
+        boolean sorted = mItems.sort(comparator, (i, j) -> {
+            T item1 = get(i);
+            T item2 = get(j);
+            if(item1 != null) {
+                item1.setIndex(i);
+            }
+            if(item2 != null) {
+                item2.setIndex(j);
+            }
+        });
+        if(sorted) {
+            updateIndex();
+        }
+        return sorted;
+    }
+    public boolean sort(Comparator<? super T> comparator, Swappable swappable){
+        if(size() < 2){
+            return false;
+        }
+        if(mItems.sort(comparator, swappable)){
             return updateIndex();
         }
         return false;
@@ -190,22 +226,44 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
         }
         return false;
     }
-    public int remove(Predicate<? super T> filter){
-        int count = 0;
-        int minIndex = size();
-        for(int i = 0; i < size(); i++){
-            T item = get(i);
-            if(filter.test(item)){
-                remove(i, false);
-                if(i < minIndex){
-                    minIndex = i;
-                }
-                count ++;
-                i --;
+    public boolean removeAll(Collection<?> collection) {
+        return removeAllIndexes(toIndexArray(collection));
+    }
+    private int[] toIndexArray(Collection<?> collection) {
+        int[] results = new int[collection.size()];
+        int i = 0;
+        List<T> items = this.mItems;
+        int size = items.size();
+        for(Object obj : collection) {
+            if(obj == null) {
+                continue;
             }
+            Block block = (Block) obj;
+            int index = block.getIndex();
+            if(index < 0 || index >= size || block != items.get(index)) {
+                continue;
+            }
+            results[i] = index;
+            i ++;
         }
-        updateIndex(minIndex);
-        return count;
+        int length = results.length;
+        while (i < length) {
+            results[i] = -1;
+            i ++;
+        }
+        return results;
+    }
+    public boolean removeAllIndexes(int[] indexes) {
+        mItems.removeAllIndexes(indexes);
+        updateIndex();
+        return true;
+    }
+    public boolean removeIf(Predicate<? super T> filter){
+        boolean removed = mItems.removeIf(filter);
+        if(removed) {
+            updateIndex();
+        }
+        return removed;
     }
     public T remove(int index){
         return remove(index, true);
@@ -215,7 +273,6 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
         if(item == null){
             return null;
         }
-        onPreRemove(item);
         item.setParent(null);
         item.setIndex(-1);
         if(updateIndex){
@@ -225,128 +282,68 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
         return item;
     }
     public boolean remove(T item){
-        return remove(item, true);
-    }
-    private boolean remove(T item, boolean updateIndex){
-        onPreRemove(item);
-        int index = -1;
-        if(item != null){
-            index = mItems.indexOfFast(item, item.getIndex());
-            if(index < 0){
-                index = mItems.indexOfFast(item);
-            }
-            item.setParent(null);
-            item.setIndex(-1);
+        if(item == null) {
+            return false;
         }
+        int index = mItems.indexOfFast(item, item.getIndex());
         if(index < 0){
             index = mItems.indexOfFast(item);
         }
+        if(index < 0) {
+            return false;
+        }
         boolean removed = mItems.remove(index) != null;
-        if(updateIndex && removed){
+        if(removed) {
             updateIndex(index);
+            item.setIndex(-1);
+            item.setParent(null);
         }
         onChanged();
         return removed;
     }
+    public int indexOf(T item){
+        if(item == null) {
+            return -1;
+        }
+        int index = mItems.indexOfFast(item, item.getIndex());
+        if(index < 0){
+            index = mItems.indexOfFast(item);
+        }
+        return index;
+    }
+    protected void notifyPreRemove(T item) {
+        if(item != null && item.getParent() == this) {
+            onPreRemove(item);
+            item.setIndex(-1);
+            item.setParent(null);
+        }
+    }
     public void onPreRemove(T item){
 
     }
-
-    public void sortSingle(T element, Comparator<? super T> comparator){
-        int count = getCount();
-        if(count < 2){
-            return;
+    public boolean swap(int i, int j) {
+        if(i == j) {
+            return false;
         }
-        int attempts = 0;
-        mItems.remove(element);
-        int speedLimit = count / 20;
-        int prev = 0;
-        int speed = 0;
-        int acceleration = 1;
-        boolean skipAcceleration = false;
-        for(int i = 0; i < count; i++){
-            attempts ++;
-            T item = get(i);
-            if(element == item){
-                continue;
-            }
-            int compare = comparator.compare(item, element);
-            if(compare == 0){
-                add(i, element);
-                return;
-            }
-            if(compare > 0){
-                if(i == 0 || attempts < 0){
-                    add(i, element);
-                    return;
-                }
-                if(prev > 0){
-                    i = prev - 1;
-                    prev = -1;
-                    continue;
-                }
-                add(i, element);
-                return;
-            }
-            if(prev < 0){
-                continue;
-            }
-            prev = i;
-            if(attempts % 8 == 0){
-                speed = speed + acceleration;
-            }
-            if(attempts % (16 + acceleration) == 0){
-                if(!skipAcceleration){
-                    acceleration = acceleration + 1;
-                    skipAcceleration = true;
-                }else {
-                    skipAcceleration = false;
-                }
-            }
-            if(speed > speedLimit){
-                speed = speedLimit;
-            }
-            i += speed;
-            if(i >= count){
-                i = prev - 1;
-                prev = -1;
-            }
-        }
-        add(element);
+        return swap(get(i), get(j));
     }
-    private void sortSingleBack(T element, Comparator<? super T> comparator, int start){
-        for(int i = start; i >= 0; i--){
-            T item = get(i);
-            if(element == item){
-                continue;
-            }
-            int compare = comparator.compare(item, element);
-            if(compare < 0){
-                if(i != start){
-                    i++;
-                }
-                add(i, element);
-                return;
-            }
-        }
-        add(start, element);
-    }
-    public void swap(T item1, T item2){
-        if(item1 == item2){
-            return;
+    public boolean swap(T item1, T item2){
+        if(item1 == item2 || item1 == null || item2 == null){
+            return false;
         }
         int i1 = item1.getIndex();
         int i2 = item2.getIndex();
         mItems.swap(i1, i2);
         item1.setIndex(i2);
         item2.setIndex(i1);
+        return true;
     }
     public void moveTo(T item, int index){
         if(index < 0){
             index = 0;
         }
-        int i = item.getIndex();
-        mItems.move(i, index);
+        int i = mItems.indexOfFast(item, item.getIndex());
+        mItems.move(item, index);
         updateIndex(i, index);
     }
     public void set(int index, T item){
@@ -485,6 +482,18 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
         }
         mItems = new ArrayCollection<>();
         updateCreator();
+        mItems.setMonitor(getMonitor());
+    }
+    protected ArrayCollection.Monitor<T> getMonitor() {
+        return new ArrayCollection.Monitor<T>() {
+            @Override
+            public void onAdd(int i, T item) {
+            }
+            @Override
+            public void onRemoved(int i, T item) {
+                notifyPreRemove(item);
+            }
+        };
     }
     private void updateCreator(){
         Creator<? extends T> creator = getCreator();

@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2002 JSON.org (now "Public Domain")
  * This is NOT property of REAndroid
- * This package is renamed from org.json.* to avoid class conflict when used on anroid platforms
+ * This package is renamed from org.json.* to avoid class conflict when used on android platforms
 */
 package com.reandroid.json;
 
@@ -50,7 +50,7 @@ public class XML {
             public Iterator<Integer> iterator() {
                 return new Iterator<Integer>() {
                     private int nextIndex = 0;
-                    private final int length = string.length();
+                    private int length = string.length();
 
                     @Override
                     public boolean hasNext() {
@@ -277,7 +277,7 @@ public class XML {
                         } else if (!nilAttributeFound) {
                             jsonObject.accumulate(string,
                                     config.isKeepStrings()
-                                            ? token
+                                            ? ((String) token)
                                             : stringToValue((String) token));
                         }
                         token = null;

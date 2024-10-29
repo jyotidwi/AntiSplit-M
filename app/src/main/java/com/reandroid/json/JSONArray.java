@@ -1,17 +1,13 @@
 /*
  * Copyright (c) 2002 JSON.org (now "Public Domain")
  * This is NOT property of REAndroid
- * This package is renamed from org.json.* to avoid class conflict when used on anroid platforms
+ * This package is renamed from org.json.* to avoid class conflict when used on android platforms
 */
 package com.reandroid.json;
 
 import com.reandroid.common.FileChannelInputStream;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.io.Writer;
+import java.io.*;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -21,7 +17,6 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.StreamSupport;
 
 public class JSONArray extends JSONItem implements Iterable<Object> {
 

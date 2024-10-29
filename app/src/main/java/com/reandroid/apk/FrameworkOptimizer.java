@@ -15,18 +15,19 @@
   */
 package com.reandroid.apk;
 
-import com.reandroid.archive.ZipEntryMap;
 import com.reandroid.archive.InputSource;
+import com.reandroid.archive.ZipEntryMap;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlAttribute;
 import com.reandroid.arsc.chunk.xml.ResXmlElement;
 import com.reandroid.arsc.chunk.xml.ResXmlNode;
-import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.arsc.model.FrameworkTable;
+import com.reandroid.arsc.model.ResourceEntry;
+import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.arsc.value.*;
+import com.reandroid.utils.collection.ArrayCollection;
 
 import java.io.IOException;
 import java.util.*;
@@ -150,7 +151,7 @@ import java.util.zip.ZipEntry;
         logMessage("Manifest size reduced by: "+percent+" %");
     }
     private List<ResXmlNode> getManifestElementToRemove(ResXmlElement manifest){
-        List<ResXmlNode> results = new ArrayList<>();
+        List<ResXmlNode> results = new ArrayCollection<>();
         for(ResXmlNode node:manifest.listXmlNodes()){
             if(!(node instanceof ResXmlElement)){
                 continue;
@@ -185,14 +186,17 @@ import java.util.zip.ZipEntry;
         }
     }
     private void backupAttributeValues(TableBlock tableBlock, ResXmlElement element){
-        if(element==null){
+        if(element == null){
             return;
         }
-        for(ResXmlAttribute attribute: element.listAttributes()){
+        Iterator<ResXmlAttribute> attributes = element.getAttributes();
+        while (attributes.hasNext()){
+            ResXmlAttribute attribute = attributes.next();
             backupAttributeValues(tableBlock, attribute);
         }
-        for(ResXmlElement child: element.listElements()){
-            backupAttributeValues(tableBlock, child);
+        Iterator<ResXmlElement> iterator = element.getElements();
+        while (iterator.hasNext()){
+            backupAttributeValues(tableBlock, iterator.next());
         }
     }
     private void backupAttributeValues(TableBlock tableBlock, ResXmlAttribute attribute){

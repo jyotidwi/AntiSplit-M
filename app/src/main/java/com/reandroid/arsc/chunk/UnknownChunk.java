@@ -18,7 +18,6 @@ package com.reandroid.arsc.chunk;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.item.ByteArray;
 import com.reandroid.common.BytesOutputStream;
-import com.starry.FileUtils;
 
 import java.io.*;
 
@@ -66,11 +65,10 @@ public class UnknownChunk extends Chunk<HeaderBlock> implements HeaderBlock.Head
         return outputStream.toByteArray();
     }
     public int readBytes(File file) throws IOException{
-        try (InputStream inputStream=FileUtils.getInputStream(file)) {
-            int result=readBytes(inputStream);
-            inputStream.close();
-            return result;
-        }
+        FileInputStream inputStream=new FileInputStream(file);
+        int result=readBytes(inputStream);
+        inputStream.close();
+        return result;
     }
     public int readBytes(InputStream inputStream) throws IOException{
         int result;
@@ -86,9 +84,10 @@ public class UnknownChunk extends Chunk<HeaderBlock> implements HeaderBlock.Head
                 throw new IOException("Can not create directory: "+dir);
             }
         }
-        try (OutputStream outputStream= FileUtils.getOutputStream(file)) {
-            return super.writeBytes(outputStream);
-        }
+        OutputStream outputStream=new FileOutputStream(file);
+        int length = super.writeBytes(outputStream);
+        outputStream.close();
+        return length;
     }
     @Override
     public String toString(){

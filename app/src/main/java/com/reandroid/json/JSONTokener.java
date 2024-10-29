@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2002 JSON.org (now "Public Domain")
  * This is NOT property of REAndroid
- * This package is renamed from org.json.* to avoid class conflict when used on anroid platforms
+ * This package is renamed from org.json.* to avoid class conflict when used on android platforms
 */
 package com.reandroid.json;
 
@@ -334,11 +334,11 @@ public class JSONTokener {
     }
 
     public JSONException syntaxError(String message) {
-        return new JSONException(message + this);
+        return new JSONException(message + this.toString());
     }
 
     public JSONException syntaxError(String message, Throwable causedBy) {
-        return new JSONException(message + this, causedBy);
+        return new JSONException(message + this.toString(), causedBy);
     }
 
     @Override

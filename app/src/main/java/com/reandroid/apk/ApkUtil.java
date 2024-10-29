@@ -15,8 +15,12 @@
   */
 package com.reandroid.apk;
 
+import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.utils.CompareUtil;
+
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ApkUtil {
     public static String replaceRootDir(String path, String dirName){
@@ -72,11 +76,106 @@ public class ApkUtil {
         }
         return results;
     }
-    public static List<File> recursiveFiles(File dir) {
+    public static List<File> recursiveFiles(File dir){
         return recursiveFiles(dir, null);
     }
-
-
+    public static List<File> listDirectories(File dir){
+        List<File> results=new ArrayList<>();
+        File[] files=dir.listFiles();
+        if(files==null){
+            return results;
+        }
+        for(File file:files){
+            if(file.isDirectory()){
+                results.add(file);
+            }
+        }
+        return results;
+    }
+    public static List<File> listPackageDirectories(File resourcesDirectory){
+        List<File> results = new ArrayList<>();
+        File[] files = resourcesDirectory.listFiles();
+        if(files == null){
+            return results;
+        }
+        for(File dir:files){
+            if(isPackageDirectory(dir)){
+                results.add(dir);
+            }
+        }
+        results.sort(CompareUtil.getComparableComparator());
+        return results;
+    }
+    public static List<File> listPublicXmlFiles(File resourcesDirectory){
+        List<File> results = new ArrayList<>();
+        File[] files = resourcesDirectory.listFiles();
+        if(files == null){
+            return results;
+        }
+        for(File dir:files){
+            List<File> resDirList = listDirectories(dir);
+            for(File resDir : resDirList){
+                File file = getPublicXmlFile(resDir);
+                if(file != null){
+                    results.add(file);
+                }
+            }
+        }
+        results.sort(CompareUtil.getComparableComparator());
+        return results;
+    }
+    private static File getPublicXmlFile(File resDir){
+        if(!resDir.isDirectory()){
+            return null;
+        }
+        File valuesDir = new File(resDir, PackageBlock.VALUES_DIRECTORY_NAME);
+        if(!valuesDir.isDirectory()){
+            return null;
+        }
+        File file = new File(valuesDir, PackageBlock.PUBLIC_XML);
+        if(!file.isFile()){
+            return null;
+        }
+        return file;
+    }
+    public static List<File> listValuesDirectory(File resDir){
+        return listValuesDirectory(resDir, true);
+    }
+    public static List<File> listValuesDirectory(File resDir, boolean includeVariants){
+        List<File> results = new ArrayList<>();
+        if(!resDir.isDirectory()){
+            return results;
+        }
+        File[] files = resDir.listFiles();
+        if(files == null){
+            return results;
+        }
+        for(File dir:files){
+            if(!dir.isDirectory()){
+                continue;
+            }
+            if(isValuesDirectoryName(dir.getName(), includeVariants)){
+                results.add(dir);
+            }
+        }
+        results.sort(CompareUtil.getComparableComparator());
+        return results;
+    }
+    public static boolean isValuesDirectoryName(String name, boolean checkVariant){
+        if(PackageBlock.VALUES_DIRECTORY_NAME.equals(name)){
+            return true;
+        }
+        if(!checkVariant){
+            return false;
+        }
+        return name.startsWith(PackageBlock.VALUES_DIRECTORY_NAME + "-");
+    }
+    private static boolean isPackageDirectory(File dir){
+        if(!dir.isDirectory()){
+            return false;
+        }
+        return new File(dir, PackageBlock.JSON_FILE_NAME).isFile();
+    }
     public static List<File> listFiles(File dir, String ext){
         List<File> results=new ArrayList<>();
         File[] files=dir.listFiles();
@@ -110,10 +209,11 @@ public class ApkUtil {
         return name;
     }
 
-    public static final String JSON_FILE_EXTENSION=".json";
-    public static final String RES_JSON_NAME = "res-json";
+    public static final String JSON_FILE_EXTENSION = ".json";
+    public static final String ROOT_NAME = "root";
     public static final String DEF_MODULE_NAME = "base";
     public static final String NAME_value_type = "value_type";
     public static final String NAME_data = "data";
 
+    public static final String SIGNATURE_DIR_NAME = "signatures";
 }

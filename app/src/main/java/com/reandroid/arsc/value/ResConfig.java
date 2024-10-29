@@ -18,6 +18,7 @@ package com.reandroid.arsc.value;
 import com.reandroid.arsc.item.ByteArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.HexUtil;
 
 import java.util.Arrays;
@@ -518,15 +519,95 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
     }
     @Override
     public String toString(){
-        String q= getQualifiers();
-        if(q.length() == 0){
-            q="DEFAULT";
+        String q = getQualifiers();
+        if(q.length() == 0) {
+            return "[DEFAULT]";
         }
-        return "["+q+"]";
+        return "[" + q + "]";
     }
     @Override
-    public int compareTo(ResConfig resConfig) {
-        return getQualifiers().compareTo(resConfig.getQualifiers());
+    public int compareTo(ResConfig config) {
+        int i = CompareUtil.compare(getMnc(), config.getMnc());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getMcc(), config.getMcc());
+        if(i != 0) {
+            return i;
+        }
+        i = compareLocale(config);
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getGenderValue(), config.getGenderValue());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getDensityValue(), config.getDensityValue());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getTouchscreenValue(), config.getTouchscreenValue());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getOrientationValue(), config.getOrientationValue());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getNavigationValue(), config.getNavigationValue());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getKeyboardValue(), config.getKeyboardValue());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getInputFlagsValue(), config.getInputFlagsValue());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getScreenWidth(), config.getScreenWidth());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getScreenHeight(), config.getScreenHeight());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getSdkVersion(), config.getSdkVersion());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getScreenLayout(), config.getScreenLayout());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getScreenLayout2(), config.getScreenLayout2());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getColorMode(), config.getColorMode());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getUiMode(), config.getUiMode());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getSmallestScreenWidthDp(), config.getSmallestScreenWidthDp());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getScreenHeightDp(), config.getScreenHeightDp());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getScreenWidthDp(), config.getScreenWidthDp());
+        if(i != 0) {
+            return i;
+        }
+        return 0;
     }
 
     public static ResConfig parse(String qualifiers){
@@ -1131,7 +1212,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         }
     }
 
-    public static class Flag{
+    public static class Flag implements Comparable<Flag> {
         private final String name;
         private final int flag;
         Flag(String name, int flag){
@@ -1140,6 +1221,13 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         }
         public int getFlag() {
             return flag;
+        }
+        @Override
+        public int compareTo(Flag flag) {
+            if(flag == null) {
+                return 1;
+            }
+            return CompareUtil.compare(getFlag(), flag.getFlag());
         }
         @Override
         public boolean equals(Object obj) {
@@ -1286,7 +1374,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             }
             StringBuilder builder = this.mBuilder;
             char separator;
-            if(script != null || variant != null){
+            if(script != null || variant != null || (region != null && region.length() == 3)){
                 builder.append('-');
                 builder.append('b');
                 separator = '+';
@@ -1336,7 +1424,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             if(flag== null){
                 return;
             }
-            mBuilder.append('-').append(flag);
+            mBuilder.append('-').append(flag.toString());
         }
         private void appendDp(String prefix, int number){
             if(number == 0){
@@ -1467,7 +1555,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
                 return null;
             }
             String[] qualifiers = this.mQualifiers;
-            if(qualifiers == null || qualifiers.length == 0){
+            if(isEmpty(qualifiers)){
                 return null;
             }
             int length = qualifiers.length;
@@ -1618,8 +1706,11 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
                 return false;
             }
             Matcher matcher = PATTERN_LOCALE_NUMBERING_SYSTEM.matcher(qualifier);
-            return matcher.find();
+            if(!matcher.find()){
+                return false;
+            }
             //TODO: where to set ?
+            return true;
         }
         private void parseLocaleScriptVariant(){
             if(this.mLanguageRegionParsed || isEmpty()){
@@ -1643,22 +1734,15 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
                 return false;
             }
             Matcher matcher = PATTERN_LOCALE_SCRIPT_VARIANT.matcher(qualifier);
-            if(!matcher.find()){
-                return false;
+            if(matcher.find()) {
+                ResConfig resConfig = this.mConfig;
+                resConfig.setLanguage(trimPlus(matcher.group(1)));
+                resConfig.setRegion(trimPlus(matcher.group(2)));
+                resConfig.setLocaleScript(trimPlus(matcher.group(3)));
+                resConfig.setLocaleVariant(trimPlus(matcher.group(4)));
+                return true;
             }
-            String language = trimPlus(matcher.group(1));
-            String region = trimPlus(matcher.group(2));
-            String script = trimPlus(matcher.group(3));
-            String variant = trimPlus(matcher.group(4));
-            if(script == null && variant == null){
-                return false;
-            }
-            ResConfig resConfig = this.mConfig;
-            resConfig.setLanguage(language);
-            resConfig.setRegion(region);
-            resConfig.setLocaleScript(script);
-            resConfig.setLocaleVariant(variant);
-            return true;
+            return false;
         }
 
         private void parseLanguage(){
@@ -1852,7 +1936,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         private static final Pattern PATTERN_DP = Pattern.compile("^([swh]+)([0-9]+)dp$");
         private static final Pattern PATTERN_WIDTH_HEIGHT = Pattern.compile("^([0-9]+)[xX]([0-9]+)$");
         private static final Pattern PATTERN_LOCALE_NUMBERING_SYSTEM = Pattern.compile("^u\\+nu\\+(.{1,8})$");
-        private static final Pattern PATTERN_LOCALE_SCRIPT_VARIANT = Pattern.compile("^b(\\+[a-z]{2})?(\\+r[A-Z]{2})?(\\+[A-Z][a-z]{3})?(\\+[A-Z]{2,8})?$");
+        private static final Pattern PATTERN_LOCALE_SCRIPT_VARIANT = Pattern.compile("^b(\\+[a-z]{2})?(\\+r?[A-Z0-9]{2,3})?(\\+[A-Z][a-z]{3})?(\\+[A-Z]{2,8})?$");
     }
 
     private static final ResConfig DEFAULT_INSTANCE = new ResConfig(SIZE_16);

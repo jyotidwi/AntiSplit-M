@@ -18,10 +18,8 @@ package com.reandroid.archive.block;
 import com.reandroid.archive.block.pad.SchemePadding;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.utils.collection.ArrayCollection;
-import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.IterableIterator;
 import com.reandroid.utils.io.FileUtil;
-import com.starry.FileUtils;
 
 import java.io.*;
 import java.util.Comparator;
@@ -43,11 +41,7 @@ public class ApkSignatureBlock extends LengthPrefixedList<SignatureInfo>
         return new IterableIterator<SignatureInfo, CertificateBlock>(this.iterator()) {
             @Override
             public Iterator<CertificateBlock> iterator(SignatureInfo element) {
-                SignatureScheme scheme = element.getSignatureScheme();
-                if(scheme != null){
-                    return scheme.getCertificates();
-                }
-                return EmptyIterator.of();
+                return element.getCertificates();
             }
         };
     }
@@ -113,16 +107,8 @@ public class ApkSignatureBlock extends LengthPrefixedList<SignatureInfo>
         refresh();
         List<File> writtenFiles = new ArrayCollection<>(size());
         for(SignatureInfo signatureInfo : this){
-            String name = signatureInfo.getIndex() + "_" + signatureInfo.getId().toFileName();
-            File file1 = new File(dir, name);
-            File dir1 = file1.getParentFile();
-            if(dir1 != null && !dir1.exists()){
-                dir1.mkdirs();
-            }
-            try(OutputStream outputStream = FileUtils.getOutputStream(file1)){
-                signatureInfo.writeBytes(outputStream);
-            }
-            writtenFiles.add(file1);
+            File file = signatureInfo.writeRawToDirectory(dir);
+            writtenFiles.add(file);
         }
         return writtenFiles;
     }

@@ -1,13 +1,11 @@
 /*
  * Copyright (c) 2002 JSON.org (now "Public Domain")
  * This is NOT property of REAndroid
- * This package is renamed from org.json.* to avoid class conflict when used on anroid platforms
+ * This package is renamed from org.json.* to avoid class conflict when used on android platforms
 */
 package com.reandroid.json;
 
 import static java.lang.String.format;
-
-import android.text.TextUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -52,10 +50,8 @@ public class JSONPointer {
     private final List<String> refTokens;
 
     public JSONPointer(final String pointer) {
-        if (pointer == null) {
-            throw new NullPointerException("pointer cannot be null");
-        }
-        if (TextUtils.isEmpty(pointer) || pointer.equals("#")) {
+        if (pointer == null) throw new NullPointerException("pointer cannot be null");
+        if (pointer.length() == 0 || pointer.equals("#")) {
             this.refTokens = Collections.emptyList();
             return;
         }
@@ -146,7 +142,7 @@ public class JSONPointer {
 
     @Override
     public String toString() {
-        StringBuilder rval = new StringBuilder();
+        StringBuilder rval = new StringBuilder("");
         for (String token: this.refTokens) {
             rval.append('/').append(escape(token));
         }

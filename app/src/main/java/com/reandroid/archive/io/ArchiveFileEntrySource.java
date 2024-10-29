@@ -55,22 +55,22 @@ public class ArchiveFileEntrySource extends ArchiveEntrySource<ZipFileInput> {
     @Override
     public void write(File file) throws IOException {
         FileChannel fileChannel = getFileChannel();
-
         if(getMethod() != Archive.STORED || fileChannel == null){
             super.write(file);
             return;
         }
         File dir = file.getParentFile();
-        if(dir != null && !dir.exists()){
-            dir.mkdirs();
-        }
-        if(file.isFile()){
-            file.delete();
-        }
+        if(dir != null && !dir.exists()) dir.mkdirs();
+        if(file.isFile()) file.delete();
         file.createNewFile();
-        try(FileChannel outputChannel = LegacyUtils.supportsFileChannel ?
-                FileChannel.open(file.toPath(), StandardOpenOption.WRITE) : new RandomAccessFile(file, "rw").getChannel()) {
-            outputChannel.transferFrom(fileChannel, 0, getLength());
+        if (LegacyUtils.supportsFileChannel) write(fileChannel, FileChannel.open(file.toPath(), StandardOpenOption.WRITE));
+        else try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
+            write(fileChannel, raf.getChannel());
         }
+    }
+
+    private void write(FileChannel fileChannel, FileChannel outputChannel) throws IOException {
+        outputChannel.transferFrom(fileChannel, 0, getLength());
+        outputChannel.close();
     }
 }

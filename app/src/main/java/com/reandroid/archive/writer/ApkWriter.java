@@ -33,6 +33,7 @@ public abstract class ApkWriter<T extends ZipOutput, OUT extends OutputSource> i
     private final InputSource[] inputSources;
     private ZipAligner zipAligner;
     private ApkSignatureBlock apkSignatureBlock;
+    private APKLogger apkLogger;
     private WriteProgress writeProgress;
     private final HeaderInterceptorChain interceptorChain;
 
@@ -60,9 +61,12 @@ public abstract class ApkWriter<T extends ZipOutput, OUT extends OutputSource> i
     }
     private void writeApkList(OUT[] outputList) throws IOException{
         int length = outputList.length;
+        logMessage("Writing files: " + length);
+        APKLogger logger = this.getApkLogger();
         ZipAligner zipAligner = getZipAligner();
         for(int i = 0; i < length; i++){
             OUT out = outputList[i];
+            out.setAPKLogger(logger);
             writeApk(out, zipAligner);
             if(i % 100 == 0){
                 out.logFileWrite();
@@ -90,9 +94,11 @@ public abstract class ApkWriter<T extends ZipOutput, OUT extends OutputSource> i
         Zip64Record zip64Record = endRecord.getZip64Record();
         if(zip64Record != null){
             long offsetOfRecord = position();
+            logMessage("ZIP64: " + zip64Record);
             zip64Record.writeBytes(outputStream);
             Zip64Locator zip64Locator = endRecord.getZip64Locator();
             zip64Locator.setOffsetZip64Record(offsetOfRecord);
+            logMessage("ZIP64: " + zip64Locator);
             zip64Locator.writeBytes(outputStream);
         }
         endRecord.writeBytes(getOutputStream());
@@ -149,8 +155,10 @@ public abstract class ApkWriter<T extends ZipOutput, OUT extends OutputSource> i
         if(signatureBlock == null){
             return;
         }
+        logMessage("Writing signature block ...");
         long offset = position();
         if(ZipHeader.isZip64Length(offset)){
+            logMessage("ZIP64 mode, skip writing signature block!");
             return;
         }
         int alignment = 4096;
@@ -178,11 +186,27 @@ public abstract class ApkWriter<T extends ZipOutput, OUT extends OutputSource> i
     public void setArchiveInfo(ArchiveInfo archiveInfo) {
         this.getInterceptorChain().setArchiveInfo(archiveInfo);
     }
+    public void setHeaderInterceptor(HeaderInterceptor interceptor) {
+        this.getInterceptorChain().setHeaderInterceptor(interceptor);
+    }
+    public void setDataDescriptorFactory(DataDescriptorFactory dataDescriptorFactory) {
+        getInterceptorChain().setDataDescriptorFactory(dataDescriptorFactory);
+    }
 
     void onCompressFileProgress(String path, int mode, long writtenBytes) {
         if(writeProgress!=null){
             writeProgress.onCompressFile(path, mode, writtenBytes);
         }
     }
-
+    APKLogger getApkLogger(){
+        return apkLogger;
+    }
+    public void setAPKLogger(APKLogger logger) {
+        this.apkLogger = logger;
+    }
+    void logMessage(String msg) {
+        if(apkLogger!=null){
+            apkLogger.logMessage(msg);
+        }
+    }
 }

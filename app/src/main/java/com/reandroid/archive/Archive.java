@@ -15,30 +15,21 @@
  */
 package com.reandroid.archive;
 
-import com.reandroid.archive.block.ApkSignatureBlock;
-import com.reandroid.archive.block.CentralEntryHeader;
-import com.reandroid.archive.block.EndRecord;
-import com.reandroid.archive.io.ZipInput;
+import com.reandroid.apk.APKLogger;
+import com.reandroid.archive.block.*;
+import com.reandroid.archive.io.*;
 import com.reandroid.archive.model.CentralFileDirectory;
 import com.reandroid.archive.model.LocalFileDirectory;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ArrayIterator;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.io.FilePermissions;
+import com.reandroid.utils.io.FileUtil;
 import com.reandroid.utils.io.IOUtil;
-import com.starry.FileUtils;
 
-import java.io.Closeable;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.io.*;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
@@ -49,62 +40,6 @@ public abstract class Archive<T extends ZipInput> implements Closeable {
     private final ArchiveEntry[] entryList;
     private final EndRecord endRecord;
     private final ApkSignatureBlock apkSignatureBlock;
-
-    public int extractAll(File dir) throws IOException {
-        return extractAll(dir, null);
-    }
-
-    public int extractAll(File dir, Predicate<ArchiveEntry> filter) throws IOException {
-        Iterator<ArchiveEntry> iterator = iterator(filter);
-        int result = 0;
-        while (iterator.hasNext()){
-            ArchiveEntry archiveEntry = iterator.next();
-            extract(toFile(dir, archiveEntry), archiveEntry);
-            result ++;
-        }
-        return result;
-    }
-    private File toFile(File dir, ArchiveEntry archiveEntry){
-        String name = archiveEntry.getName().replace('/', File.separatorChar);
-        return new File(dir, name);
-    }
-
-    public void extract(File file, ArchiveEntry archiveEntry) throws IOException {
-        if(archiveEntry.isDirectory()) {
-            // TODO: make directories considering file collision
-            return;
-        }
-
-        if(archiveEntry.getMethod() != Archive.STORED){
-            extractCompressed(file, archiveEntry);
-        }else {
-            extractStored(file, archiveEntry);
-        }
-        //applyAttributes(archiveEntry, file);
-    }
-    private void extractCompressed(File file, ArchiveEntry archiveEntry) throws IOException {
-        try(OutputStream outputStream = FileUtils.getOutputStream(file)) {
-            IOUtil.writeAll(openInputStream(archiveEntry), outputStream);
-        }
-    }
-    private void applyAttributes(ArchiveEntry archiveEntry, File file) {
-        CentralEntryHeader ceh = archiveEntry.getCentralEntryHeader();
- //       ceh.getFilePermissions().apply(file);
-        long time = Archive.dosToJavaDate(ceh.getDosTime()).getTime();
-        file.setLastModified(time);
-    }
-
-    public static Date dosToJavaDate(long dosTime) {
-        final Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.YEAR, (int) ((dosTime >> 25) & 0x7f) + 1980);
-        cal.set(Calendar.MONTH, (int) ((dosTime >> 21) & 0x0f) - 1);
-        cal.set(Calendar.DATE, (int) (dosTime >> 16) & 0x1f);
-        cal.set(Calendar.HOUR_OF_DAY, (int) (dosTime >> 11) & 0x1f);
-        cal.set(Calendar.MINUTE, (int) (dosTime >> 5) & 0x3f);
-        cal.set(Calendar.SECOND, (int) (dosTime << 1) & 0x3e);
-        cal.set(Calendar.MILLISECOND, 0);
-        return cal.getTime();
-    }
 
     public Archive(T zipInput) throws IOException {
         this.zipInput = zipInput;
@@ -200,14 +135,99 @@ public abstract class Archive<T extends ZipInput> implements Closeable {
     public ApkSignatureBlock getApkSignatureBlock() {
         return apkSignatureBlock;
     }
+    public EndRecord getEndRecord() {
+        return endRecord;
+    }
 
+    public int extractAll(File dir) throws IOException {
+        return extractAll(dir, null, null);
+    }
+    public int extractAll(File dir, APKLogger logger) throws IOException {
+        return extractAll(dir, null, logger);
+    }
+    public int extractAll(File dir, Predicate<ArchiveEntry> filter) throws IOException {
+        return extractAll(dir, filter, null);
+    }
+    public int extractAll(File dir, Predicate<ArchiveEntry> filter, APKLogger logger) throws IOException {
+        Iterator<ArchiveEntry> iterator = iterator(filter);
+        int result = 0;
+        while (iterator.hasNext()){
+            ArchiveEntry archiveEntry = iterator.next();
+            extract(toFile(dir, archiveEntry), archiveEntry, logger);
+            result ++;
+        }
+        return result;
+    }
+    public void extract(File file, ArchiveEntry archiveEntry) throws IOException{
+        extract(file, archiveEntry, null);
+    }
+    public void extract(File file, ArchiveEntry archiveEntry, APKLogger logger) throws IOException {
+        if(archiveEntry.isDirectory()) {
+            // TODO: make directories considering file collision
+            return;
+        }
+        FileUtil.ensureParentDirectory(file);
+        if(logger != null){
+            long size = archiveEntry.getDataSize();
+            if(size > LOG_LARGE_FILE_SIZE){
+                logger.logVerbose("Extracting ["
+                        + FileUtil.toReadableFileSize(size) + "] "+ archiveEntry.getName());
+            }
+        }
+        if(archiveEntry.getMethod() != Archive.STORED){
+            extractCompressed(file, archiveEntry);
+        }else {
+            extractStored(file, archiveEntry);
+        }
+        applyAttributes(archiveEntry, file);
+    }
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    private void applyAttributes(ArchiveEntry archiveEntry, File file) {
+        FilePermissions permissions = archiveEntry.getFilePermissions();
+        if(permissions.get() != 0) {
+            permissions.apply(file);
+        }
+        long time = Archive.dosToJavaDate(archiveEntry.getDosTime()).getTime();
+        file.setLastModified(time);
+    }
     abstract void extractStored(File file, ArchiveEntry archiveEntry) throws IOException;
-
+    private void extractCompressed(File file, ArchiveEntry archiveEntry) throws IOException {
+        FileOutputStream outputStream = new FileOutputStream(file);
+        IOUtil.writeAll(openInputStream(archiveEntry), outputStream);
+    }
+    private File toFile(File dir, ArchiveEntry archiveEntry){
+        String name = archiveEntry.getName().replace('/', File.separatorChar);
+        return new File(dir, name);
+    }
     @Override
     public void close() throws IOException {
         this.zipInput.close();
     }
 
+    public static<T1 extends InputSource> PathTree<T1> buildPathTree(T1[] inputSources){
+        PathTree<T1> root = PathTree.newRoot();
+        int length = inputSources.length;
+        for(int i = 0; i < length; i ++){
+            T1 item = inputSources[i];
+            root.add(item.getAlias(), item);
+        }
+        return root;
+    }
+
+    public static Date dosToJavaDate(long dosTime) {
+        final Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.YEAR, (int) ((dosTime >> 25) & 0x7f) + 1980);
+        cal.set(Calendar.MONTH, (int) ((dosTime >> 21) & 0x0f) - 1);
+        cal.set(Calendar.DATE, (int) (dosTime >> 16) & 0x1f);
+        cal.set(Calendar.HOUR_OF_DAY, (int) (dosTime >> 11) & 0x1f);
+        cal.set(Calendar.MINUTE, (int) (dosTime >> 5) & 0x3f);
+        cal.set(Calendar.SECOND, (int) (dosTime << 1) & 0x3e);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTime();
+    }
+    public static long javaToDosTime(long javaTime) {
+        return javaToDosTime(new Date(javaTime));
+    }
     public static long javaToDosTime(Date date) {
         if(date == null || date.getTime() == 0){
             return 0;

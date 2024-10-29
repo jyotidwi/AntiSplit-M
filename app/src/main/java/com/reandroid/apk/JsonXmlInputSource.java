@@ -21,9 +21,14 @@ import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.json.JSONException;
 import com.reandroid.json.JSONObject;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
-public class JsonXmlInputSource extends InputSource {
+
+ public class JsonXmlInputSource extends InputSource {
     private final InputSource inputSource;
     private APKLogger apkLogger;
     public JsonXmlInputSource(InputSource inputSource) {
@@ -52,7 +57,7 @@ public class JsonXmlInputSource extends InputSource {
             JSONObject jsonObject=new JSONObject(inputStream);
             resXmlDocument.fromJson(jsonObject);
         }catch (JSONException ex){
-            throw new RuntimeException(inputSource.getAlias()+": "+ex.getMessage(), ex);
+            throw new JSONException(inputSource.getAlias()+": "+ex.getMessage(), ex);
         }
         return resXmlDocument;
     }

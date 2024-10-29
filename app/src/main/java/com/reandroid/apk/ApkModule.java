@@ -15,17 +15,10 @@
   */
 package com.reandroid.apk;
 
-import com.reandroid.apkeditor.merge.LogUtil;
-import com.reandroid.archive.ArchiveFile;
-import com.reandroid.archive.BlockInputSource;
-import com.reandroid.archive.FileInputSource;
-import com.reandroid.archive.InputSource;
-import com.reandroid.archive.WriteProgress;
-import com.reandroid.archive.ZipEntryMap;
+import com.reandroid.archive.*;
 import com.reandroid.archive.block.ApkSignatureBlock;
 import com.reandroid.archive.io.ArchiveFileEntrySource;
-import com.reandroid.archive.writer.ApkFileWriter;
-import com.reandroid.archive.writer.ApkStreamWriter;
+import com.reandroid.archive.writer.*;
 import com.reandroid.arsc.ApkFile;
 import com.reandroid.arsc.array.PackageArray;
 import com.reandroid.arsc.base.Block;
@@ -34,27 +27,25 @@ import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
+import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.item.TableString;
 import com.reandroid.arsc.model.FrameworkTable;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
+import com.reandroid.identifiers.PackageIdentifier;
 import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.CollectionUtil;
+import com.reandroid.xml.XMLDocument;
+import com.reandroid.xml.XMLElement;
 
-import java.io.Closeable;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
+import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
 
 public class ApkModule implements ApkFile, Closeable {
-    private final String moduleName;
+    private String moduleName;
     private final ZipEntryMap zipEntryMap;
     private boolean loadDefaultFramework = true;
     private boolean mDisableLoadFramework = false;
@@ -70,6 +61,8 @@ public class ApkModule implements ApkFile, Closeable {
     private Closeable mCloseable;
     private final List<TableBlock> mExternalFrameworks;
 
+    private final Map<Object, Object> mTagMaps;
+
     public ApkModule(String moduleName, ZipEntryMap zipEntryMap){
         this.moduleName = moduleName;
         this.zipEntryMap = zipEntryMap;
@@ -77,15 +70,85 @@ public class ApkModule implements ApkFile, Closeable {
         this.mUncompressedFiles.addPath(zipEntryMap);
         this.mExternalFrameworks = new ArrayCollection<>();
         this.zipEntryMap.setModuleName(moduleName);
+        this.mTagMaps = new HashMap<>();
     }
-
+    public ApkModule(ZipEntryMap zipEntryMap){
+        this("base", zipEntryMap);
+    }
     public ApkModule(){
         this("base", new ZipEntryMap());
     }
 
-
-
-
+    public void putTag(Object key, Object item){
+        mTagMaps.put(key, item);
+    }
+    public Object getTag(Object key){
+        return mTagMaps.get(key);
+    }
+    public Object removeTag(Object key){
+        return mTagMaps.remove(key);
+    }
+    public void clearTags(){
+        mTagMaps.clear();
+    }
+    public void addExternalFramework(File frameworkFile) throws IOException {
+        if(frameworkFile == null){
+            return;
+        }
+        logMessage("Loading external framework: " + frameworkFile);
+        FrameworkApk framework = FrameworkApk.loadTableBlock(frameworkFile);
+        framework.setAPKLogger(getApkLogger());
+        addExternalFramework(framework);
+    }
+    public void addExternalFramework(ApkModule apkModule){
+        if(apkModule == null || apkModule == this || !apkModule.hasTableBlock()){
+            return;
+        }
+        addExternalFramework(apkModule.getTableBlock());
+    }
+    public void addExternalFramework(TableBlock tableBlock){
+        if(tableBlock == null
+                || tableBlock.getApkFile() == this
+                || mExternalFrameworks.contains(tableBlock)){
+            return;
+        }
+        mExternalFrameworks.add(tableBlock);
+        updateExternalFramework();
+    }
+    public String refreshTable(){
+        TableBlock tableBlock = this.mTableBlock;
+        if(tableBlock != null){
+            return tableBlock.refreshFull();
+        }
+        return null;
+    }
+    public String refreshManifest(){
+        AndroidManifestBlock manifestBlock = this.mManifestBlock;
+        if(manifestBlock != null){
+            return manifestBlock.refreshFull();
+        }
+        return null;
+    }
+    public void validateResourceNames(){
+        if(!hasTableBlock()){
+            return;
+        }
+        logMessage("Validating resource names ...");
+        TableBlock tableBlock = getTableBlock();
+        for(PackageBlock packageBlock : tableBlock.listPackages()){
+            validateResourceNames(packageBlock);
+        }
+    }
+    public void validateResourceNames(PackageBlock packageBlock){
+        PackageIdentifier packageIdentifier = new PackageIdentifier();
+        packageIdentifier.load(packageBlock);
+        if(!packageIdentifier.hasDuplicateResources()){
+            return;
+        }
+        logMessage("Renaming duplicate resources ... ");
+        packageIdentifier.ensureUniqueResourceNames();
+        packageIdentifier.setResourceNamesToPackage(packageBlock);
+    }
     public ApkSignatureBlock getApkSignatureBlock() {
         return apkSignatureBlock;
     }
@@ -93,8 +156,47 @@ public class ApkModule implements ApkFile, Closeable {
         this.apkSignatureBlock = apkSignatureBlock;
     }
 
+    public boolean hasSignatureBlock(){
+        return getApkSignatureBlock() != null;
+    }
 
+    public void dumpSignatureInfoFiles(File directory) throws IOException{
+        ApkSignatureBlock apkSignatureBlock = getApkSignatureBlock();
+        if(apkSignatureBlock == null){
+            throw new IOException("Don't have signature block");
+        }
+        apkSignatureBlock.writeSplitRawToDirectory(directory);
+    }
+    public void dumpSignatureBlock(File file) throws IOException{
+        ApkSignatureBlock apkSignatureBlock = getApkSignatureBlock();
+        if(apkSignatureBlock == null){
+            throw new IOException("Don't have signature block");
+        }
+        apkSignatureBlock.writeRaw(file);
+    }
 
+    public void scanSignatureInfoFiles(File directory) throws IOException{
+        if(!directory.isDirectory()){
+            throw new IOException("No such directory: " + directory);
+        }
+        ApkSignatureBlock apkSignatureBlock = this.apkSignatureBlock;
+        if(apkSignatureBlock == null){
+            apkSignatureBlock = new ApkSignatureBlock();
+        }
+        apkSignatureBlock.scanSplitFiles(directory);
+        setApkSignatureBlock(apkSignatureBlock);
+    }
+    public void loadSignatureBlock(File file) throws IOException{
+        if(!file.isFile()){
+            throw new IOException("No such file: " + file);
+        }
+        ApkSignatureBlock apkSignatureBlock = this.apkSignatureBlock;
+        if(apkSignatureBlock == null){
+            apkSignatureBlock = new ApkSignatureBlock();
+        }
+        apkSignatureBlock.read(file);
+        setApkSignatureBlock(apkSignatureBlock);
+    }
 
     public String getSplit(){
         if(!hasAndroidManifest()){
@@ -111,7 +213,21 @@ public class ApkModule implements ApkFile, Closeable {
         results.addAll(tableBlock.getFrameWorks());
         return results;
     }
-
+    public boolean isFrameworkVersionLoaded(Integer version){
+        if(version == null){
+            return false;
+        }
+        for(TableBlock tableBlock : getLoadedFrameworks()){
+            if(!(tableBlock instanceof FrameworkTable)){
+                continue;
+            }
+            FrameworkTable frame = (FrameworkTable) tableBlock;
+            if(version.equals(frame.getVersionCode())){
+                return true;
+            }
+        }
+        return false;
+    }
     public FrameworkApk getLoadedFramework(Integer version, boolean onlyAndroid){
         for(TableBlock tableBlock : getLoadedFrameworks()){
             if(!(tableBlock instanceof FrameworkTable)){
@@ -126,6 +242,10 @@ public class ApkModule implements ApkFile, Closeable {
             }
         }
         return null;
+    }
+    public FrameworkApk initializeAndroidFramework(Integer version) throws IOException {
+        TableBlock tableBlock = getTableBlock(false);
+        return initializeAndroidFramework(tableBlock, version);
     }
     public FrameworkApk initializeAndroidFramework(TableBlock tableBlock, Integer version) throws IOException {
         if(mDisableLoadFramework || tableBlock == null || isAndroid(tableBlock)){
@@ -150,13 +270,99 @@ public class ApkModule implements ApkFile, Closeable {
                 + " (" + frameworkApk.getVersionName() + ")");
         return frameworkApk;
     }
-
+    public FrameworkApk initializeAndroidFramework(XMLDocument xmlDocument) throws IOException {
+        if(this.preferredFramework != null){
+            return initializeAndroidFramework(preferredFramework);
+        }
+        if(isAndroidCoreApp(xmlDocument)){
+            logMessage("Looks framework itself, skip loading frameworks");
+            return null;
+        }
+        Integer version = readVersionCode(xmlDocument);
+        return initializeAndroidFramework(version);
+    }
     private boolean isAndroid(TableBlock tableBlock){
         if(tableBlock instanceof FrameworkTable){
             FrameworkTable frameworkTable = (FrameworkTable) tableBlock;
             return frameworkTable.isAndroid();
         }
         return false;
+    }
+    private boolean isAndroidCoreApp(XMLDocument manifestDocument){
+        XMLElement root = manifestDocument.getDocumentElement();
+        if(root == null){
+            return false;
+        }
+        if(!"android".equals(root.getAttributeValue("package"))){
+            return false;
+        }
+        String coreApp = root.getAttributeValue("coreApp");
+        return "true".equals(coreApp);
+    }
+    private Integer readVersionCode(XMLDocument xmlDocument){
+        if(xmlDocument == null){
+            return null;
+        }
+        XMLElement manifestRoot = xmlDocument.getDocumentElement();
+        if(manifestRoot == null){
+            logMessage("WARN: Manifest root not found");
+            return null;
+        }
+        String versionString = manifestRoot.getAttributeValue("android:compileSdkVersion");
+        Integer version = null;
+        if(versionString!=null){
+            version = safeParseInteger(versionString);
+        }
+        if(version == null){
+            versionString = manifestRoot.getAttributeValue("platformBuildVersionCode");
+            if(versionString!=null){
+                version = safeParseInteger(versionString);
+            }
+        }
+        Integer target = null;
+        Iterator<XMLElement> iterator = manifestRoot
+                .getElements(AndroidManifestBlock.TAG_uses_sdk);
+        while (iterator.hasNext()){
+            XMLElement element = iterator.next();
+            versionString = element.getAttributeValue("android:targetSdkVersion");
+            if(versionString != null){
+                target = safeParseInteger(versionString);
+            }
+        }
+        if(version == null){
+            version = target;
+        }else if(target != null && target > version){
+            version = target;
+        }
+        return version;
+    }
+    private Integer safeParseInteger(String versionString) {
+        try{
+            return Integer.parseInt(versionString);
+        }catch (NumberFormatException exception){
+            logMessage("NumberFormatException on manifest version reading: '"
+                    +versionString+"': "+exception.getMessage());
+            return null;
+        }
+    }
+
+    public void setPreferredFramework(Integer version) {
+        if(version != null && version.equals(preferredFramework)){
+            return;
+        }
+        this.preferredFramework = version;
+        if(version == null || mTableBlock == null){
+            return;
+        }
+        if(isFrameworkVersionLoaded(version)){
+            return;
+        }
+        logMessage("Initializing preferred framework: " + version);
+        mTableBlock.clearFrameworks();
+        FrameworkApk frameworkApk = AndroidFrameworks.getBestMatch(version);
+        AndroidFrameworks.setCurrent(frameworkApk);
+        mTableBlock.addFramework(frameworkApk.getTableBlock());
+        logMessage("Initialized framework: " + frameworkApk.getVersionCode());
     }
 
     public Integer getAndroidFrameworkVersion(){
@@ -179,8 +385,53 @@ public class ApkModule implements ApkFile, Closeable {
         }
         return version;
     }
-
-
+    public void removeResFilesWithEntry(int resourceId) {
+        removeResFilesWithEntry(resourceId, null, true);
+    }
+    public void removeResFilesWithEntry(int resourceId, ResConfig resConfig, boolean trimEntryArray) {
+        List<Entry> removedList = removeResFiles(resourceId, resConfig);
+        SpecTypePair specTypePair = null;
+        for(Entry entry:removedList){
+            if(entry == null || entry.isNull()){
+                continue;
+            }
+            if(trimEntryArray && specTypePair==null){
+                specTypePair = entry.getTypeBlock().getParentSpecTypePair();
+            }
+            entry.setNull(true);
+        }
+        if(specTypePair!=null){
+            specTypePair.removeNullEntries(resourceId);
+        }
+    }
+    public List<Entry> removeResFiles(int resourceId) {
+        return removeResFiles(resourceId, null);
+    }
+    public List<Entry> removeResFiles(int resourceId, ResConfig resConfig) {
+        ArrayCollection<Entry> results = new ArrayCollection<>();
+        if(resourceId == 0 && resConfig == null){
+            return results;
+        }
+        List<ResFile> resFileList = listResFiles(resourceId, resConfig);
+        ZipEntryMap zipEntryMap = getZipEntryMap();
+        for(ResFile resFile:resFileList){
+            results.addAll(resFile.iterator());
+            zipEntryMap.remove(resFile.getInputSource());
+        }
+        return results;
+    }
+    public XMLDocument decodeXMLFile(String path) throws IOException {
+        ResXmlDocument resXmlDocument = loadResXmlDocument(path);
+        AndroidManifestBlock manifest = getAndroidManifest();
+        int pkgId = manifest.guessCurrentPackageId();
+        if(pkgId != 0 && hasTableBlock()){
+            PackageBlock packageBlock = getTableBlock().pickOne(pkgId);
+            if(packageBlock != null){
+                resXmlDocument.setPackageBlock(packageBlock);
+            }
+        }
+        return resXmlDocument.decodeToXml();
+    }
     public List<DexFileInputSource> listDexFiles(){
         List<DexFileInputSource> results = new ArrayCollection<>();
         for(InputSource source: getInputSources()){
@@ -212,44 +463,120 @@ public class ApkModule implements ApkFile, Closeable {
     public String getModuleName(){
         return moduleName;
     }
-
+    public void setModuleName(String moduleName){
+        if(moduleName == null){
+            throw new NullPointerException();
+        }
+        this.moduleName = moduleName;
+        this.zipEntryMap.setModuleName(moduleName);
+    }
     public void writeApk(File file) throws IOException {
         writeApk(file, null);
     }
     public void writeApk(File file, WriteProgress progress) throws IOException {
-        try (ApkFileWriter writer = createApkFileWriter(file)) {
-            writer.setWriteProgress(progress);
-            writer.write();
-        }
+        ApkFileWriter writer = createApkFileWriter(file);
+        writer.setWriteProgress(progress);
+        writer.write();
+    }
+    public byte[] writeApkBytes() throws IOException {
+        ApkByteWriter writer = createApkByteWriter();
+        writer.write();
+        return writer.toByteArray();
     }
     public void writeApk(OutputStream outputStream) throws IOException {
         createApkStreamWriter(outputStream).write();
     }
-    public ApkStreamWriter createApkStreamWriter(OutputStream outputStream) {
-        ZipEntryMap zipEntryMap = getZipEntryMap();
-        UncompressedFiles uf = getUncompressedFiles();
-        uf.apply(zipEntryMap);
-        ApkStreamWriter writer = new ApkStreamWriter(outputStream,
-                zipEntryMap.toArray(true));
-        writer.setApkSignatureBlock(getApkSignatureBlock());
-        writer.setArchiveInfo(zipEntryMap.getArchiveInfo());
-        return writer;
-    }
     public ApkFileWriter createApkFileWriter(File file) throws IOException {
-        ZipEntryMap zipEntryMap = getZipEntryMap();
-        UncompressedFiles uf = getUncompressedFiles();
-        uf.apply(zipEntryMap);
-        ApkFileWriter writer = new ApkFileWriter(file, zipEntryMap.toArray(true));
-        writer.setApkSignatureBlock(getApkSignatureBlock());
-        writer.setArchiveInfo(zipEntryMap.getArchiveInfo());
+        updateUncompressedFiles();
+        ApkFileWriter writer = new ApkFileWriter(file, getZipEntryMap().toArray(true));
+        applyDefaultApkWriterSetting(writer);
         return writer;
     }
-
-
+    public ApkByteWriter createApkByteWriter() {
+        updateUncompressedFiles();
+        ApkByteWriter writer = new ApkByteWriter(getZipEntryMap().toArray(true));
+        applyDefaultApkWriterSetting(writer);
+        return writer;
+    }
+    public ApkStreamWriter createApkStreamWriter(OutputStream outputStream) {
+        updateUncompressedFiles();
+        ApkStreamWriter writer = new ApkStreamWriter(outputStream,
+                getZipEntryMap().toArray(true));
+        applyDefaultApkWriterSetting(writer);
+        return writer;
+    }
+    private void applyDefaultApkWriterSetting(ApkWriter<?, ?> writer) {
+        writer.setAPKLogger(getApkLogger());
+        writer.setApkSignatureBlock(getApkSignatureBlock());
+        writer.setArchiveInfo(getZipEntryMap().getArchiveInfo());
+        writer.setDataDescriptorFactory(DataDescriptorFactory.NO_ACTION);
+    }
+    public void uncompressNonXmlResFiles() {
+        for(ResFile resFile:listResFiles()){
+            if(resFile.isBinaryXml()){
+                continue;
+            }
+            resFile.getInputSource().setMethod(ZipEntry.STORED);
+        }
+    }
     public UncompressedFiles getUncompressedFiles(){
         return mUncompressedFiles;
     }
-
+    public void updateUncompressedFiles() {
+        getUncompressedFiles().apply(getZipEntryMap());
+    }
+    public void removeDir(String dirName){
+        getZipEntryMap().removeDir(dirName);
+    }
+    public void validateResourcesDir() {
+        List<ResFile> resFileList = listResFiles();
+        Set<String> existPaths=new HashSet<>();
+        InputSource[] sourceList = getInputSources();
+        for(InputSource inputSource:sourceList){
+            existPaths.add(inputSource.getAlias());
+        }
+        for(ResFile resFile:resFileList){
+            String path = resFile.getFilePath();
+            String pathNew = resFile.validateTypeDirectoryName();
+            if(pathNew == null || pathNew.equals(path)){
+                continue;
+            }
+            if(existPaths.contains(pathNew)){
+                continue;
+            }
+            existPaths.remove(path);
+            existPaths.add(pathNew);
+            resFile.setFilePath(pathNew);
+            if(resFile.getInputSource().getMethod() == ZipEntry.STORED){
+                getUncompressedFiles().replacePath(path, pathNew);
+            }
+            logVerbose("Dir validated: '"+path+"' -> '"+pathNew+"'");
+        }
+        getTableBlock().refresh();
+    }
+    public void setResourcesRootDir(String dirName) {
+        List<ResFile> resFileList = listResFiles();
+        Set<String> existPaths=new HashSet<>();
+        InputSource[] sourceList = getInputSources();
+        for(InputSource inputSource:sourceList){
+            existPaths.add(inputSource.getAlias());
+        }
+        for(ResFile resFile:resFileList){
+            String path=resFile.getFilePath();
+            String pathNew=ApkUtil.replaceRootDir(path, dirName);
+            if(existPaths.contains(pathNew)){
+                continue;
+            }
+            existPaths.remove(path);
+            existPaths.add(pathNew);
+            resFile.setFilePath(pathNew);
+            if(resFile.getInputSource().getMethod() == ZipEntry.STORED){
+                getUncompressedFiles().replacePath(path, pathNew);
+            }
+            logVerbose("Root changed: '"+path+"' -> '"+pathNew+"'");
+        }
+        getTableBlock().refresh();
+    }
     public List<ResFile> listResFiles() {
         return listResFiles(0, null);
     }
@@ -262,7 +589,7 @@ public class ApkModule implements ApkFile, Closeable {
         TableStringPool stringPool= tableBlock.getStringPool();
         for(InputSource inputSource : getInputSources()){
             String name = inputSource.getAlias();
-            Iterator<TableString> iterator = stringPool.getItems(name);
+            Iterator<TableString> iterator = stringPool.getAll(name);
             while (iterator.hasNext()){
                 TableString tableString = iterator.next();
                 List<Entry> entryList = filterResFileEntries(tableString, resourceId, resConfig);
@@ -274,7 +601,48 @@ public class ApkModule implements ApkFile, Closeable {
         }
         return results;
     }
+    public boolean removeResFile(String path) {
+        return removeResFile(path, true);
+    }
+    public boolean removeResFile(String path, boolean keepResourceId) {
+        InputSource inputSource = getInputSource(path);
+        if(inputSource == null) {
+            return false;
+        }
+        ResFile resFile = getResFile(path);
+        if(resFile == null) {
+            return false;
+        }
+        resFile.delete(keepResourceId);
+        removeInputSource(path);
+        return true;
+    }
+    public ResFile getResFile(String path) {
+        InputSource inputSource = getInputSource(path);
+        if(inputSource == null) {
+            return null;
+        }
+        List<Entry> entryList = listReferencedEntries(path);
+        if(entryList.isEmpty()) {
+            return null;
+        }
+        return new ResFile(inputSource, entryList);
+    }
 
+    public List<Entry> listReferencedEntries(String path) {
+        ArrayCollection<Entry> results = new ArrayCollection<>();
+        TableBlock tableBlock = getTableBlock();
+        if (tableBlock != null) {
+            TableStringPool stringPool = tableBlock.getStringPool();
+            Iterator<TableString> iterator = stringPool.getAll(path);
+            Predicate<Entry> filter = entry -> entry.isScalar() &&
+                    TypeBlock.canHaveResourceFile(entry.getTypeName());
+            while (iterator.hasNext()) {
+                results.addAll(iterator.next().getEntries(filter));
+            }
+        }
+        return results;
+    }
     private List<Entry> filterResFileEntries(TableString tableString, int resourceId, ResConfig resConfig){
         Iterator<Entry> itr = tableString.getEntries(item -> {
             if(!item.isScalar() ||
@@ -287,6 +655,16 @@ public class ApkModule implements ApkFile, Closeable {
             return resConfig == null || resConfig.equals(item.getResConfig());
         });
         return CollectionUtil.toList(itr);
+    }
+    public int getVersionCode() {
+        AndroidManifestBlock manifestBlock = getAndroidManifest();
+        if(manifestBlock != null) {
+            Integer versionCode = manifestBlock.getVersionCode();
+            if(versionCode != null) {
+                return versionCode;
+            }
+        }
+        return 0;
     }
     public String getPackageName(){
         if(hasAndroidManifest()){
@@ -378,6 +756,7 @@ public class ApkModule implements ApkFile, Closeable {
             mTableBlock = null;
             mTableOriginalSource = null;
             archive.remove(TableBlock.FILE_NAME);
+            unlinkLoadedManifest();
             return;
         }
         tableBlock.setApkFile(this);
@@ -389,6 +768,14 @@ public class ApkModule implements ApkFile, Closeable {
         getUncompressedFiles().addPath(source);
         mTableBlock = tableBlock;
         updateExternalFramework();
+        ensureLoadedManifestLinked();
+    }
+    public boolean ensureTableBlock() {
+        if(!hasTableBlock()) {
+            setTableBlock(TableBlock.createEmpty());
+            return true;
+        }
+        return false;
     }
     /**
      * Use getAndroidManifest()
@@ -407,26 +794,17 @@ public class ApkModule implements ApkFile, Closeable {
             return null;
         }
         setManifestOriginalSource(inputSource);
-        InputStream inputStream = null;
+        InputStream inputStream;
         try {
             inputStream = inputSource.openStream();
-            AndroidManifestBlock manifestBlock=AndroidManifestBlock.load(inputStream);
+            AndroidManifestBlock manifestBlock = AndroidManifestBlock.load(inputStream);
             inputStream.close();
-            BlockInputSource<AndroidManifestBlock> blockInputSource=new BlockInputSource<>(inputSource.getName(),manifestBlock);
-            blockInputSource.setSort(inputSource.getSort());
-            blockInputSource.setMethod(inputSource.getMethod());
+            this.mManifestBlock = manifestBlock;
+            BlockInputSource<AndroidManifestBlock> blockInputSource = new BlockInputSource<>(
+                    inputSource.getName(),manifestBlock);
+            blockInputSource.copyAttributes(inputSource);
             addInputSource(blockInputSource);
-            manifestBlock.setApkFile(this);
-            TableBlock tableBlock = this.mTableBlock;
-            if(tableBlock != null){
-                int packageId = manifestBlock.guessCurrentPackageId();
-                if(packageId != 0){
-                    manifestBlock.setPackageBlock(tableBlock.pickOne(packageId));
-                }else {
-                    manifestBlock.setPackageBlock(tableBlock.pickOne());
-                }
-            }
-            mManifestBlock = manifestBlock;
+            ensureLoadedManifestLinked();
             onManifestBlockLoaded(manifestBlock);
         } catch (IOException exception) {
             throw new IllegalArgumentException(exception);
@@ -437,22 +815,77 @@ public class ApkModule implements ApkFile, Closeable {
         initializeApkType(manifestBlock);
     }
     public TableBlock getTableBlock(boolean initFramework) {
-        if(mTableBlock==null){
+        TableBlock tableBlock = this.mTableBlock;
+        if(tableBlock == null){
             if(!hasTableBlock()){
                 return null;
             }
             try {
-                mTableBlock = loadTableBlock();
+                tableBlock = loadTableBlock();
+                this.mTableBlock = tableBlock;
                 if(initFramework && loadDefaultFramework){
                     Integer version = getAndroidFrameworkVersion();
-                    initializeAndroidFramework(mTableBlock, version);
+                    initializeAndroidFramework(tableBlock, version);
                 }
                 updateExternalFramework();
             } catch (IOException exception) {
                 throw new IllegalArgumentException(exception);
             }
+            ensureLoadedManifestLinked();
         }
-        return mTableBlock;
+        return tableBlock;
+    }
+    private void ensureLoadedManifestLinked() {
+        TableBlock tableBlock = this.mTableBlock;
+        if(tableBlock == null) {
+            return;
+        }
+        AndroidManifestBlock manifestBlock = this.mManifestBlock;
+        if(manifestBlock == null) {
+            return;
+        }
+        PackageBlock packageBlock = manifestBlock.getPackageBlock();
+        if(packageBlock != null) {
+            TableBlock linkedTable = packageBlock.getTableBlock();
+            if(linkedTable == tableBlock) {
+                return;
+            }
+        }
+        packageBlock = tableBlock.pickOne(manifestBlock.guessCurrentPackageId());
+        if(packageBlock == null) {
+            packageBlock = tableBlock.pickOne();
+        }
+        if(packageBlock != null) {
+            manifestBlock.setPackageBlock(packageBlock);
+        }
+        manifestBlock.setApkFile(this);
+        ensureFrameworkLinked();
+    }
+    private void unlinkLoadedManifest() {
+        AndroidManifestBlock manifestBlock = this.mManifestBlock;
+        if(manifestBlock == null) {
+            return;
+        }
+        manifestBlock.setPackageBlock(null);
+        manifestBlock.setApkFile(null);
+    }
+    private void ensureFrameworkLinked() {
+        if(mDisableLoadFramework) {
+            return;
+        }
+        TableBlock tableBlock = this.mTableBlock;
+        if(tableBlock == null ||
+                tableBlock instanceof FrameworkTable ||
+                isAndroid(tableBlock)) {
+            return;
+        }
+        Integer preferred = this.preferredFramework;
+        if(preferred != null || (mManifestBlock != null && !tableBlock.hasFramework())) {
+            try {
+                initializeAndroidFramework(tableBlock, preferred);
+            } catch (IOException ignored) {
+            }
+        }
     }
     private void updateExternalFramework(){
         TableBlock tableBlock = mTableBlock;
@@ -463,7 +896,12 @@ public class ApkModule implements ApkFile, Closeable {
             tableBlock.addFramework(framework);
         }
     }
-
+    public void discardManifestChanges(){
+        getZipEntryMap().add(getManifestOriginalSource());
+    }
+    public void keepManifestChanges(){
+        mManifestOriginalSource = null;
+    }
     public InputSource getManifestOriginalSource(){
         InputSource inputSource = this.mManifestOriginalSource;
         if(inputSource == null){
@@ -478,7 +916,12 @@ public class ApkModule implements ApkFile, Closeable {
             mManifestOriginalSource = inputSource;
         }
     }
-
+    public void discardTableBlockChanges(){
+        getZipEntryMap().add(getTableOriginalSource());
+    }
+    public void keepTableBlockChanges(){
+        mTableOriginalSource = null;
+    }
     public InputSource getTableOriginalSource(){
         InputSource inputSource = this.mTableOriginalSource;
         if(inputSource == null){
@@ -586,7 +1029,15 @@ public class ApkModule implements ApkFile, Closeable {
         }
         return packageBlock;
     }
-
+    public ApkType getApkType(){
+        if(mApkType!=null){
+            return mApkType;
+        }
+        return initializeApkType(mManifestBlock);
+    }
+    public void setApkType(ApkType apkType){
+        this.mApkType = apkType;
+    }
     private ApkType initializeApkType(AndroidManifestBlock manifestBlock){
         if(mApkType!=null){
             return mApkType;
@@ -636,9 +1087,9 @@ public class ApkModule implements ApkFile, Closeable {
             tableBlock = TableBlock.load(inputStream);
             inputStream.close();
         }
-        BlockInputSource<TableBlock> blockInputSource=new BlockInputSource<>(inputSource.getName(), tableBlock);
-        blockInputSource.setMethod(inputSource.getMethod());
-        blockInputSource.setSort(inputSource.getSort());
+        BlockInputSource<TableBlock> blockInputSource = new BlockInputSource<>(
+                inputSource.getName(), tableBlock);
+        blockInputSource.copyAttributes(inputSource);
         getZipEntryMap().add(blockInputSource);
         tableBlock.setApkFile(this);
         return tableBlock;
@@ -674,11 +1125,15 @@ public class ApkModule implements ApkFile, Closeable {
     public InputSource getInputSource(String path){
         return getZipEntryMap().getInputSource(path);
     }
-
+    public InputSource removeInputSource(String path){
+        return getZipEntryMap().remove(path);
+    }
     private void addInputSource(InputSource inputSource){
         getZipEntryMap().add(inputSource);
     }
-
+    public List<InputSource> listInputSources(){
+        return getZipEntryMap().listInputSources();
+    }
     public InputSource[] getInputSources(){
         return getZipEntryMap().toArray();
     }
@@ -691,19 +1146,62 @@ public class ApkModule implements ApkFile, Closeable {
     }
 
     public void merge(ApkModule module) throws IOException {
-        if(module==null||module==this){
+        merge(module, false);
+    }
+    public void merge(ApkModule module, boolean force) throws IOException {
+        if(module == null || module == this){
             return;
         }
+        logMessage("Merging: " + module.getModuleName());
+        validateMerge(module, force);
         mergeDexFiles(module);
         mergeTable(module);
         mergeFiles(module);
         getUncompressedFiles().merge(module.getUncompressedFiles());
     }
+    private void validateMerge(ApkModule apkModule, boolean force) throws IOException{
+        if(!hasTableBlock()) {
+            return;
+        }
+        String packageName = getPackageName();
+        int code = getVersionCode();
+        if(packageName == null || code == 0) {
+            return;
+        }
+        String packageName2 = apkModule.getPackageName();
+        int code2 = apkModule.getVersionCode();
+        if(packageName2 == null || code2 == 0) {
+            return;
+        }
+        if(!packageName.equals(packageName2)) {
+            return;
+        }
+        if(code == code2) {
+            return;
+        }
+        StringBuilder builder = new StringBuilder();
+        if(!force) {
+            builder.append("WARN: ");
+        }
+        builder.append("Incompatible to merge: {");
+        builder.append(packageName);
+        builder.append(", ");
+        builder.append(code);
+        builder.append("}, with {");
+        builder.append(packageName2);
+        builder.append(", ");
+        builder.append(code2);
+        builder.append("}");
+        String msg = builder.toString();
+        if(force) {
+            throw new IOException(msg);
+        }
+        logMessage(msg);
+    }
     private void mergeTable(ApkModule module) {
         if(!module.hasTableBlock()){
             return;
         }
-        logMessage("Merging resource table: "+module.getModuleName());
         TableBlock exist;
         if(!hasTableBlock()){
             exist=new TableBlock();
@@ -732,6 +1230,7 @@ public class ApkModule implements ApkFile, Closeable {
             if(inputSource.getAlias().startsWith("lib/")){
                 uncompressedFiles.removePath(inputSource.getAlias());
             }
+            logVerbose("Added: " + inputSource.getAlias());
             entryMapExist.add(inputSource);
         }
     }
@@ -769,7 +1268,19 @@ public class ApkModule implements ApkFile, Closeable {
         this.apkLogger = logger;
     }
     void logMessage(String msg) {
-        LogUtil.logMessage(msg);
+        if(apkLogger!=null){
+            apkLogger.logMessage(msg);
+        }
+    }
+    private void logError(String msg, Throwable tr) {
+        if(apkLogger!=null){
+            apkLogger.logError(msg, tr);
+        }
+    }
+    private void logVerbose(String msg) {
+        if(apkLogger!=null){
+            apkLogger.logVerbose(msg);
+        }
     }
     public void setCloseable(Closeable closeable){
         this.mCloseable = closeable;
@@ -785,7 +1296,9 @@ public class ApkModule implements ApkFile, Closeable {
     public String toString(){
         return getModuleName();
     }
-
+    public static ApkModule loadApkFile(File apkFile) throws IOException {
+        return loadApkFile(apkFile, ApkUtil.DEF_MODULE_NAME);
+    }
     public static ApkModule loadApkFile(File apkFile, String moduleName) throws IOException {
         ArchiveFile archive = new ArchiveFile(apkFile);
         ApkModule apkModule = new ApkModule(moduleName, archive.createZipEntryMap());
@@ -793,4 +1306,34 @@ public class ApkModule implements ApkFile, Closeable {
         apkModule.setCloseable(archive);
         return apkModule;
     }
+    public static ApkModule loadApkFile(File apkFile, File ... externalFrameworks) throws IOException {
+        return loadApkFile(null, apkFile, externalFrameworks);
+    }
+    public static ApkModule loadApkFile(APKLogger logger, File apkFile, File ... externalFrameworks) throws IOException {
+        ArchiveFile archive = new ArchiveFile(apkFile);
+        ApkModule apkModule = new ApkModule(ApkUtil.DEF_MODULE_NAME, archive.createZipEntryMap());
+        apkModule.setAPKLogger(logger);
+        apkModule.setApkSignatureBlock(archive.getApkSignatureBlock());
+        apkModule.setCloseable(archive);
+        if(externalFrameworks == null || externalFrameworks.length == 0){
+            return apkModule;
+        }
+        for(File frameworkFile : externalFrameworks){
+            if(frameworkFile == null){
+                continue;
+            }
+            if(apkFile.equals(frameworkFile)){
+                throw new IOException("External framework should be different: " + apkFile);
+            }
+            apkModule.addExternalFramework(frameworkFile);
+        }
+        return apkModule;
+    }
+    public static ApkModule readApkBytes(byte[] bytes) throws IOException {
+        ArchiveBytes archiveBytes = new ArchiveBytes(bytes);
+        ApkModule apkModule = new ApkModule(archiveBytes.createZipEntryMap());
+        apkModule.setModuleName("byte_" + System.currentTimeMillis());
+        return apkModule;
+    }
+
 }

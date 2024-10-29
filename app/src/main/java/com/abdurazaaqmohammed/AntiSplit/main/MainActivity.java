@@ -575,9 +575,9 @@ public class MainActivity extends Activity implements Merger.LogListener {
     }
 
     @Override
-    public void onLog(String msg) {
+    public void onLog(CharSequence msg) {
         runOnUiThread(() -> {
-            ((TextView)findViewById(R.id.logField)).append(msg + '\n');
+            (this.<TextView>findViewById(R.id.logField)).append(new StringBuilder(msg).append('\n'));
             ScrollView scrollView = findViewById(R.id.scrollView);
             scrollView.post(() -> scrollView.fullScroll(View.FOCUS_DOWN));
         });

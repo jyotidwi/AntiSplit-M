@@ -31,13 +31,16 @@ public class CollectionUtil {
     public static<T> List<T> toUniqueList(Iterator<? extends T> iterator) {
         return new ArrayCollection<>(toHashSet(iterator));
     }
+    @SafeVarargs
     public static<T> HashSet<T> newHashSet(T ... elements) {
         if(elements == null || elements.length == 0) {
             return new HashSet<>();
         }
         int length = elements.length;
         HashSet<T> results = new HashSet<>(length);
-        results.addAll(Arrays.asList(elements).subList(0, length));
+        for (int i = 0; i < length; i ++){
+            results.add(elements[i]);
+        }
         return results;
     }
     public static<T> HashSet<T> toHashSet(Iterator<? extends T> iterator) {
@@ -162,6 +165,7 @@ public class CollectionUtil {
         }
         return results;
     }
+    @SafeVarargs
     public static<T> List<T> asList(T ... elements) {
         return new ArrayCollection<>(elements);
     }
@@ -180,6 +184,13 @@ public class CollectionUtil {
         }
         return results;
     }
+    public static<T> Iterator<T> newIterator(Collection<? extends T> collection) {
+        int size = collection.size();
+        if(size == 0) {
+            return EmptyIterator.of();
+        }
+        return ArrayIterator.of(collection.toArray());
+    }
     public static<T> Iterator<T> copyOf(Iterator<? extends T> iterator){
         boolean hasNext = iterator.hasNext();
         if(!hasNext){
@@ -196,7 +207,7 @@ public class CollectionUtil {
         int random = Long.toString(System.currentTimeMillis()).hashCode();
         shuffle(random, list);
     }
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("all")
     public static void shuffle(int random, List<?> list) {
         if(list.isEmpty()){
             return;
@@ -230,7 +241,7 @@ public class CollectionUtil {
         return (Predicate<T>) REJECT_ALL;
     }
 
-    public static<T> Predicate<T> orFilter(Predicate<T> filter1, Predicate<T> filter2){
+    public static<T> Predicate<? super T> orFilter(Predicate<? super T> filter1, Predicate<? super T> filter2){
         if(filter1 == null || filter1 == getRejectAll()){
             return filter2;
         }

@@ -20,22 +20,19 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.item.SpecString;
-import com.reandroid.utils.collection.CollectionUtil;
-import com.reandroid.utils.collection.ComputeIterator;
-import com.reandroid.utils.collection.FilterIterator;
-import com.reandroid.utils.HexUtil;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.arsc.value.ResValue;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.arsc.value.attribute.AttributeBag;
+import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.collection.*;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class ResourceEntry implements Iterable<Entry>{
@@ -45,6 +42,35 @@ public class ResourceEntry implements Iterable<Entry>{
     public ResourceEntry(PackageBlock packageBlock, int resourceId){
         this.resourceId = resourceId;
         this.packageBlock = packageBlock;
+    }
+
+    public Iterator<String> getStringValues() {
+        return this.getStringValues(this.iterator());
+    }
+    Iterator<String> getStringValues(Iterator<Entry> iterator) {
+        return new IterableIterator<Entry, String>(iterator) {
+            public Iterator<String> iterator(Entry element) {
+                return getStringValues(element);
+            }
+        };
+    }
+    Iterator<String> getStringValues(Entry entry) {
+        ResValue resValue = entry.getResValue();
+        if (resValue == null) {
+            return EmptyIterator.of();
+        }
+        ValueType valueType = resValue.getValueType();
+        if (valueType == ValueType.STRING) {
+            return SingleIterator.of(resValue.getValueAsString());
+        }
+        if(!valueType.isReference()) {
+            return EmptyIterator.of();
+        }
+        TableBlock tableBlock = getPackageBlock().getTableBlock();
+        if(tableBlock == null) {
+            return EmptyIterator.of();
+        }
+        return this.getStringValues(tableBlock.resolveReference(resValue.getData()).iterator());
     }
 
     public ResourceEntry previous(){
@@ -191,6 +217,9 @@ public class ResourceEntry implements Iterable<Entry>{
     public boolean isEmpty() {
         return CollectionUtil.isEmpty(iterator(true));
     }
+    public boolean isDefined() {
+        return iterator(true).hasNext();
+    }
     public boolean isDeclared() {
         return getName() != null;
     }
@@ -200,6 +229,13 @@ public class ResourceEntry implements Iterable<Entry>{
     public boolean isContext(Block block) {
         if(block == null){
             return false;
+        }
+        if(block instanceof TableBlock) {
+            PackageBlock packageBlock = getPackageBlock();
+            return packageBlock != null && block == packageBlock.getTableBlock();
+        }
+        if(block instanceof PackageBlock) {
+            return isContext((PackageBlock) block);
         }
         return isContext(block.getParentInstance(PackageBlock.class));
     }
@@ -263,19 +299,21 @@ public class ResourceEntry implements Iterable<Entry>{
     public Iterator<Entry> iterator(boolean skipNull){
         return getPackageBlock().getEntries(getResourceId(), skipNull);
     }
-    public Iterator<Entry> iterator(Predicate<Entry> filter){
+    public Iterator<Entry> iterator(Predicate<? super Entry> filter) {
         return new FilterIterator<>(getPackageBlock().getEntries(getResourceId()), filter);
     }
     public Iterator<ResConfig> getConfigs(){
-        return new ComputeIterator<>(iterator(false), new Function<Entry, ResConfig>() {
-            @Override
-            public ResConfig apply(Entry entry) {
-                return entry.getResConfig();
-            }
-        });
+        return new ComputeIterator<>(iterator(false), Entry::getResConfig);
     }
     public String getHexId(){
         return HexUtil.toHex8(getResourceId());
+    }
+    public ResourceName toResourceName() {
+        String name = getName();
+        if(name == null) {
+            return null;
+        }
+        return new ResourceName(getPackageName(), getType(), name);
     }
     public String buildReference(){
         return buildReference(getPackageBlock(), null);

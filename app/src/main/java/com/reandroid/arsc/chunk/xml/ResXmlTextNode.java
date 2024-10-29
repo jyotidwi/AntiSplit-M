@@ -150,12 +150,12 @@ public class ResXmlTextNode extends ResXmlNode {
         getResXmlText().linkStringReferences();
     }
     @Override
-    public void serialize(XmlSerializer serializer) throws IOException {
-        if(isNull()){
-            return;
+    public void serialize(XmlSerializer serializer, boolean decode) throws IOException {
+        if (!isNull()) {
+            serializer.text(getText());
         }
-        serializer.text(getText());
     }
+
     @Override
     public void parse(XmlPullParser parser) throws IOException, XmlPullParserException {
         setLineNumber(parser.getLineNumber());
@@ -226,7 +226,7 @@ public class ResXmlTextNode extends ResXmlNode {
                 || event == XmlPullParser.ENTITY_REF;
     }
     private static boolean isIndent(String text){
-        if(text == null || text.length() == 0){
+        if(android.text.TextUtils.isEmpty(text)){
             return true;
         }
         char[] chars = text.toCharArray();

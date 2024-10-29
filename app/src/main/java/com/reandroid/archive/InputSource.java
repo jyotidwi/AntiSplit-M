@@ -15,18 +15,21 @@
  */
 package com.reandroid.archive;
 
+import android.text.TextUtils;
+
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
+import com.reandroid.utils.CRCDigest;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.StringsUtil;
-import com.starry.FileUtils;
+import com.reandroid.utils.io.FileUtil;
 
 import java.io.*;
 import java.util.Comparator;
-import java.util.zip.CRC32;
 
 public abstract class InputSource {
     private final String name;
-    private final String alias;
+    private String alias;
     private long mCrc;
     private long mLength;
     private int method = Archive.DEFLATED;
@@ -51,8 +54,15 @@ public abstract class InputSource {
     public void setSort(int sort) {
         this.sort = sort;
     }
+    public void copyAttributes(InputSource other) {
+        if(other != null && other != this) {
+            this.setSort(other.getSort());
+            this.setMethod(other.getMethod());
+            this.setAlias(other.getAlias());
+        }
+    }
     public boolean isUncompressed(){
-        return getMethod() == Archive.STORED;
+        return getMethod() != Archive.DEFLATED;
     }
     public void setUncompressed(boolean uncompressed){
         if(uncompressed){
@@ -74,7 +84,22 @@ public abstract class InputSource {
         }
         return getName();
     }
-
+    public void setAlias(String alias) {
+        this.alias = alias;
+        this.splitAlias = null;
+    }
+    public String getSimpleName() {
+        return FileUtil.getFileName(getAlias());
+    }
+    public String getSimpleNameWoExtension() {
+        return FileUtil.getNameWoExtension(getAlias());
+    }
+    public String getParentPath() {
+        return FileUtil.getParent(getAlias());
+    }
+    public String getExtension() {
+        return FileUtil.getExtension(getAlias());
+    }
     private String[] getSplitAlias(){
         if(this.splitAlias == null){
             String alias = StringsUtil.toLowercase(getAlias());
@@ -95,12 +120,14 @@ public abstract class InputSource {
         if(!dir.exists()){
             dir.mkdirs();
         }
-        try(OutputStream outputStream = FileUtils.getOutputStream(file)) {
-            write(outputStream);
-        }
+        FileOutputStream outputStream = new FileOutputStream(file);
+        write(outputStream);
+        outputStream.close();
     }
     public long write(OutputStream outputStream) throws IOException {
-        InputStream inputStream = openStream();
+        return write(outputStream, openStream());
+    }
+    private long write(OutputStream outputStream, InputStream inputStream) throws IOException {
         long result=0;
         byte[] buffer=new byte[1024 * 1000];
         int len;
@@ -111,7 +138,6 @@ public abstract class InputSource {
         close(inputStream);
         return result;
     }
-
     public String getName(){
         return name;
     }
@@ -150,7 +176,7 @@ public abstract class InputSource {
     private void calculateCrc() throws IOException {
         InputStream inputStream=openStream();
         long length=0;
-        CRC32 crc = new CRC32();
+        CRCDigest crc = new CRCDigest();
         int bytesRead;
         byte[] buffer = new byte[1024*64];
         while((bytesRead = inputStream.read(buffer)) != -1) {
@@ -172,38 +198,29 @@ public abstract class InputSource {
     public static int compareDex(String dex1, String dex2){
         int d1 = getDexNumber(dex1);
         int d2 = getDexNumber(dex2);
-        if(d1 == d2){
-            return 0;
-        }
-        if(d1 < 0){
-            return 1;
-        }
-        if(d2 < 0){
-            return -1;
-        }
-        return Integer.compare(d1, d2);
+        return (d1 == d2) ? 0 : (d1 < 0) ? 1 : (d2 < 0) ? -1 : Integer.compare(d1, d2);
+
     }
+
     private static int getSortOrder(String[] alias){
         int length = alias.length;
         if(length == 0){
             return LAST_ORDER;
         }
         String name = alias[0];
-        if(StringsUtil.isEmpty(name)){
+        if(TextUtils.isEmpty(name)){
             return LAST_ORDER;
         }
         if(length != 1){
-            if(META_INF.equals(name)){
-                return ORDER_meta_inf;
-            }
-            if(LIB.equals(name)){
-                return ORDER_lib;
-            }
-            if(RES.equals(name)){
-                return ORDER_res;
-            }
-            if(ASSETS.equals(name)){
-                return ORDER_assets;
+            switch (name) {
+                case META_INF:
+                    return ORDER_meta_inf;
+                case LIB:
+                    return ORDER_lib;
+                case RES:
+                    return ORDER_res;
+                case ASSETS:
+                    return ORDER_assets;
             }
             return LAST_ORDER;
         }
@@ -224,7 +241,7 @@ public abstract class InputSource {
         int order1 = getSortOrder(alias1);
         int order2 = getSortOrder(alias2);
         if(order1 != order2){
-            return Integer.compare(order1, order2);
+            return CompareUtil.compare(order1, order2);
         }
         if(order1 == ORDER_classes){
             return compareDex(alias1[0], alias2[0]);
